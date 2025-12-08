@@ -5,14 +5,7 @@
     "url": "https://github.com/linuxiscool"
   },
   "plugins": [
-    {
-      "name": "brainstorm",
-      "source": "./plugins/brainstorm/",
-      "description": "Brainstorming plugin for Claude",
-      "version": "0.1.0",
-      "author": {
-        "name": "linuxiscool"
-      }
-    }
+    {"name": "brainstorm", "source": "./plugins/brainstorm/"},
+    {"name": "logging", "source": "./plugins/logging/"}
   ]
 }

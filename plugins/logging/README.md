@@ -4,7 +4,7 @@ Minimal, full-fidelity logging for Claude Code sessions.
 
 ## Philosophy
 
-- **Single script**: One 91-line file handles all 10 hook types
+- **Single script**: One file handles all 10 hook types
 - **JSONL storage**: Append-only, one JSON object per line
 - **Zero truncation**: Full payloads preserved, never data loss
 - **No dependencies**: Pure Python, no external packages
@@ -12,115 +12,21 @@ Minimal, full-fidelity logging for Claude Code sessions.
 
 ## Installation
 
-Add hooks to your `.claude/settings.json`. All hooks use the same script with different `--event-type` arguments:
+### From Marketplace
 
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type SessionStart"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type SessionEnd"
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type UserPromptSubmit"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type PreToolUse"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type PostToolUse"
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type PermissionRequest"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type Notification"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type PreCompact"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type Stop"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run /path/to/plugins/logging/hooks/log_event.py --event-type SubagentStop"
-          }
-        ]
-      }
-    ]
-  }
-}
+```bash
+# Add the marketplace (if not already added)
+/plugin marketplace add linuxiscool/claude-plugins
+
+# Install the plugin
+/plugin install logging@linuxiscool-claude-plugins
+```
+
+### From Local Path
+
+```bash
+/plugin marketplace add /path/to/marketplaces/claude
+/plugin install logging
 ```
 
 ## Data Storage
@@ -142,7 +48,17 @@ Each `.jsonl` file contains one JSON event per line with full payloads:
 {"ts": "2025-01-15T10:30:05", "type": "UserPromptSubmit", "session_id": "abc123", "data": {...}}
 ```
 
-## Generating Reports
+## Automatic Reports
+
+When using `--report` with SessionEnd (as shown in the installation example), a Markdown report is automatically generated alongside each session's JSONL file:
+
+```
+.claude/logging/2025/01/15/
+├── abc12345.jsonl    # Raw event data
+└── abc12345.md       # Human-readable report (auto-generated)
+```
+
+## Manual Reports
 
 Use the report tool to generate Markdown from logs:
 
@@ -200,15 +116,15 @@ grep -h "prompt" .claude/logging/2025/01/15/*.jsonl | jq .data.prompt
 
 ```
 plugins/logging/
+├── .claude-plugin/
+│   ├── plugin.json     # Plugin manifest
+│   └── hooks.json      # Hook configuration
 ├── hooks/
-│   └── log_event.py    # Single script handles all hooks (91 LOC)
+│   └── log_event.py    # Single script handles all hooks
 ├── tools/
-│   └── report.py       # Markdown report generator (214 LOC)
-├── _archive/           # Old implementation preserved
+│   └── report.py       # Bulk report generator
 └── README.md
 ```
-
-**Total: ~305 LOC** (down from 1,700+ in the original implementation)
 
 ## Design Decisions
 
