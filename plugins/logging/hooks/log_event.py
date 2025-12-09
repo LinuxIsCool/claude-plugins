@@ -15,10 +15,17 @@ from datetime import datetime
 from pathlib import Path
 
 EMOJIS = {
-    "SessionStart": "💫", "SessionEnd": "⭐", "UserPromptSubmit": "🍄",
-    "PreToolUse": "🔨", "PostToolUse": "🏰", "PermissionRequest": "🔑",
-    "Notification": "🟡", "PreCompact": "♻", "Stop": "🟢",
-    "SubagentStop": "🔵", "AssistantResponse": "🌲",
+    "SessionStart": "💫",
+    "SessionEnd": "⭐",
+    "UserPromptSubmit": "🍄",
+    "PreToolUse": "🔨",
+    "PostToolUse": "🏰",
+    "PermissionRequest": "🔑",
+    "Notification": "🟡",
+    "PreCompact": "♻",
+    "Stop": "🟢",
+    "SubagentStop": "🔵",
+    "AssistantResponse": "🌲",
 }
 
 
@@ -145,6 +152,7 @@ def summarize(text, context, cache, cache_path):
 
     try:
         import anthropic
+
         client = anthropic.Anthropic(api_key=api_key)
 
         prompt = f"""Generate a 2-7 word summary of this {context}.
@@ -170,7 +178,7 @@ Summary:"""
             model="claude-haiku-4-5-20251001",
             max_tokens=30,
             temperature=0.3,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
 
         summary = msg.content[0].text.strip().strip('"').strip("'").strip(".")
@@ -191,7 +199,9 @@ Summary:"""
 def generate_markdown(jsonl_path, md_path, sid):
     """Generate markdown report from JSONL source."""
     try:
-        events = [json.loads(l) for l in jsonl_path.read_text().strip().split("\n") if l]
+        events = [
+            json.loads(l) for l in jsonl_path.read_text().strip().split("\n") if l
+        ]
     except:
         return
     if not events:
@@ -221,7 +231,9 @@ def generate_markdown(jsonl_path, md_path, sid):
         f"# Session {sid[:8]}",
         f"**ID:** `{sid}`",
         f"**Started:** {events[0]['ts'][:19].replace('T', ' ')}",
-        "", "---", ""
+        "",
+        "---",
+        "",
     ]
 
     # Second pass: process events into exchanges (prompt → stop cycles)
@@ -232,7 +244,12 @@ def generate_markdown(jsonl_path, md_path, sid):
 
         if t == "UserPromptSubmit":
             # Start new exchange
-            prompt, tools, tool_details, subagents = (ts, d.get("prompt", "")), Counter(), [], []
+            prompt, tools, tool_details, subagents = (
+                (ts, d.get("prompt", "")),
+                Counter(),
+                [],
+                [],
+            )
 
         elif t == "PreToolUse" and prompt:
             name, preview = d.get("tool_name", "?"), tool_preview(d)
@@ -254,28 +271,41 @@ def generate_markdown(jsonl_path, md_path, sid):
             if prompt:
                 ts_prompt, text = prompt
                 user_summary = summarize(text, "user request", cache, cache_path)
-                user_label = f"`{ts_prompt}` 🍄 User: {user_summary}" if user_summary else f"`{ts_prompt}` 🍄 User"
+                user_label = (
+                    f"`{ts_prompt}` 🍄 User: {user_summary}"
+                    if user_summary
+                    else f"`{ts_prompt}` 🍄 User"
+                )
                 lines.extend(["", "---", "", user_label, quote(text), ""])
 
                 if tools:
                     summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
-                    lines.extend([
-                        "<details>",
-                        f"<summary>📦 {sum(tools.values())} tools: {summary}</summary>",
-                        "", *tool_details, "",
-                        "</details>", ""
-                    ])
+                    lines.extend(
+                        [
+                            "<details>",
+                            f"<summary>📦 {sum(tools.values())} tools: {summary}</summary>",
+                            "",
+                            *tool_details,
+                            "",
+                            "</details>",
+                            "",
+                        ]
+                    )
 
                 if subagents:
                     for sa in subagents:
                         model_tag = f" ({sa['model']})" if sa.get("model") else ""
-                        sa_summary = summarize(sa.get("response", ""), "agent response", cache, cache_path)
-                        sa_label = f"`{sa['ts']}` 🔵 Subagent {sa['id']}{model_tag}: {sa_summary}" if sa_summary else f"`{sa['ts']}` 🔵 Subagent {sa['id']}{model_tag}"
-                        lines.extend([
-                            "<details>",
-                            f"<summary>{sa_label}</summary>",
-                            ""
-                        ])
+                        sa_summary = summarize(
+                            sa.get("response", ""), "agent response", cache, cache_path
+                        )
+                        sa_label = (
+                            f"`{sa['ts']}` 🔵 Subagent {sa['id']}{model_tag}: {sa_summary}"
+                            if sa_summary
+                            else f"`{sa['ts']}` 🔵 Subagent {sa['id']}{model_tag}"
+                        )
+                        lines.extend(
+                            ["<details>", f"<summary>{sa_label}</summary>", ""]
+                        )
                         if sa.get("task_prompt"):
                             lines.extend(["**Prompt:**", quote(sa["task_prompt"]), ""])
                         if sa.get("tools"):
@@ -289,14 +319,25 @@ def generate_markdown(jsonl_path, md_path, sid):
                 prompt = None
 
             response = d.get("response", "")
-            claude_summary = summarize(response, "assistant response", cache, cache_path)
-            claude_label = f"`{ts}` 🌲 Claude: {claude_summary}" if claude_summary else f"`{ts}` 🌲 Claude"
-            lines.extend([
-                "<details>",
-                f"<summary>{claude_label}</summary>",
-                "", quote(response), "",
-                "</details>", ""
-            ])
+            claude_summary = summarize(
+                response, "assistant response", cache, cache_path
+            )
+            claude_label = (
+                f"`{ts}` 🌲 Claude: {claude_summary}"
+                if claude_summary
+                else f"`{ts}` 🌲 Claude"
+            )
+            lines.extend(
+                [
+                    "<details>",
+                    f"<summary>{claude_label}</summary>",
+                    "",
+                    quote(response),
+                    "",
+                    "</details>",
+                    "",
+                ]
+            )
 
         elif t == "SubagentStop" and prompt is None:
             # Subagent outside of an exchange (e.g., session startup)
@@ -304,15 +345,17 @@ def generate_markdown(jsonl_path, md_path, sid):
             transcript = d.get("agent_transcript_path", "")
             info = get_subagent_info(transcript) if transcript else {}
             model_tag = f" ({info['model']})" if info.get("model") else ""
-            sa_summary = summarize(info.get("response", ""), "agent response", cache, cache_path)
-            sa_label = f"`{ts}` 🔵 Subagent {agent_id}{model_tag}: {sa_summary}" if sa_summary else f"`{ts}` 🔵 Subagent {agent_id}{model_tag}"
+            sa_summary = summarize(
+                info.get("response", ""), "agent response", cache, cache_path
+            )
+            sa_label = (
+                f"`{ts}` 🔵 Subagent {agent_id}{model_tag}: {sa_summary}"
+                if sa_summary
+                else f"`{ts}` 🔵 Subagent {agent_id}{model_tag}"
+            )
 
             if info.get("tools") or info.get("response"):
-                lines.extend([
-                    "<details>",
-                    f"<summary>{sa_label}</summary>",
-                    ""
-                ])
+                lines.extend(["<details>", f"<summary>{sa_label}</summary>", ""])
                 if info.get("tools"):
                     lines.append(f"**Tools:** {len(info['tools'])}")
                     lines.extend(info["tools"])
@@ -339,23 +382,47 @@ def main():
     if not data:
         return
 
-    cwd, sid, ts = data.get("cwd") or ".", data.get("session_id", "unknown"), datetime.now()
+    cwd, sid, ts = (
+        data.get("cwd") or ".",
+        data.get("session_id", "unknown"),
+        datetime.now(),
+    )
     jsonl, md = get_paths(cwd, sid, ts)
 
     # Append to JSONL (source of truth)
     with open(jsonl, "a") as f:
-        json.dump({"ts": ts.isoformat(), "type": event, "session_id": sid, "data": data}, f, default=str)
+        json.dump(
+            {"ts": ts.isoformat(), "type": event, "session_id": sid, "data": data},
+            f,
+            default=str,
+        )
         f.write("\n")
 
         # Capture assistant response on Stop (append before closing file)
         if event == "Stop" and data.get("transcript_path"):
             response = get_response(data["transcript_path"])
             if response:
-                json.dump({"ts": ts.isoformat(), "type": "AssistantResponse", "session_id": sid, "data": {"response": response}}, f, default=str)
+                json.dump(
+                    {
+                        "ts": ts.isoformat(),
+                        "type": "AssistantResponse",
+                        "session_id": sid,
+                        "data": {"response": response},
+                    },
+                    f,
+                    default=str,
+                )
                 f.write("\n")
 
     # Regenerate markdown on key events
-    if event in ("SessionStart", "UserPromptSubmit", "Stop", "SessionEnd", "SubagentStop", "Notification"):
+    if event in (
+        "SessionStart",
+        "UserPromptSubmit",
+        "Stop",
+        "SessionEnd",
+        "SubagentStop",
+        "Notification",
+    ):
         generate_markdown(jsonl, md, sid)
 
 
