@@ -146,7 +146,7 @@ def generate_markdown(jsonl_path, md_path, sid):
             # Complete the exchange
             if prompt:
                 ts_prompt, text = prompt
-                lines.extend(["", "---", "", f"`{ts_prompt}` 🍄 **User**", quote(text), ""])
+                lines.extend(["", "---", "", f"`{ts_prompt}` 🍄 User", quote(text), ""])
 
                 if tools:
                     summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
@@ -178,7 +178,7 @@ def generate_markdown(jsonl_path, md_path, sid):
             response = d.get("response", "")
             lines.extend([
                 "<details>",
-                f"<summary>`{ts}` 🌲 **Claude**</summary>",
+                f"<summary>`{ts}` 🌲 Claude</summary>",
                 "", quote(response), "",
                 "</details>", ""
             ])
