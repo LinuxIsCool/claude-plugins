@@ -255,7 +255,7 @@ def main():
                 f.write("\n")
 
     # Regenerate markdown on key events
-    if event in ("SessionStart", "Stop", "SessionEnd", "SubagentStop", "Notification"):
+    if event in ("SessionStart", "UserPromptSubmit", "Stop", "SessionEnd", "SubagentStop", "Notification"):
         generate_markdown(jsonl, md, sid)
 
 
