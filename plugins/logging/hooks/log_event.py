@@ -93,40 +93,30 @@ def generate_markdown(jsonl_path, md_path, sid):
         elif t == "PostToolUse" and prompt:
             tools[d.get("tool_name", "?")] += 1
 
-        elif t == "AssistantResponse" and prompt:
-            # Complete the exchange
-            ts_prompt, text = prompt
-            lines.extend(["", "---", f"### {ts_prompt}", "", "🍄 **User**", quote(text), ""])
+        elif t == "AssistantResponse":
+            # Complete the exchange - use stored prompt or last seen
+            if prompt:
+                ts_prompt, text = prompt
+                lines.extend(["", "---", f"### {ts_prompt}", "", "🍄 **User**", quote(text), ""])
 
-            if tools:
-                summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
-                lines.extend([
-                    "<details>",
-                    f"<summary>📦 {sum(tools.values())} tools: {summary}</summary>",
-                    "", *tool_details, "",
-                    "</details>", ""
-                ])
+                if tools:
+                    summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
+                    lines.extend([
+                        "<details>",
+                        f"<summary>📦 {sum(tools.values())} tools: {summary}</summary>",
+                        "", *tool_details, "",
+                        "</details>", ""
+                    ])
+                prompt = None
 
             lines.extend(["🌲 **Claude**", quote(d.get("response", "")), ""])
-            prompt = None
 
         elif t in ("SessionStart", "SessionEnd", "Notification", "SubagentStop"):
             info = d.get("source") or d.get("message") or d.get("agent_id") or ""
             lines.append(f"`{ts}` {EMOJIS.get(t, '•')} {t} {info}".rstrip())
 
-        elif t == "Stop" and prompt:
-            # Exchange without captured response (shouldn't happen normally)
-            ts_prompt, text = prompt
-            lines.extend(["", "---", f"### {ts_prompt}", "", "🍄 **User**", quote(text), ""])
-            if tools:
-                summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
-                lines.extend([
-                    "<details>",
-                    f"<summary>📦 {sum(tools.values())} tools: {summary}</summary>",
-                    "", *tool_details, "",
-                    "</details>", ""
-                ])
-            prompt = None
+        elif t == "Stop":
+            pass  # AssistantResponse handles the exchange
 
     md_path.write_text("\n".join(lines) + "\n")
 
