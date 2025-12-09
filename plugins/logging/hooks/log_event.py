@@ -44,6 +44,38 @@ def get_response(transcript_path):
     return ""
 
 
+def get_subagent_info(transcript_path):
+    """Extract model, tools, and response from subagent transcript."""
+    try:
+        data = json.loads(Path(transcript_path).read_text())
+        model = data.get("message", {}).get("model", "")
+        # Shorten model name (claude-opus-4-5-20251101 -> opus-4-5)
+        if "opus" in model:
+            model = "opus"
+        elif "sonnet" in model:
+            model = "sonnet"
+        elif "haiku" in model:
+            model = "haiku"
+
+        tools, response = [], ""
+        for block in data.get("message", {}).get("content", []):
+            if block.get("type") == "tool_use":
+                name = block.get("name", "?")
+                inp = block.get("input", {})
+                preview = ""
+                for k in ("file_path", "pattern", "query", "command"):
+                    if k in inp:
+                        preview = str(inp[k])
+                        break
+                tools.append(f"- {name} `{preview}`" if preview else f"- {name}")
+            elif block.get("type") == "text":
+                response = block.get("text", "")
+
+        return {"model": model, "tools": tools, "response": response}
+    except:
+        return {"model": "", "tools": [], "response": ""}
+
+
 def tool_preview(data):
     """Extract preview string from tool input."""
     inp = data.get("tool_input", {})
@@ -77,14 +109,14 @@ def generate_markdown(jsonl_path, md_path, sid):
     ]
 
     # Process events into exchanges (prompt → stop cycles)
-    prompt = tools = tool_details = None
+    prompt = tools = tool_details = subagents = None
 
     for e in events:
         t, d, ts = e["type"], e.get("data", {}), e["ts"][11:19]
 
         if t == "UserPromptSubmit":
             # Start new exchange
-            prompt, tools, tool_details = (ts, d.get("prompt", "")), Counter(), []
+            prompt, tools, tool_details, subagents = (ts, d.get("prompt", "")), Counter(), [], []
 
         elif t == "PreToolUse" and prompt:
             name, preview = d.get("tool_name", "?"), tool_preview(d)
@@ -93,8 +125,15 @@ def generate_markdown(jsonl_path, md_path, sid):
         elif t == "PostToolUse" and prompt:
             tools[d.get("tool_name", "?")] += 1
 
+        elif t == "SubagentStop" and prompt is not None:
+            # Collect subagent info for this exchange
+            agent_id = d.get("agent_id", "?")
+            transcript = d.get("agent_transcript_path", "")
+            info = get_subagent_info(transcript) if transcript else {}
+            subagents.append({"ts": ts, "id": agent_id, **info})
+
         elif t == "AssistantResponse":
-            # Complete the exchange - use stored prompt or last seen
+            # Complete the exchange
             if prompt:
                 ts_prompt, text = prompt
                 lines.extend(["", "---", f"### {ts_prompt}", "", "🍄 **User**", quote(text), ""])
@@ -107,12 +146,52 @@ def generate_markdown(jsonl_path, md_path, sid):
                         "", *tool_details, "",
                         "</details>", ""
                     ])
+
+                if subagents:
+                    for sa in subagents:
+                        model_tag = f" ({sa['model']})" if sa.get("model") else ""
+                        lines.extend([
+                            "<details>",
+                            f"<summary>🔵 Subagent {sa['id']}{model_tag}</summary>",
+                            ""
+                        ])
+                        if sa.get("tools"):
+                            lines.append(f"**Tools:** {len(sa['tools'])}")
+                            lines.extend(sa["tools"])
+                            lines.append("")
+                        if sa.get("response"):
+                            lines.extend(["**Response:**", quote(sa["response"]), ""])
+                        lines.extend(["</details>", ""])
+
                 prompt = None
 
             lines.extend(["🌲 **Claude**", quote(d.get("response", "")), ""])
 
-        elif t in ("SessionStart", "SessionEnd", "Notification", "SubagentStop"):
-            info = d.get("source") or d.get("message") or d.get("agent_id") or ""
+        elif t == "SubagentStop" and prompt is None:
+            # Subagent outside of an exchange (e.g., session startup)
+            agent_id = d.get("agent_id", "?")
+            transcript = d.get("agent_transcript_path", "")
+            info = get_subagent_info(transcript) if transcript else {}
+            model_tag = f" ({info['model']})" if info.get("model") else ""
+
+            if info.get("tools") or info.get("response"):
+                lines.extend([
+                    "<details>",
+                    f"<summary>`{ts}` 🔵 Subagent {agent_id}{model_tag}</summary>",
+                    ""
+                ])
+                if info.get("tools"):
+                    lines.append(f"**Tools:** {len(info['tools'])}")
+                    lines.extend(info["tools"])
+                    lines.append("")
+                if info.get("response"):
+                    lines.extend(["**Response:**", quote(info["response"]), ""])
+                lines.extend(["</details>", ""])
+            else:
+                lines.append(f"`{ts}` 🔵 Subagent {agent_id}{model_tag}")
+
+        elif t in ("SessionStart", "SessionEnd", "Notification"):
+            info = d.get("source") or d.get("message") or ""
             lines.append(f"`{ts}` {EMOJIS.get(t, '•')} {t} {info}".rstrip())
 
     md_path.write_text("\n".join(lines) + "\n")
@@ -143,7 +222,7 @@ def main():
                 f.write("\n")
 
     # Regenerate markdown on key events
-    if event in ("SessionStart", "Stop", "SessionEnd"):
+    if event in ("SessionStart", "Stop", "SessionEnd", "SubagentStop"):
         generate_markdown(jsonl, md, sid)
 
 
