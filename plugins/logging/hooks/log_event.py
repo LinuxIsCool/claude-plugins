@@ -38,7 +38,7 @@ def get_info(event, data, jsonl):
     if event == "Notification":
         return data.get("message", "")
     if event == "SubagentStop":
-        return data.get("agent_id", "?")[:8]
+        return data.get("agent_id", "?")
     if event == "Stop":
         return stats(jsonl)
     if event == "AssistantResponse":
@@ -49,10 +49,10 @@ def get_info(event, data, jsonl):
 def preview(data):
     inp = data.get("tool_input", {})
     if isinstance(inp, str):
-        return f"`{inp[:50]}`"
+        return f"`{inp}`"
     for k in ("file_path", "pattern", "query", "command"):
         if k in inp:
-            return f"`{str(inp[k])[:50]}`"
+            return f"`{str(inp[k])}`"
     return ""
 
 
