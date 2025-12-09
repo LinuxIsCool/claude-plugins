@@ -209,3 +209,4 @@ resources/
 
 # Claude Code logging
 .claude/logging/**/*.jsonl
+.claude/logging/**/*.cache.json
