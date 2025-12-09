@@ -115,9 +115,6 @@ def generate_markdown(jsonl_path, md_path, sid):
             info = d.get("source") or d.get("message") or d.get("agent_id") or ""
             lines.append(f"`{ts}` {EMOJIS.get(t, '•')} {t} {info}".rstrip())
 
-        elif t == "Stop":
-            pass  # AssistantResponse handles the exchange
-
     md_path.write_text("\n".join(lines) + "\n")
 
 

@@ -1,25 +1,24 @@
 # Claude Code Logging Plugin
 
-Full-fidelity session logging with live Markdown reports.
+Full-fidelity session logging with Markdown reports.
 
 ## Installation
 
 ```bash
-/plugin marketplace add linuxiscool/claude-plugins
 /plugin install logging
 ```
 
 ## What It Does
 
-Every hook event is logged to two files:
+Logs every hook event to JSONL (source of truth) and generates Markdown reports:
 
 ```
 <project>/.claude/logging/YYYY/MM/DD/
-├── {session}.jsonl   # Full data (never truncated)
-└── {session}.md      # Live-updating human-readable report
+├── HH-MM-SS-{session}.jsonl   # Full data, never truncated
+└── HH-MM-SS-{session}.md      # Conversation-style report
 ```
 
-## Live Report Format
+## Report Format
 
 ```markdown
 # Session abc12345
@@ -30,28 +29,25 @@ Every hook event is logged to two files:
 ---
 
 `10:30:00` 💫 SessionStart startup
-`10:30:05` 🍄 UserPromptSubmit Help me refactor...
-`10:30:10` 🔨 PreToolUse Read `src/main.py`
-`10:30:11` 🏰 PostToolUse Read
-`10:30:20` 🟢 Stop 1 prompt, 2 tools
-`10:30:20` 🌲 AssistantResponse Done! I refactored...
+
+---
+### 10:30:05
+
+🍄 **User**
+> Help me refactor the logging plugin
+
+<details>
+<summary>📦 3 tools: Read (2), Edit (1)</summary>
+
+- Read `src/main.py`
+- Read `src/utils.py`
+- Edit `src/main.py`
+
+</details>
+
+🌲 **Claude**
+> Done! I refactored the logging plugin to be more modular...
 ```
-
-## Events Logged
-
-| Event | Emoji | Info |
-|-------|-------|------|
-| SessionStart | 💫 | source |
-| SessionEnd | ⭐ | |
-| UserPromptSubmit | 🍄 | full prompt |
-| PreToolUse | 🔨 | tool name + preview |
-| PostToolUse | 🏰 | tool name |
-| PermissionRequest | 🔑 | |
-| Notification | 🟡 | message |
-| PreCompact | ♻ | |
-| Stop | 🟢 | prompt/tool counts |
-| SubagentStop | 🔵 | agent id |
-| AssistantResponse | 🌲 | full response |
 
 ## Querying JSONL
 
@@ -64,24 +60,11 @@ jq -r 'select(.type=="UserPromptSubmit") | .data.prompt' .claude/logging/*/*/*.j
 
 # Count events by type
 jq -s 'group_by(.type) | map({type:.[0].type, n:length})' .claude/logging/*/*/*.jsonl
-
-# Search across all sessions
-grep -r "keyword" .claude/logging/
-```
-
-## Structure
-
-```
-plugins/logging/
-├── .claude-plugin/
-│   └── plugin.json     # Manifest + hooks
-└── hooks/
-    └── log_event.py    # Single 80-line script
 ```
 
 ## Design
 
-- **Single script**: One file handles all 10 hooks via `-e EventType`
-- **JSONL**: Append-only, full fidelity, works with `jq`/`grep`
-- **Live Markdown**: Updates after every event, viewable mid-session
-- **No config**: Sensible defaults, disable hooks by not registering them
+- **JSONL source of truth**: Append-only, full fidelity
+- **Markdown on Stop**: Regenerated from JSONL after each exchange
+- **Aggregated tools**: Grouped in collapsible details
+- **Conversation format**: User/Claude exchanges with visual separators
