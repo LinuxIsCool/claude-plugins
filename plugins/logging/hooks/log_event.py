@@ -45,33 +45,43 @@ def get_response(transcript_path):
 
 
 def get_subagent_info(transcript_path):
-    """Extract model, tools, and response from subagent transcript."""
+    """Extract model, tools, and response from subagent transcript (multi-line JSONL)."""
     try:
-        data = json.loads(Path(transcript_path).read_text())
-        model = data.get("message", {}).get("model", "")
-        # Shorten model name (claude-opus-4-5-20251101 -> opus-4-5)
-        if "opus" in model:
-            model = "opus"
-        elif "sonnet" in model:
-            model = "sonnet"
-        elif "haiku" in model:
-            model = "haiku"
+        lines = Path(transcript_path).read_text().strip().split("\n")
+        model, tools, responses = "", [], []
 
-        tools, response = [], ""
-        for block in data.get("message", {}).get("content", []):
-            if block.get("type") == "tool_use":
-                name = block.get("name", "?")
-                inp = block.get("input", {})
-                preview = ""
-                for k in ("file_path", "pattern", "query", "command"):
-                    if k in inp:
-                        preview = str(inp[k])
-                        break
-                tools.append(f"- {name} `{preview}`" if preview else f"- {name}")
-            elif block.get("type") == "text":
-                response = block.get("text", "")
+        for line in lines:
+            if not line.strip():
+                continue
+            data = json.loads(line)
 
-        return {"model": model, "tools": tools, "response": response}
+            # Get model from first entry
+            if not model:
+                m = data.get("message", {}).get("model", "")
+                if "opus" in m:
+                    model = "opus"
+                elif "sonnet" in m:
+                    model = "sonnet"
+                elif "haiku" in m:
+                    model = "haiku"
+
+            # Extract tools and text from all entries
+            for block in data.get("message", {}).get("content", []):
+                if block.get("type") == "tool_use":
+                    name = block.get("name", "?")
+                    inp = block.get("input", {})
+                    preview = ""
+                    for k in ("file_path", "pattern", "query", "command"):
+                        if k in inp:
+                            preview = str(inp[k])
+                            break
+                    tools.append(f"- {name} `{preview}`" if preview else f"- {name}")
+                elif block.get("type") == "text":
+                    text = block.get("text", "").strip()
+                    if text:
+                        responses.append(text)
+
+        return {"model": model, "tools": tools, "response": "\n\n".join(responses)}
     except:
         return {"model": "", "tools": [], "response": ""}
 
