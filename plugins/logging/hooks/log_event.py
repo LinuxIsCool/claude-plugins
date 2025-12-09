@@ -146,7 +146,7 @@ def generate_markdown(jsonl_path, md_path, sid):
             # Complete the exchange
             if prompt:
                 ts_prompt, text = prompt
-                lines.extend(["", "---", f"### {ts_prompt}", "", "🍄 **User**", quote(text), ""])
+                lines.extend(["", "---", "", f"`{ts_prompt}` 🍄 **User**", quote(text), ""])
 
                 if tools:
                     summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
@@ -162,7 +162,7 @@ def generate_markdown(jsonl_path, md_path, sid):
                         model_tag = f" ({sa['model']})" if sa.get("model") else ""
                         lines.extend([
                             "<details>",
-                            f"<summary>🔵 Subagent {sa['id']}{model_tag}</summary>",
+                            f"<summary>`{sa['ts']}` 🔵 Subagent {sa['id']}{model_tag}</summary>",
                             ""
                         ])
                         if sa.get("tools"):
@@ -175,7 +175,7 @@ def generate_markdown(jsonl_path, md_path, sid):
 
                 prompt = None
 
-            lines.extend(["🌲 **Claude**", quote(d.get("response", "")), ""])
+            lines.extend([f"`{ts}` 🌲 **Claude**", quote(d.get("response", "")), ""])
 
         elif t == "SubagentStop" and prompt is None:
             # Subagent outside of an exchange (e.g., session startup)
