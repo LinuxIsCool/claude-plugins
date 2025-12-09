@@ -100,7 +100,15 @@ def main():
 
     base = Path(cwd) / ".claude/logging" / ts.strftime("%Y/%m/%d")
     base.mkdir(parents=True, exist_ok=True)
-    jsonl, md = base / f"{sid[:8]}.jsonl", base / f"{sid[:8]}.md"
+
+    # Find existing files for this session, or create new ones with timestamp prefix
+    existing = list(base.glob(f"*-{sid[:8]}.jsonl"))
+    if existing:
+        prefix = existing[0].stem.rsplit("-", 1)[0]  # Extract timestamp prefix
+    else:
+        prefix = ts.strftime("%H-%M-%S")
+
+    jsonl, md = base / f"{prefix}-{sid[:8]}.jsonl", base / f"{prefix}-{sid[:8]}.md"
 
     # JSONL
     with open(jsonl, "a") as f:
