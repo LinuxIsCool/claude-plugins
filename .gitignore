@@ -208,4 +208,4 @@ __marimo__/
 resources/
 
 # Claude Code logging
-.claude/logging/
+.claude/logging/**/*.jsonl
