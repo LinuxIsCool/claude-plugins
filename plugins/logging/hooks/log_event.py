@@ -120,6 +120,7 @@ def generate_markdown(jsonl_path, md_path, sid):
 
     # Process events into exchanges (prompt → stop cycles)
     prompt = tools = tool_details = subagents = None
+    pending_tasks = {}  # tool_use_id -> prompt for Task tool calls
 
     for e in events:
         t, d, ts = e["type"], e.get("data", {}), e["ts"][11:19]
@@ -127,19 +128,33 @@ def generate_markdown(jsonl_path, md_path, sid):
         if t == "UserPromptSubmit":
             # Start new exchange
             prompt, tools, tool_details, subagents = (ts, d.get("prompt", "")), Counter(), [], []
+            pending_tasks = {}
 
         elif t == "PreToolUse" and prompt:
             name, preview = d.get("tool_name", "?"), tool_preview(d)
             tool_details.append(f"- {name} `{preview}`" if preview else f"- {name}")
+            # Track Task tool prompts
+            if name == "Task":
+                tool_use_id = d.get("tool_use_id", "")
+                task_prompt = d.get("tool_input", {}).get("prompt", "")
+                if tool_use_id and task_prompt:
+                    pending_tasks[tool_use_id] = task_prompt
 
         elif t == "PostToolUse" and prompt:
             tools[d.get("tool_name", "?")] += 1
+            # Match Task completion to get agent_id -> prompt mapping
+            if d.get("tool_name") == "Task":
+                tool_use_id = d.get("tool_use_id", "")
+                agent_id = d.get("tool_response", {}).get("agentId", "")
+                if agent_id and tool_use_id in pending_tasks:
+                    pending_tasks[agent_id] = pending_tasks.pop(tool_use_id)
 
         elif t == "SubagentStop" and prompt is not None:
             # Collect subagent info for this exchange
             agent_id = d.get("agent_id", "?")
             transcript = d.get("agent_transcript_path", "")
             info = get_subagent_info(transcript) if transcript else {}
+            info["task_prompt"] = pending_tasks.get(agent_id, "")
             subagents.append({"ts": ts, "id": agent_id, **info})
 
         elif t == "AssistantResponse":
@@ -165,6 +180,8 @@ def generate_markdown(jsonl_path, md_path, sid):
                             f"<summary>`{sa['ts']}` 🔵 Subagent {sa['id']}{model_tag}</summary>",
                             ""
                         ])
+                        if sa.get("task_prompt"):
+                            lines.extend(["**Prompt:**", quote(sa["task_prompt"]), ""])
                         if sa.get("tools"):
                             lines.append(f"**Tools:** {len(sa['tools'])}")
                             lines.extend(sa["tools"])
