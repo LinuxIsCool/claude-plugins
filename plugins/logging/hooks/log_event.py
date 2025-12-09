@@ -148,11 +148,10 @@ def main():
         json.dump({"ts": ts.isoformat(), "type": event, "session_id": sid, "data": data}, f, default=str)
         f.write("\n")
 
-    # Capture assistant response on Stop
-    if event == "Stop" and data.get("transcript_path"):
-        response = get_response(data["transcript_path"])
-        if response:
-            with open(jsonl, "a") as f:
+        # Capture assistant response on Stop (append before closing file)
+        if event == "Stop" and data.get("transcript_path"):
+            response = get_response(data["transcript_path"])
+            if response:
                 json.dump({"ts": ts.isoformat(), "type": "AssistantResponse", "session_id": sid, "data": {"response": response}}, f, default=str)
                 f.write("\n")
 
