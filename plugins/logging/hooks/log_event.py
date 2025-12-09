@@ -3,162 +3,150 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-
-"""
-Universal logging hook for Claude Code.
-Single script handles all 10 hook types via --event-type argument.
-
-Usage in settings.json:
-  "command": "uv run log_event.py --event-type SessionStart"
-  "command": "uv run log_event.py --event-type SessionEnd --report"
-"""
+"""Claude Code logging hook. Logs to JSONL + live Markdown."""
 
 import argparse
 import json
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+EMOJIS = {
+    "SessionStart": "💫",
+    "SessionEnd": "⭐",
+    "UserPromptSubmit": "🍄",
+    "PreToolUse": "🔨",
+    "PostToolUse": "🏰",
+    "PermissionRequest": "🔑",
+    "Notification": "🟡",
+    "PreCompact": "♻",
+    "Stop": "🟢",
+    "SubagentStop": "🔵",
+    "AssistantResponse": "🌲",
+}
 
 
-def get_log_file(cwd: str, session_id: str) -> Path:
-    """Get session log file path organized by date."""
-    base = Path(cwd) / ".claude" / "logging" / datetime.now().strftime("%Y/%m/%d")
-    base.mkdir(parents=True, exist_ok=True)
-    short_id = session_id[:8] if len(session_id) > 8 else session_id
-    return base / f"{short_id}.jsonl"
+def get_info(event, data, jsonl):
+    if event == "SessionStart":
+        return data.get("source", "")
+    if event == "UserPromptSubmit":
+        return data.get("prompt", "")
+    if event == "PreToolUse":
+        return f"{data.get('tool_name', '?')} {preview(data)}"
+    if event == "PostToolUse":
+        return data.get("tool_name", "?")
+    if event == "Notification":
+        return data.get("message", "")
+    if event == "SubagentStop":
+        return data.get("agent_id", "?")[:8]
+    if event == "Stop":
+        return stats(jsonl)
+    if event == "AssistantResponse":
+        return data.get("response", "")
+    return ""
 
 
-def log_event(cwd: str, session_id: str, event_type: str, payload: dict) -> Path:
-    """Append event to session JSONL file. Stores FULL payload, never truncates."""
-    log_file = get_log_file(cwd, session_id)
-    event = {
-        "ts": datetime.now().isoformat(),
-        "type": event_type,
-        "session_id": session_id,
-        "data": payload
-    }
-    with open(log_file, 'a') as f:
-        f.write(json.dumps(event, default=str) + '\n')
-    return log_file
+def preview(data):
+    inp = data.get("tool_input", {})
+    if isinstance(inp, str):
+        return f"`{inp[:50]}`"
+    for k in ("file_path", "pattern", "query", "command"):
+        if k in inp:
+            return f"`{str(inp[k])[:50]}`"
+    return ""
 
 
-def read_input() -> dict:
-    """Read and parse JSON from stdin. Returns empty dict on failure."""
+def stats(path):
     try:
-        text = sys.stdin.read()
-        return json.loads(text) if text.strip() else {}
-    except (json.JSONDecodeError, Exception):
-        return {}
+        lines = path.read_text().strip().split("\n") if path.exists() else []
+        events = [json.loads(l) for l in lines if l]
+        p = sum(1 for e in events if e["type"] == "UserPromptSubmit")
+        t = sum(1 for e in events if e["type"] == "PostToolUse")
+        return f"{p} prompt{'s'*(p!=1)}, {t} tool{'s'*(t!=1)}" if p or t else ""
+    except:
+        return ""
 
 
-def get_cwd(data: dict) -> str:
-    """Extract working directory from hook input."""
-    return data.get("cwd") or data.get("working_directory") or str(Path.cwd())
-
-
-def get_session_id(data: dict) -> str:
-    """Extract session ID from hook input."""
-    return data.get("session_id", "unknown")
-
-
-def generate_session_report(jsonl_path: Path) -> Path:
-    """Generate Markdown report from JSONL session log."""
-    events = []
-    with open(jsonl_path) as f:
-        for line in f:
-            if line.strip():
-                try:
-                    events.append(json.loads(line))
-                except json.JSONDecodeError:
-                    pass
-
-    if not events:
-        return None
-
-    session_id = events[0].get("session_id", "unknown")
-    md_path = jsonl_path.with_suffix(".md")
-
-    lines = [
-        f"# Session: {session_id[:8]}",
-        "",
-        f"**Full ID:** `{session_id}`",
-        f"**Events:** {len(events)}",
-        f"**Started:** {events[0].get('ts', 'unknown')[:19]}",
-        f"**Ended:** {events[-1].get('ts', 'unknown')[:19]}",
-        "",
-        "---",
-        ""
-    ]
-
-    for event in events:
-        ts = event.get("ts", "")[:19].replace("T", " ")
-        event_type = event.get("type", "Unknown")
-        data = event.get("data", {})
-
-        lines.append(f"### {ts} — {event_type}")
-
-        if event_type == "UserPromptSubmit":
-            prompt = data.get("prompt", "")
-            if prompt:
-                # Indent for blockquote, handle multiline
-                quoted = "\n> ".join(prompt.split("\n"))
-                lines.append(f"\n> {quoted}")
-
-        elif event_type == "PreToolUse":
-            tool = data.get("tool_name", "unknown")
-            lines.append(f"\n**Tool:** `{tool}`")
-
-        elif event_type == "PostToolUse":
-            tool = data.get("tool_name", "unknown")
-            lines.append(f"\n**Tool:** `{tool}` ✓")
-
-        elif event_type == "SessionStart":
-            lines.append(f"\n*Session started*")
-
-        elif event_type == "SessionEnd":
-            lines.append(f"\n*Session ended*")
-
-        lines.append("")
-
-    md_path.write_text("\n".join(lines))
-    return md_path
+def get_last_response(transcript_path):
+    """Extract the last assistant response from Claude's transcript."""
+    try:
+        lines = Path(transcript_path).read_text().strip().split("\n")
+        for line in reversed(lines):
+            if not line.strip():
+                continue
+            entry = json.loads(line)
+            if entry.get("type") == "assistant":
+                content = entry.get("message", {}).get("content", [])
+                for block in content:
+                    if block.get("type") == "text":
+                        return block.get("text", "")
+        return ""
+    except:
+        return ""
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Log Claude Code hook events")
-    parser.add_argument(
-        "--event-type", "-e",
-        required=True,
-        help="Hook event type (SessionStart, PreToolUse, etc.)"
-    )
-    parser.add_argument(
-        "--report", "-r",
-        action="store_true",
-        help="Generate Markdown report (use with SessionEnd)"
-    )
-    args = parser.parse_args()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-e", required=True)
+    event = ap.parse_args().e
 
-    data = read_input()
+    data = json.loads(sys.stdin.read() or "{}") if sys.stdin else {}
     if not data:
-        sys.exit(0)
+        return
 
-    try:
-        log_file = log_event(
-            cwd=get_cwd(data),
-            session_id=get_session_id(data),
-            event_type=args.event_type,
-            payload=data
+    cwd = data.get("cwd") or "."
+    sid = data.get("session_id", "unknown")
+    ts = datetime.now()
+
+    base = Path(cwd) / ".claude/logging" / ts.strftime("%Y/%m/%d")
+    base.mkdir(parents=True, exist_ok=True)
+    jsonl, md = base / f"{sid[:8]}.jsonl", base / f"{sid[:8]}.md"
+
+    # JSONL
+    with open(jsonl, "a") as f:
+        json.dump(
+            {"ts": ts.isoformat(), "type": event, "session_id": sid, "data": data},
+            f,
+            default=str,
+        )
+        f.write("\n")
+
+    # Markdown header
+    if not md.exists():
+        md.write_text(
+            f"# Session {sid[:8]}\n**ID:** `{sid}`\n**Started:** {ts:%Y-%m-%d %H:%M:%S}\n\n---\n\n"
         )
 
-        # Generate report on SessionEnd if requested
-        if args.report and args.event_type == "SessionEnd" and log_file.exists():
-            generate_session_report(log_file)
+    # Log the event
+    emoji = EMOJIS.get(event, "•")
+    info = get_info(event, data, jsonl)
+    with open(md, "a") as f:
+        f.write(f"`{ts:%H:%M:%S}` {emoji} {event} {info}\n".rstrip() + "\n")
 
-    except Exception:
-        pass  # Never block Claude Code
-
-    sys.exit(0)
+    # On Stop, also capture and log the assistant's response
+    if event == "Stop" and data.get("transcript_path"):
+        response = get_last_response(data["transcript_path"])
+        if response:
+            # Log to JSONL
+            with open(jsonl, "a") as f:
+                json.dump(
+                    {
+                        "ts": ts.isoformat(),
+                        "type": "AssistantResponse",
+                        "session_id": sid,
+                        "data": {"response": response},
+                    },
+                    f,
+                    default=str,
+                )
+                f.write("\n")
+            # Log to Markdown
+            with open(md, "a") as f:
+                f.write(f"`{ts:%H:%M:%S}` 🌲 AssistantResponse {response}\n")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except:
+        pass
