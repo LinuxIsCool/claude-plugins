@@ -3,86 +3,132 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""Claude Code logging hook. Logs to JSONL + live Markdown."""
+"""Claude Code logging hook. Logs to JSONL, generates Markdown reports."""
 
 import argparse
 import json
 import sys
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
 EMOJIS = {
-    "SessionStart": "💫",
-    "SessionEnd": "⭐",
-    "UserPromptSubmit": "🍄",
-    "PreToolUse": "🔨",
-    "PostToolUse": "🏰",
-    "PermissionRequest": "🔑",
-    "Notification": "🟡",
-    "PreCompact": "♻",
-    "Stop": "🟢",
-    "SubagentStop": "🔵",
-    "AssistantResponse": "🌲",
+    "SessionStart": "💫", "SessionEnd": "⭐", "UserPromptSubmit": "🍄",
+    "PreToolUse": "🔨", "PostToolUse": "🏰", "PermissionRequest": "🔑",
+    "Notification": "🟡", "PreCompact": "♻", "Stop": "🟢",
+    "SubagentStop": "🔵", "AssistantResponse": "🌲",
 }
 
 
-def get_info(event, data, jsonl):
-    if event == "SessionStart":
-        return data.get("source", "")
-    if event == "UserPromptSubmit":
-        return data.get("prompt", "")
-    if event == "PreToolUse":
-        return f"{data.get('tool_name', '?')} {preview(data)}"
-    if event == "PostToolUse":
-        return data.get("tool_name", "?")
-    if event == "Notification":
-        return data.get("message", "")
-    if event == "SubagentStop":
-        return data.get("agent_id", "?")
-    if event == "Stop":
-        return stats(jsonl)
-    if event == "AssistantResponse":
-        return data.get("response", "")
+def get_paths(cwd, sid, ts):
+    """Get log file paths, reusing existing timestamp prefix or creating new."""
+    base = Path(cwd) / ".claude/logging" / ts.strftime("%Y/%m/%d")
+    base.mkdir(parents=True, exist_ok=True)
+    existing = list(base.glob(f"*-{sid[:8]}.jsonl"))
+    prefix = existing[0].stem.rsplit("-", 1)[0] if existing else ts.strftime("%H-%M-%S")
+    return base / f"{prefix}-{sid[:8]}.jsonl", base / f"{prefix}-{sid[:8]}.md"
+
+
+def get_response(transcript_path):
+    """Extract last assistant response from Claude's transcript."""
+    try:
+        for line in reversed(Path(transcript_path).read_text().strip().split("\n")):
+            if line.strip():
+                entry = json.loads(line)
+                if entry.get("type") == "assistant":
+                    for block in entry.get("message", {}).get("content", []):
+                        if block.get("type") == "text":
+                            return block.get("text", "")
+    except:
+        pass
     return ""
 
 
-def preview(data):
+def tool_preview(data):
+    """Extract preview string from tool input."""
     inp = data.get("tool_input", {})
     if isinstance(inp, str):
-        return f"`{inp}`"
+        return inp
     for k in ("file_path", "pattern", "query", "command"):
         if k in inp:
-            return f"`{str(inp[k])}`"
+            return str(inp[k])
     return ""
 
 
-def stats(path):
-    try:
-        lines = path.read_text().strip().split("\n") if path.exists() else []
-        events = [json.loads(l) for l in lines if l]
-        p = sum(1 for e in events if e["type"] == "UserPromptSubmit")
-        t = sum(1 for e in events if e["type"] == "PostToolUse")
-        return f"{p} prompt{'s'*(p!=1)}, {t} tool{'s'*(t!=1)}" if p or t else ""
-    except:
-        return ""
+def quote(text):
+    """Convert text to markdown blockquote."""
+    return "\n".join(f"> {line}" for line in text.split("\n"))
 
 
-def get_last_response(transcript_path):
-    """Extract the last assistant response from Claude's transcript."""
+def generate_markdown(jsonl_path, md_path, sid):
+    """Generate markdown report from JSONL source."""
     try:
-        lines = Path(transcript_path).read_text().strip().split("\n")
-        for line in reversed(lines):
-            if not line.strip():
-                continue
-            entry = json.loads(line)
-            if entry.get("type") == "assistant":
-                content = entry.get("message", {}).get("content", [])
-                for block in content:
-                    if block.get("type") == "text":
-                        return block.get("text", "")
-        return ""
+        events = [json.loads(l) for l in jsonl_path.read_text().strip().split("\n") if l]
     except:
-        return ""
+        return
+    if not events:
+        return
+
+    lines = [
+        f"# Session {sid[:8]}",
+        f"**ID:** `{sid}`",
+        f"**Started:** {events[0]['ts'][:19].replace('T', ' ')}",
+        "", "---", ""
+    ]
+
+    # Process events into exchanges (prompt → stop cycles)
+    prompt = tools = tool_details = None
+
+    for e in events:
+        t, d, ts = e["type"], e.get("data", {}), e["ts"][11:19]
+
+        if t == "UserPromptSubmit":
+            # Start new exchange
+            prompt, tools, tool_details = (ts, d.get("prompt", "")), Counter(), []
+
+        elif t == "PreToolUse" and prompt:
+            name, preview = d.get("tool_name", "?"), tool_preview(d)
+            tool_details.append(f"- {name} `{preview}`" if preview else f"- {name}")
+
+        elif t == "PostToolUse" and prompt:
+            tools[d.get("tool_name", "?")] += 1
+
+        elif t == "AssistantResponse" and prompt:
+            # Complete the exchange
+            ts_prompt, text = prompt
+            lines.extend(["", "---", f"### {ts_prompt}", "", "🍄 **User**", quote(text), ""])
+
+            if tools:
+                summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
+                lines.extend([
+                    "<details>",
+                    f"<summary>📦 {sum(tools.values())} tools: {summary}</summary>",
+                    "", *tool_details, "",
+                    "</details>", ""
+                ])
+
+            lines.extend(["🌲 **Claude**", quote(d.get("response", "")), ""])
+            prompt = None
+
+        elif t in ("SessionStart", "SessionEnd", "Notification", "SubagentStop"):
+            info = d.get("source") or d.get("message") or d.get("agent_id") or ""
+            lines.append(f"`{ts}` {EMOJIS.get(t, '•')} {t} {info}".rstrip())
+
+        elif t == "Stop" and prompt:
+            # Exchange without captured response (shouldn't happen normally)
+            ts_prompt, text = prompt
+            lines.extend(["", "---", f"### {ts_prompt}", "", "🍄 **User**", quote(text), ""])
+            if tools:
+                summary = ", ".join(f"{n} ({c})" for n, c in tools.most_common())
+                lines.extend([
+                    "<details>",
+                    f"<summary>📦 {sum(tools.values())} tools: {summary}</summary>",
+                    "", *tool_details, "",
+                    "</details>", ""
+                ])
+            prompt = None
+
+    md_path.write_text("\n".join(lines) + "\n")
 
 
 def main():
@@ -94,63 +140,25 @@ def main():
     if not data:
         return
 
-    cwd = data.get("cwd") or "."
-    sid = data.get("session_id", "unknown")
-    ts = datetime.now()
+    cwd, sid, ts = data.get("cwd") or ".", data.get("session_id", "unknown"), datetime.now()
+    jsonl, md = get_paths(cwd, sid, ts)
 
-    base = Path(cwd) / ".claude/logging" / ts.strftime("%Y/%m/%d")
-    base.mkdir(parents=True, exist_ok=True)
-
-    # Find existing files for this session, or create new ones with timestamp prefix
-    existing = list(base.glob(f"*-{sid[:8]}.jsonl"))
-    if existing:
-        prefix = existing[0].stem.rsplit("-", 1)[0]  # Extract timestamp prefix
-    else:
-        prefix = ts.strftime("%H-%M-%S")
-
-    jsonl, md = base / f"{prefix}-{sid[:8]}.jsonl", base / f"{prefix}-{sid[:8]}.md"
-
-    # JSONL
+    # Append to JSONL (source of truth)
     with open(jsonl, "a") as f:
-        json.dump(
-            {"ts": ts.isoformat(), "type": event, "session_id": sid, "data": data},
-            f,
-            default=str,
-        )
+        json.dump({"ts": ts.isoformat(), "type": event, "session_id": sid, "data": data}, f, default=str)
         f.write("\n")
 
-    # Markdown header
-    if not md.exists():
-        md.write_text(
-            f"# Session {sid[:8]}\n**ID:** `{sid}`\n**Started:** {ts:%Y-%m-%d %H:%M:%S}\n\n---\n\n"
-        )
-
-    # Log the event
-    emoji = EMOJIS.get(event, "•")
-    info = get_info(event, data, jsonl)
-    with open(md, "a") as f:
-        f.write(f"`{ts:%H:%M:%S}` {emoji} {event} {info}\n".rstrip() + "\n")
-
-    # On Stop, also capture and log the assistant's response
+    # Capture assistant response on Stop
     if event == "Stop" and data.get("transcript_path"):
-        response = get_last_response(data["transcript_path"])
+        response = get_response(data["transcript_path"])
         if response:
-            # Log to JSONL
             with open(jsonl, "a") as f:
-                json.dump(
-                    {
-                        "ts": ts.isoformat(),
-                        "type": "AssistantResponse",
-                        "session_id": sid,
-                        "data": {"response": response},
-                    },
-                    f,
-                    default=str,
-                )
+                json.dump({"ts": ts.isoformat(), "type": "AssistantResponse", "session_id": sid, "data": {"response": response}}, f, default=str)
                 f.write("\n")
-            # Log to Markdown
-            with open(md, "a") as f:
-                f.write(f"`{ts:%H:%M:%S}` 🌲 AssistantResponse {response}\n")
+
+    # Regenerate markdown on key events
+    if event in ("SessionStart", "Stop", "SessionEnd"):
+        generate_markdown(jsonl, md, sid)
 
 
 if __name__ == "__main__":
