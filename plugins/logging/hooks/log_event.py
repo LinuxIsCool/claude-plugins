@@ -175,7 +175,13 @@ def generate_markdown(jsonl_path, md_path, sid):
 
                 prompt = None
 
-            lines.extend([f"`{ts}` 🌲 **Claude**", quote(d.get("response", "")), ""])
+            response = d.get("response", "")
+            lines.extend([
+                "<details>",
+                f"<summary>`{ts}` 🌲 **Claude**</summary>",
+                "", quote(response), "",
+                "</details>", ""
+            ])
 
         elif t == "SubagentStop" and prompt is None:
             # Subagent outside of an exchange (e.g., session startup)
