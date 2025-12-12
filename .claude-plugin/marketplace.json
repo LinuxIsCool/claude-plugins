@@ -8,6 +8,8 @@
     {"name": "brainstorm", "source": "./plugins/brainstorm/"},
     {"name": "logging", "source": "./plugins/logging/"},
     {"name": "awareness", "source": "./plugins/awareness/"},
-    {"name": "schedule", "source": "./plugins/Schedule.md/"}
+    {"name": "schedule", "source": "./plugins/Schedule.md/"},
+    {"name": "agents", "source": "./plugins/agents/"},
+    {"name": "llms", "source": "./plugins/llms/"}
   ]
 }
