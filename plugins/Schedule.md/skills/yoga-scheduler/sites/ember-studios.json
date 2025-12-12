@@ -1,0 +1,80 @@
+{
+  "id": "ember-studios-duncan",
+  "name": "Ember Studios Duncan",
+  "url": "https://www.emberstudiosduncan.com/schedule",
+  "platform": "wix",
+  "location": {
+    "address": "201-330 Duncan St",
+    "city": "Duncan",
+    "province": "BC",
+    "postal": "V9L 3W4"
+  },
+  "contact": {
+    "email": "contact@emberstudiosduncan.com",
+    "phone": "250.252.7663"
+  },
+  "fetchStrategy": {
+    "primary": "playwright-screenshot",
+    "fallback": ["playwright-text", "user-screenshot", "user-paste"],
+    "waitTime": 6000,
+    "viewport": { "width": 1400, "height": 1200 }
+  },
+  "instructors": [
+    { "name": "David", "styles": ["flow", "ember-45"] },
+    { "name": "Chandra", "styles": ["flow", "slow-flow"] },
+    { "name": "Jesi Rae", "styles": ["bootcamp", "gentle-hatha"] },
+    { "name": "Amanda M", "styles": ["mat-pilates"] }
+  ],
+  "classTypes": {
+    "BOOTCAMP": {
+      "style": "fitness",
+      "intensity": "high",
+      "icon": "🔥",
+      "duration": 60
+    },
+    "GENTLE HATHA": {
+      "style": "hatha",
+      "intensity": "low",
+      "icon": "🌤️",
+      "duration": 60,
+      "price": 10
+    },
+    "FLOW": {
+      "style": "vinyasa",
+      "intensity": "medium",
+      "icon": "🔥",
+      "duration": 60
+    },
+    "EMBER 45": {
+      "style": "express",
+      "intensity": "medium",
+      "icon": "🔥",
+      "duration": 45
+    },
+    "MAT PILATES": {
+      "style": "pilates",
+      "intensity": "medium",
+      "icon": "🔥",
+      "duration": 60
+    },
+    "SLOW FLOW": {
+      "style": "vinyasa",
+      "intensity": "low",
+      "icon": "🌤️",
+      "duration": 60
+    }
+  },
+  "scheduling": {
+    "weekStartsOn": "sunday",
+    "typicalWeekPattern": true,
+    "bookingRequired": true,
+    "registrationClosesAtClassTime": true
+  },
+  "cache": {
+    "lastFetch": null,
+    "lastFetchSuccess": null,
+    "ttlMinutes": 240,
+    "failureCount": 0
+  },
+  "notes": "Hot yoga studio. Wix-based site loads schedule dynamically. Screenshot method works best."
+}

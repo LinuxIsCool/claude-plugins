@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Cache
+.cache/
+
+# Playwright browsers
+.browsers/
+
+# OS files
+.DS_Store
+
+# Editor
+*.swp
+*.swo

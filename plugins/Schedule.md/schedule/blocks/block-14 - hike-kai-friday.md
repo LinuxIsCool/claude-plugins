@@ -1,0 +1,17 @@
+---
+id: block-14
+title: "Hike (Kai)"
+category: outdoor
+day: friday
+startTime: "15:00"
+endTime: "16:00"
+recurring: weekly
+tags: ["hike", "kai", "outdoor", "exercise"]
+source: manual
+createdAt: "2024-12-11T00:00:00Z"
+updatedAt: "2024-12-11T00:00:00Z"
+---
+
+# Hike (Kai)
+
+Friday afternoon hike with Kai.

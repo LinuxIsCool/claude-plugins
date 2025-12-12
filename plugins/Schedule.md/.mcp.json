@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "schedule": {
+      "command": "bun",
+      "args": ["run", "${CLAUDE_PLUGIN_ROOT}/src/mcp/server.ts"],
+      "env": {
+        "SCHEDULE_ROOT": "${CLAUDE_PLUGIN_ROOT}"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "env": {
+        "PLAYWRIGHT_BROWSERS_PATH": "${CLAUDE_PLUGIN_ROOT}/.browsers"
+      }
+    }
+  }
+}
