@@ -10,6 +10,8 @@
     {"name": "awareness", "source": "./plugins/awareness/"},
     {"name": "schedule", "source": "./plugins/Schedule.md/"},
     {"name": "agents", "source": "./plugins/agents/"},
-    {"name": "llms", "source": "./plugins/llms/"}
+    {"name": "llms", "source": "./plugins/llms/"},
+    {"name": "backlog", "source": "./plugins/backlog/"},
+    {"name": "journal", "source": "./plugins/journal/"}
   ]
 }
