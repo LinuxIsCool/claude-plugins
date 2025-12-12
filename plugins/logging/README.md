@@ -91,6 +91,29 @@ jq -r 'select(.type=="UserPromptSubmit") | .data.prompt' .claude/logging/*/*/*.j
 jq -s 'group_by(.type) | map({type:.[0].type, n:length})' .claude/logging/*/*/*.jsonl
 ```
 
+## Searching Logs
+
+Search through conversation history to recall past discussions:
+
+```bash
+# Basic search
+uv run plugins/logging/tools/search_logs.py "authentication"
+
+# Search only user prompts
+uv run plugins/logging/tools/search_logs.py "bug fix" --type UserPromptSubmit
+
+# Get more results
+uv run plugins/logging/tools/search_logs.py "refactor" --limit 20
+
+# Human-readable output
+uv run plugins/logging/tools/search_logs.py "error" --format text
+```
+
+The `log-search` skill enables Claude to automatically search logs when you ask:
+- "What did we discuss about authentication?"
+- "Find our previous conversation about the database"
+- "When did we work on the refactoring?"
+
 ## Design
 
 - **JSONL source of truth**: Append-only, full fidelity, never truncated
@@ -99,3 +122,4 @@ jq -s 'group_by(.type) | map({type:.[0].type, n:length})' .claude/logging/*/*/*.
 - **Aggregated tools**: Grouped in collapsible details
 - **Subagent details**: Model, prompt, tools, and response captured
 - **Conversation format**: User/Claude exchanges with timestamps
+- **BM25 search**: Keyword-based search over conversation history

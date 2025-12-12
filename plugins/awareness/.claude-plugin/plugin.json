@@ -1,0 +1,17 @@
+{
+  "name": "awareness",
+  "version": "0.1.0",
+  "description": "Self-awareness and learning plugin for Claude Code. Enables systematic documentation reading, guide utilization, and technique mastery.",
+  "author": {
+    "name": "linuxiscool"
+  },
+  "keywords": [
+    "awareness",
+    "learning",
+    "self-improvement",
+    "documentation",
+    "mastery"
+  ],
+  "skills": ["./skills/"],
+  "commands": ["./commands/"]
+}
