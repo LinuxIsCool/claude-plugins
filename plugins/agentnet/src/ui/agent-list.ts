@@ -139,6 +139,7 @@ export async function renderAgentList(
 		};
 
 		screen.key(["up", "k"], () => {
+			if (!agentList.focused) return; // Focus guard
 			if (currentIndex > 0) {
 				currentIndex--;
 				updateSelection();
@@ -146,6 +147,7 @@ export async function renderAgentList(
 		});
 
 		screen.key(["down", "j"], () => {
+			if (!agentList.focused) return; // Focus guard
 			if (currentIndex < profiles.length - 1) {
 				currentIndex++;
 				updateSelection();
@@ -153,6 +155,7 @@ export async function renderAgentList(
 		});
 
 		screen.key(["enter"], async () => {
+			if (!agentList.focused) return; // Focus guard
 			const profile = profiles[currentIndex];
 			if (profile && options?.onView) {
 				await options.onView(profile);
@@ -161,15 +164,17 @@ export async function renderAgentList(
 		});
 
 		screen.key(["w", "W"], async () => {
+			if (!agentList.focused) return; // Focus guard
 			const profile = profiles[currentIndex];
 			if (profile && options?.onViewWall) {
+				resolve(); // Resolve FIRST to prevent race condition
 				screen.destroy();
 				await options.onViewWall(profile);
-				resolve();
 			}
 		});
 
 		screen.key(["m", "M"], async () => {
+			if (!agentList.focused) return; // Focus guard
 			const profile = profiles[currentIndex];
 			if (profile && options?.onMessage) {
 				await options.onMessage(profile);
@@ -178,8 +183,9 @@ export async function renderAgentList(
 		});
 
 		screen.key(["q", "escape", "C-c"], () => {
+			if (!agentList.focused) return; // Focus guard
+			resolve(); // Resolve FIRST
 			screen.destroy();
-			resolve();
 		});
 
 		agentList.focus();

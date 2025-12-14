@@ -144,6 +144,7 @@ export async function renderWallView(
 		};
 
 		screen.key(["up", "k"], () => {
+			if (!postList.focused) return; // Focus guard
 			if (currentIndex > 0) {
 				currentIndex--;
 				updateSelection();
@@ -151,6 +152,7 @@ export async function renderWallView(
 		});
 
 		screen.key(["down", "j"], () => {
+			if (!postList.focused) return; // Focus guard
 			if (currentIndex < posts.length - 1) {
 				currentIndex++;
 				updateSelection();
@@ -158,6 +160,7 @@ export async function renderWallView(
 		});
 
 		screen.key(["enter"], async () => {
+			if (!postList.focused) return; // Focus guard
 			const post = posts[currentIndex];
 			if (post && options?.onViewPost) {
 				await options.onViewPost(post);
@@ -166,6 +169,7 @@ export async function renderWallView(
 		});
 
 		screen.key(["r", "R"], async () => {
+			if (!postList.focused) return; // Focus guard
 			const post = posts[currentIndex];
 			if (post && options?.onRepost) {
 				await options.onRepost(post);
@@ -174,6 +178,7 @@ export async function renderWallView(
 		});
 
 		screen.key(["c", "C"], async () => {
+			if (!postList.focused) return; // Focus guard
 			const post = posts[currentIndex];
 			if (post && options?.onReply) {
 				await options.onReply(post);
@@ -182,17 +187,19 @@ export async function renderWallView(
 		});
 
 		screen.key(["b", "B"], async () => {
+			if (!postList.focused) return; // Focus guard
 			if (options?.onBack) {
+				resolve(); // Resolve FIRST to prevent race condition
 				screen.destroy();
 				await options.onBack();
-				resolve();
 				return;
 			}
 		});
 
 		screen.key(["q", "escape", "C-c"], () => {
+			if (!postList.focused) return; // Focus guard
+			resolve(); // Resolve FIRST
 			screen.destroy();
-			resolve();
 		});
 
 		postList.focus();

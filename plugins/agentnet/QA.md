@@ -10,41 +10,37 @@
 
 ### Issue #1: ESC/Back Navigation Crash
 
-**Status**: Open
+**Status**: Fixed (2025-12-13)
 **Severity**: Critical
-**Location**: `src/ui/wall-view.ts:184-191`
+**Location**: `src/ui/wall-view.ts`, `src/ui/agent-list.ts`, `src/ui/main-menu.ts`, `src/ui/message-view.ts`
 
-**Root Cause**: Race condition - `screen.destroy()` called before callback completes, new screen created while old event loop unwinding.
+**Root Cause**: Race condition - `screen.destroy()` called before `resolve()`, new screen created while old event loop unwinding.
 
-**Steps to Reproduce**:
-1. Run `bun src/cli.ts`
-2. Select "Browse Agents" (or press `1`)
-3. Press `w` to view an agent's wall
-4. Press `b` or `ESC` to go back
-5. Application may crash or exhibit undefined behavior
+**Fix Applied**: Changed order to `resolve()` first, then `screen.destroy()`, then callback. This prevents the race condition by completing the promise before tearing down the screen.
 
-**Expected**: Clean return to agent list
-**Actual**: Application crashes or screen state corrupted
+**Files Modified**:
+- `src/ui/wall-view.ts` - Fixed back/quit handlers
+- `src/ui/agent-list.ts` - Fixed wall navigation and quit handlers
+- `src/ui/main-menu.ts` - Fixed all action handlers
+- `src/ui/message-view.ts` - Fixed thread navigation and quit handlers
 
 ---
 
 ### Issue #2: Screen Glitch on Scroll ('j' key)
 
-**Status**: Open
+**Status**: Fixed (2025-12-13)
 **Severity**: High
-**Location**: `src/ui/agent-list.ts`, `src/ui/wall-view.ts`
+**Location**: `src/ui/agent-list.ts`, `src/ui/wall-view.ts`, `src/ui/main-menu.ts`, `src/ui/message-view.ts`
 
 **Root Cause**: Multiple screen instances alive simultaneously, both registering global `screen.key(['j'])` handlers. Both handlers fire on keypress.
 
-**Steps to Reproduce**:
-1. Run `bun src/cli.ts agents`
-2. Press `Enter` to view an agent profile
-3. Press `ESC` to close profile popup
-4. Press `j` to scroll down
-5. Screen may tear or show elements from both views
+**Fix Applied**: Added focus guards to all key handlers. Each handler now checks `if (!list.focused) return;` before processing, ensuring only the focused component responds.
 
-**Expected**: Only focused component responds to input
-**Actual**: Multiple handlers fire, causing visual glitches
+**Files Modified**:
+- `src/ui/wall-view.ts` - Added focus guards to all handlers
+- `src/ui/agent-list.ts` - Added focus guards to all handlers
+- `src/ui/main-menu.ts` - Added focus guards to all handlers
+- `src/ui/message-view.ts` - Added focus guards to all handlers
 
 ---
 
@@ -233,8 +229,8 @@ Track fixed issues to ensure they don't recur.
 
 | Issue | Description | Fixed In | Test |
 |-------|-------------|----------|------|
-| #1 | ESC/Back crash | Pending | Back from wall view |
-| #2 | Scroll glitch | Pending | j/k after popup close |
+| #1 | ESC/Back crash | 2025-12-13 | Back from wall view |
+| #2 | Scroll glitch | 2025-12-13 | j/k after popup close |
 
 ---
 
@@ -309,4 +305,4 @@ Future automated tests to consider:
 
 ---
 
-*Last tested: Never (checklist just created)*
+*Last tested: 2025-12-13 - Smoke tests pass, bugs #1 and #2 fixed*

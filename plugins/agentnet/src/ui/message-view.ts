@@ -172,6 +172,7 @@ export async function renderThreadList(
 		};
 
 		screen.key(["up", "k"], () => {
+			if (!threadList.focused) return; // Focus guard
 			if (currentIndex > 0) {
 				currentIndex--;
 				updateSelection();
@@ -179,6 +180,7 @@ export async function renderThreadList(
 		});
 
 		screen.key(["down", "j"], () => {
+			if (!threadList.focused) return; // Focus guard
 			if (currentIndex < threads.length - 1) {
 				currentIndex++;
 				updateSelection();
@@ -186,15 +188,17 @@ export async function renderThreadList(
 		});
 
 		screen.key(["enter"], async () => {
+			if (!threadList.focused) return; // Focus guard
 			const thread = threads[currentIndex];
 			if (thread && options.onSelectThread) {
+				resolve(); // Resolve FIRST
 				screen.destroy();
 				await options.onSelectThread(thread);
-				resolve();
 			}
 		});
 
 		screen.key(["n", "N"], async () => {
+			if (!threadList.focused) return; // Focus guard
 			if (options.onNewThread) {
 				await options.onNewThread();
 				screen.render();
@@ -202,17 +206,19 @@ export async function renderThreadList(
 		});
 
 		screen.key(["b", "B"], async () => {
+			if (!threadList.focused) return; // Focus guard
 			if (options.onBack) {
+				resolve(); // Resolve FIRST
 				screen.destroy();
 				await options.onBack();
-				resolve();
 				return;
 			}
 		});
 
 		screen.key(["q", "escape", "C-c"], () => {
+			if (!threadList.focused) return; // Focus guard
+			resolve(); // Resolve FIRST
 			screen.destroy();
-			resolve();
 		});
 
 		threadList.focus();
@@ -316,37 +322,43 @@ export async function renderThreadView(
 		});
 
 		screen.key(["up", "k"], () => {
+			if (!messageBox.focused) return; // Focus guard
 			messageBox.scroll(-1);
 			screen.render();
 		});
 
 		screen.key(["down", "j"], () => {
+			if (!messageBox.focused) return; // Focus guard
 			messageBox.scroll(1);
 			screen.render();
 		});
 
 		screen.key(["pageup"], () => {
+			if (!messageBox.focused) return; // Focus guard
 			messageBox.scroll(-10);
 			screen.render();
 		});
 
 		screen.key(["pagedown"], () => {
+			if (!messageBox.focused) return; // Focus guard
 			messageBox.scroll(10);
 			screen.render();
 		});
 
 		screen.key(["b", "B"], async () => {
+			if (!messageBox.focused) return; // Focus guard
 			if (options.onBack) {
+				resolve(); // Resolve FIRST
 				screen.destroy();
 				await options.onBack();
-				resolve();
 				return;
 			}
 		});
 
 		screen.key(["q", "escape", "C-c"], () => {
+			if (!messageBox.focused) return; // Focus guard
+			resolve(); // Resolve FIRST
 			screen.destroy();
-			resolve();
 		});
 
 		messageBox.focus();

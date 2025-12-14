@@ -133,6 +133,7 @@ export async function renderMainMenu(items: MenuItem[]): Promise<void> {
 		};
 
 		screen.key(["up", "k"], () => {
+			if (!menuList.focused) return; // Focus guard
 			if (currentIndex > 0) {
 				currentIndex--;
 				updateSelection();
@@ -140,6 +141,7 @@ export async function renderMainMenu(items: MenuItem[]): Promise<void> {
 		});
 
 		screen.key(["down", "j"], () => {
+			if (!menuList.focused) return; // Focus guard
 			if (currentIndex < items.length - 1) {
 				currentIndex++;
 				updateSelection();
@@ -149,27 +151,30 @@ export async function renderMainMenu(items: MenuItem[]): Promise<void> {
 		// Quick select with number keys
 		for (let i = 1; i <= Math.min(9, items.length); i++) {
 			screen.key([String(i)], async () => {
+				if (!menuList.focused) return; // Focus guard
 				const item = items[i - 1];
 				if (item) {
+					resolve(); // Resolve FIRST
 					screen.destroy();
 					await item.action();
-					resolve();
 				}
 			});
 		}
 
 		screen.key(["enter"], async () => {
+			if (!menuList.focused) return; // Focus guard
 			const item = items[currentIndex];
 			if (item) {
+				resolve(); // Resolve FIRST
 				screen.destroy();
 				await item.action();
-				resolve();
 			}
 		});
 
 		screen.key(["q", "escape", "C-c"], () => {
+			if (!menuList.focused) return; // Focus guard
+			resolve(); // Resolve FIRST
 			screen.destroy();
-			resolve();
 		});
 
 		menuList.focus();

@@ -128,17 +128,40 @@ Consult for architectural decisions:
 - New navigation patterns
 - Performance concerns
 
-## Current Known Issues
+## Recently Fixed Issues
 
-### Issue #1: ESC/Back Navigation Crash
-**Location**: `src/ui/wall-view.ts:184-191`
-**Root Cause**: Race condition - screen.destroy() before callback completes
-**Fix Pattern**: Resolve promise first, yield event loop, then destroy
+### Issue #1: ESC/Back Navigation Crash (Fixed 2025-12-13)
+**Location**: All UI files (`wall-view.ts`, `agent-list.ts`, `main-menu.ts`, `message-view.ts`)
+**Root Cause**: Race condition - screen.destroy() before resolve()
+**Fix Applied**: Changed order to resolve() first, then screen.destroy(), then callback
 
-### Issue #2: Screen Glitch on Scroll
-**Location**: Multiple UI files
+### Issue #2: Screen Glitch on Scroll (Fixed 2025-12-13)
+**Location**: All UI files
 **Root Cause**: Multiple screens register same key handlers
-**Fix Pattern**: Add focus guards to all key handlers
+**Fix Applied**: Added focus guards (`if (!list.focused) return;`) to all key handlers
+
+## TUI Pattern Reference
+
+When implementing new screens or fixing bugs, follow these established patterns:
+
+**Screen Exit Order** (prevents race conditions):
+```typescript
+screen.key(["q", "escape"], () => {
+  if (!list.focused) return; // Focus guard FIRST
+  resolve();         // Resolve promise
+  screen.destroy();  // Then destroy screen
+});
+```
+
+**Navigation with Callback** (for back/next):
+```typescript
+screen.key(["b"], async () => {
+  if (!list.focused) return; // Focus guard
+  resolve();         // Resolve FIRST
+  screen.destroy();  // Destroy screen
+  await callback();  // Then call next screen
+});
+```
 
 ## Development Workflow
 
