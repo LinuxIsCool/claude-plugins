@@ -34,14 +34,20 @@ An Obsidian-style linked journal for Claude Code with zettelkasten atomic notes.
 | Daily | `YYYY-MM-DD.md` | Daily intentions, reflections |
 | Atomic | `HHMMSS-title.md` | Zettelkasten atomic notes |
 
-## Skills
+## Master Skill: `journal`
 
-- **journal-writer**: Create journal entries
-- **journal-planner**: Planning-focused entries (goals, roadmaps)
-- **journal-reflector**: Reflection-focused entries (retrospectives, lessons)
-- **journal-linker**: Manage wikilinks and backlinks
-- **journal-aggregator**: Summarize over time periods
-- **journal-browser**: Navigate and search the journal
+A single discoverable skill with 6 sub-skills loaded on-demand.
+
+### Sub-Skills
+
+| Sub-Skill | Purpose |
+|-----------|---------|
+| **journal-writer** | Create journal entries (daily, atomic, structured) |
+| **journal-planner** | Planning-focused entries (goals, roadmaps, intentions) |
+| **journal-reflector** | Reflection-focused entries (retrospectives, lessons learned) |
+| **journal-linker** | Manage wikilinks and backlinks |
+| **journal-aggregator** | Summarize patterns over time periods |
+| **journal-browser** | Navigate and search the journal |
 
 ## Usage
 
@@ -61,3 +67,24 @@ Entries use standard Obsidian conventions:
 - Backlinks tracked in frontmatter
 
 Open `.claude/journal/` in Obsidian for a visual graph view of your thoughts.
+
+## Plugin Directory Structure
+
+```
+journal/
+├── .claude-plugin/
+│   └── plugin.json              # Plugin manifest
+├── skills/
+│   └── journal-master/          # Master skill (discoverable)
+│       ├── SKILL.md             # Master skill definition
+│       └── subskills/           # Sub-skills (loaded via Read)
+│           ├── journal-writer.md
+│           ├── journal-planner.md
+│           ├── journal-reflector.md
+│           ├── journal-linker.md
+│           ├── journal-aggregator.md
+│           └── journal-browser.md
+├── commands/
+│   └── journal.md               # /journal command
+└── README.md
+```
