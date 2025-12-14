@@ -1,5 +1,6 @@
 {
   "name": "linuxiscool-claude-plugins",
+  "version": "0.1.0",
   "owner": {
     "name": "linuxiscool",
     "url": "https://github.com/linuxiscool"
@@ -12,6 +13,10 @@
     {"name": "agents", "source": "./plugins/agents/"},
     {"name": "llms", "source": "./plugins/llms/"},
     {"name": "backlog", "source": "./plugins/backlog/"},
-    {"name": "journal", "source": "./plugins/journal/"}
+    {"name": "journal", "source": "./plugins/journal/"},
+    {"name": "knowledge-graphs", "source": "./plugins/knowledge-graphs/"},
+    {"name": "exploration", "source": "./plugins/exploration/"},
+    {"name": "interface", "source": "./plugins/interface/"},
+    {"name": "agentnet", "source": "./plugins/agentnet/"}
   ]
 }
