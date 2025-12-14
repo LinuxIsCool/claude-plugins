@@ -1,0 +1,21 @@
+{
+  "name": "backlog",
+  "version": "0.1.0",
+  "description": "Task management for AI-assisted development. Create, track, and complete tasks using markdown files with Claude's guidance.",
+  "author": {
+    "name": "linuxiscool"
+  },
+  "repository": "https://github.com/MrLesk/Backlog.md",
+  "license": "MIT",
+  "keywords": [
+    "tasks",
+    "backlog",
+    "project-management",
+    "kanban",
+    "todo",
+    "acceptance-criteria"
+  ],
+  "commands": ["./commands/"],
+  "skills": ["./skills/"],
+  "mcpServers": "./.mcp.json"
+}

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "backlog": {
+      "command": "npx",
+      "args": ["backlog.md", "mcp", "start"],
+      "env": {}
+    }
+  }
+}

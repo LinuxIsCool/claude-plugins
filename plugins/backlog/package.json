@@ -1,0 +1,15 @@
+{
+  "name": "backlog-plugin",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Claude Code plugin for Backlog.md task management",
+  "private": true,
+  "scripts": {
+    "mcp": "npx backlog.md mcp start",
+    "serve": "npx backlog.md browser",
+    "init": "npx backlog.md init"
+  },
+  "dependencies": {
+    "backlog.md": "^1.27.0"
+  }
+}
