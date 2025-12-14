@@ -12,31 +12,23 @@ This plugin embodies:
 - **Curiosity** - Active exploration, question assumptions
 - **Self-improvement** - Compound learnings over time
 
-## Skills
+## Master Skill: `awareness`
 
-### 1. docs-reader
+A single discoverable skill with 9 sub-skills loaded on-demand.
 
-Systematically read and digest Claude Code documentation.
+### Sub-Skills
 
-**When it's invoked**: When learning about Claude Code features, understanding system capabilities, or building foundational knowledge.
-
-**Learning progression**: Fundamentals → Configuration → Extension → Advanced → Mastery
-
-### 2. guide-utilizer
-
-Effectively use the claude-code-guide subagent for authoritative information.
-
-**When it's invoked**: When you need accurate information about Claude Code features, hooks, MCP servers, settings, IDE integrations, or the Agent SDK.
-
-**Key principle**: Be specific, include context, ask for details.
-
-### 3. techniques
-
-Practice and master Claude Code techniques through incremental experimentation.
-
-**When it's invoked**: When developing new capabilities, testing ideas, improving workflow, or compounding skill mastery.
-
-**Core method**: Observe → Hypothesize → Test (small) → Learn → Compound
+| Sub-Skill | Purpose |
+|-----------|---------|
+| **docs-reader** | Systematic Claude Code documentation reading |
+| **guide-utilizer** | Effective use of claude-code-guide subagent |
+| **techniques** | Claude Code technique mastery through experimentation |
+| **skill-creator** | Creating new skills and extending capabilities |
+| **plugin-studier** | Understanding plugin architecture |
+| **plugin-developer** | Hot-reload plugins, cache management, development cycle |
+| **resource-studier** | Exploring reference materials in resources/ |
+| **agent-creator** | Creating custom agents and sub-agents |
+| **temporal-kg-memory** | Building knowledge graphs from conversation logs |
 
 ## Core Principles
 
@@ -86,15 +78,22 @@ Let's practice the Edit tool technique
 ```
 awareness/
 ├── .claude-plugin/
-│   └── plugin.json          # Plugin manifest
+│   └── plugin.json              # Plugin manifest
 ├── skills/
-│   ├── docs-reader/
-│   │   └── SKILL.md         # Documentation reading skill
-│   ├── guide-utilizer/
-│   │   └── SKILL.md         # Guide utilization skill
-│   └── techniques/
-│       └── SKILL.md         # Technique mastery skill
-├── commands/                 # (Future: slash commands)
+│   └── awareness/               # Master skill (discoverable)
+│       ├── SKILL.md             # Master skill definition
+│       └── subskills/           # Sub-skills (loaded via Read)
+│           ├── docs-reader.md
+│           ├── guide-utilizer.md
+│           ├── techniques.md
+│           ├── skill-creator.md
+│           ├── plugin-studier.md
+│           ├── plugin-developer.md
+│           ├── resource-studier.md
+│           ├── agent-creator.md
+│           └── temporal-kg-memory.md
+├── commands/
+│   └── learn.md                 # /learn command
 └── README.md
 ```
 
