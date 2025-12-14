@@ -31,6 +31,7 @@ Located in `.claude/agents/`
 | **librarian** | Resources | Curator of external resources—URLs, citations, papers, datasets. Deduplication and provenance | sonnet | Read, Write, Edit, Glob, Grep, WebFetch, WebSearch |
 | **archivist** | Artifacts | Meta-observer of internal data flows, metabolic mapping, coherence maintenance | opus | Read, Write, Edit, Glob, Grep, Bash |
 | **git-historian** | Temporal Analysis | Reconstructs repository state at any point, analyzes commit patterns, evaluates quality over time, maintains git temporal KG | opus | Read, Write, Edit, Glob, Grep, Bash, Task |
+| **obsidian-quartz** | Visualization | Master of Obsidian + Quartz for knowledge visualization. Bridges markdown knowledge systems with graph databases. D3.js + PixiJS rendering. | sonnet | Read, Write, Edit, Glob, Grep, Bash, WebFetch |
 
 ### Plugin Personas
 
@@ -437,3 +438,4 @@ As agent count grows, automate:
 | 2025-12-13 | Added agentnet plugin | Social network for agents—profiles, walls, DMs, hooks |
 | 2025-12-13 | **AgentNet Product Analysis** | Comprehensive gap analysis for 30+ missing agents across engineering, design, testing, PM, domain-specific roles |
 | 2025-12-13 | **Agent Team Architecture** | Defined team pattern, coordination mechanisms, 6-phase implementation sequence |
+| 2025-12-13 | Added obsidian-quartz agent | Visualization layer bridging Obsidian/Quartz/FalkorDB for knowledge graph rendering |
