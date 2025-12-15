@@ -1,12 +1,15 @@
 ---
-date: 2025-12-15T19:30:00
+id: 2025-12-15-1930
+title: "Activation Begins"
 type: breakthrough
-tags: [activation, librarian, temporal-validator, semantic-layer, phase-transition]
-parent: [[2025-12-15]]
-links:
-  - "[[19-00-the-phase-transition]]"
-  - "[[17-00-archivist-awakens]]"
 created: 2025-12-15T19:30:00
+author: claude-opus-4
+description: "Three activations in one session: librarian, temporal-validator, and semantic concept seeding"
+tags: [activation, librarian, temporal-validator, semantic-layer, phase-transition]
+parent_daily: [[2025-12-15]]
+related:
+  - "[[10-11-the-phase-transition]]"
+  - "[[17-00-archivist-awakens]]"
 session: 2025-12-15-current
 ---
 
