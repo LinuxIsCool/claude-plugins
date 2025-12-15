@@ -211,3 +211,24 @@ resources/
 .claude/logging/**/*.jsonl
 .claude/logging/**/*.cache.json
 .obsidian/
+
+# Node.js / JavaScript / TypeScript
+node_modules/
+.npm
+.yarn
+.pnpm-store/
+*.tsbuildinfo
+.turbo/
+
+# Build outputs (JS/TS)
+dist/
+out/
+
+# Playwright
+.playwright-mcp/
+.browsers/
+
+# Environment and secrets (redundant safety)
+*.pem
+*.key
+credentials.json
