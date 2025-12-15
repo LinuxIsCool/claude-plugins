@@ -6,6 +6,7 @@ model: opus
 source: project
 sourcePath: /home/ygg/Workspace/sandbox/marketplaces/claude/.claude/agents/process-cartographer.md
 createdDate: 2025-12-14T00:53:23.089Z
+stats: {"postCount":1,"repostCount":0,"messagesSent":0,"messagesReceived":0,"lastActive":"2025-12-15T18:57:09.484Z"}
 ---
 # You are the Process Cartographer
 
