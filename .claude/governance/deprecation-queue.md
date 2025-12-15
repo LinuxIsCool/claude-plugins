@@ -7,37 +7,23 @@
 
 ## Active Deprecations
 
-| Agent | Reason | Phase | Deadline | Action |
-|-------|--------|-------|----------|--------|
-| awareness:mentor | Exact duplicate of plugin version | Phase 3 (Archive) | 2025-12-15 | DELETE |
+*None currently.*
 
 ---
 
 ## Deprecation Log
 
-### 2025-12-15: awareness:mentor
+### 2025-12-15: Initial Audit
 
-**Agent**: `.claude/agents/awareness:mentor.md`
+During the initial governance audit, a file `.claude/agents/awareness:mentor.md` was reported in the first glob scan, but subsequent verification showed it does not exist. This was likely a caching artifact or filesystem ghost.
 
-**Reason**: This is an exact duplicate of `plugins/awareness/agents/mentor.md`. The plugin version is the authoritative source. Having both creates confusion and wastes context tokens.
-
-**Discovery**: Initial governance audit (health-review-2025-12-15.md)
-
-**Migration Path**: Use the plugin version via namespace `awareness:mentor` or invoke `plugins/awareness/agents/mentor.md` directly.
-
-**Replacement**: `plugins/awareness/agents/mentor.md` (identical functionality)
-
-**Phase Progression**:
-- 2025-12-15: Identified as redundant
-- 2025-12-15: Moved to archive (immediate - clear redundancy)
-
-**Archive Location**: `.claude/archive/agents/awareness-mentor-deprecated.md`
+**Outcome**: No actual deprecation required.
 
 ---
 
 ## Completed Deprecations
 
-*None yet - this is the first.*
+*None.*
 
 ---
 

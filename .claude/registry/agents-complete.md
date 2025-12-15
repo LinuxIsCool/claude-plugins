@@ -44,12 +44,11 @@ Additionally, **5 built-in agents** exist natively in Claude Code.
 | 3 | **process-cartographer** | opus | Read, Glob, Grep, Write, Edit | Workflow mapping, information flows, incentive systems, learning loops | Official |
 | 4 | **temporal-validator** | opus | Read, Glob, Grep, Write, Edit, Bash, Task | Truth tracking over time, staleness detection, temporal KG | Official |
 | 5 | **librarian** | sonnet | Read, Write, Edit, Glob, Grep, WebFetch, WebSearch | External resource curation, URL deduplication, citation management | Official |
-| 6 | **awareness:mentor** | sonnet | Read, Glob, Grep, Skill, Task, WebFetch, WebSearch | Duplicate of plugin mentor - learning guidance | Redundant |
-| 7 | **agent-architect** | opus | Read, Glob, Grep, Write, Edit | Fleet management, cataloguing, taxonomy, governance | Official (Meta) |
-| 8 | **archivist** | opus | Read, Write, Edit, Glob, Grep, Bash | Metabolic observer, data flows, coherence maintenance | Official (Meta) |
-| 9 | **git-historian** | opus | Read, Write, Edit, Glob, Grep, Bash, Task | Repository temporal analysis, commit quality, evolution tracking | Official |
-| 10 | **qa-engineer** | sonnet | Read, Glob, Grep, Bash | Manual testing, bug reproduction, test planning, TUI validation | Official |
-| 11 | **obsidian-quartz** | sonnet | Read, Write, Edit, Glob, Grep, Bash, WebFetch | Visualization bridge (Obsidian/Quartz/FalkorDB), D3+PixiJS | Official |
+| 6 | **agent-architect** | opus | Read, Glob, Grep, Write, Edit | Fleet management, cataloguing, taxonomy, governance | Official (Meta) |
+| 7 | **archivist** | opus | Read, Write, Edit, Glob, Grep, Bash | Metabolic observer, data flows, coherence maintenance | Official (Meta) |
+| 8 | **git-historian** | opus | Read, Write, Edit, Glob, Grep, Bash, Task | Repository temporal analysis, commit quality, evolution tracking | Official |
+| 9 | **qa-engineer** | sonnet | Read, Glob, Grep, Bash | Manual testing, bug reproduction, test planning, TUI validation | Official |
+| 10 | **obsidian-quartz** | sonnet | Read, Write, Edit, Glob, Grep, Bash, WebFetch | Visualization bridge (Obsidian/Quartz/FalkorDB), D3+PixiJS | Official |
 
 ### Agent Details
 
@@ -82,32 +81,27 @@ Additionally, **5 built-in agents** exist natively in Claude Code.
 - **Output**: `.claude/library/`
 - **Principle**: "Never make the same web request twice unnecessarily"
 
-#### 6. awareness:mentor (REDUNDANT)
-- **File**: `/home/ygg/Workspace/sandbox/marketplaces/claude/.claude/agents/awareness:mentor.md`
-- **Note**: Exact duplicate of `plugins/awareness/agents/mentor.md`
-- **Recommendation**: DELETE - Use plugin version via namespace
-
-#### 7. agent-architect
+#### 6. agent-architect
 - **File**: `/home/ygg/Workspace/sandbox/marketplaces/claude/.claude/agents/agent-architect.md`
 - **Output**: `.claude/registry/agents.md`, `.claude/registry/agents-complete.md`
 - **Role**: Meta-agent for ecosystem self-awareness
 
-#### 8. archivist
+#### 7. archivist
 - **File**: `/home/ygg/Workspace/sandbox/marketplaces/claude/.claude/agents/archivist.md`
 - **Output**: `.claude/archive/`
 - **Role**: Meta-observer of data flows and metabolic patterns
 
-#### 9. git-historian
+#### 8. git-historian
 - **File**: `/home/ygg/Workspace/sandbox/marketplaces/claude/.claude/agents/git-historian.md`
 - **Output**: `.claude/archive/git/`
 - **Status**: Initial ingestion complete (27 commits, 153 files, 270 relationships)
 
-#### 10. qa-engineer
+#### 9. qa-engineer
 - **File**: `/home/ygg/Workspace/sandbox/marketplaces/claude/.claude/agents/qa-engineer.md`
 - **Focus**: TUI testing, edge cases, regression tracking
 - **Created for**: AgentNet development
 
-#### 11. obsidian-quartz
+#### 10. obsidian-quartz
 - **File**: `/home/ygg/Workspace/sandbox/marketplaces/claude/.claude/agents/obsidian-quartz.md`
 - **Domain**: Knowledge visualization, Quartz static site, D3+PixiJS
 - **Integration**: Journal plugin, FalkorDB, knowledge-graphs
@@ -253,8 +247,7 @@ DOMAIN EXPERTS (14 plugin personas)
 
 | Conflict | Resolution |
 |----------|------------|
-| **archivist** (project) vs **archivist** (logging plugin) | Different scopes: project-level = ecosystem metabolism, plugin-level = conversation history. Keep both with clear documentation. |
-| **awareness:mentor** (project) vs **mentor** (awareness plugin) | REDUNDANT. Delete project-level copy. |
+| **archivist** (project) vs **archivist** (logging plugin) | Different scopes: project-level = ecosystem metabolism, plugin-level = conversation history. Keep both with disambiguation notes added to both files. |
 
 ---
 

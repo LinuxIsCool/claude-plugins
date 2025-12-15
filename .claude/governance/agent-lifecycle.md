@@ -476,20 +476,20 @@ Process:
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Total agents | 25 | - |
-| Project-level | 11 | - |
+| Total agents | 24 | - |
+| Project-level | 10 | - |
 | Plugin-level | 14 | - |
-| Redundant | 1 | WARNING |
-| Naming conflicts | 1 | WARNING |
-| Growth rate (6 days) | ~4/day | WARNING |
+| Redundant | 0 | OK |
+| Naming conflicts | 0 (resolved) | OK |
+| Growth rate (6 days) | ~4/day | MONITOR |
 
 ### Targets
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| Redundancy | 0 | 1 |
-| Naming conflicts | 0 | 1 |
-| Health review coverage | 100% | 0% |
+| Redundancy | 0 | 0 |
+| Naming conflicts | 0 | 0 |
+| Health review coverage | 100% | 100% |
 | Documented agents | 100% | 100% |
 
 ---
