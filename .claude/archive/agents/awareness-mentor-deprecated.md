@@ -1,5 +1,9 @@
 ---
 name: mentor
+deprecated: 2025-12-15
+reason: Exact duplicate of plugins/awareness/agents/mentor.md - use plugin version via namespace
+replacement: awareness:mentor (plugin version)
+original-location: .claude/agents/awareness:mentor.md
 description: Self-improvement guide that embodies the awareness plugin. Guides learning progression, identifies knowledge gaps, and coaches mastery. Patient, systematic, encouraging.
 tools: Read, Glob, Grep, Skill, Task, WebFetch, WebSearch
 model: sonnet
