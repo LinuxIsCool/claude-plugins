@@ -433,5 +433,81 @@ Execute commits in order, verifying each before proceeding.
 
 ---
 
-*Document Status: v1.1 - Added proactive commit discipline*
+---
+
+## Agent ID Traceability
+
+### The Identity Challenge
+
+Claude Code assigns two types of IDs:
+
+| ID Type | Format | Scope | Example |
+|---------|--------|-------|---------|
+| **Session ID** | Full UUID | Main conversation | `298311d7-dc9e-4d73-bbb3-323eaba7d29e` |
+| **Agent ID** | Short hex | Subagent execution | `a3edb0d` |
+
+**Key constraint**: Agents cannot introspect their own hex ID at runtime. The ID is only available after the agent completes.
+
+### Commit Format with Agent ID
+
+When the main session knows which agent produced work (from Task tool output), include the agent ID:
+
+```
+[agent:archivist/a3edb0d] observe: metabolic patterns
+
+Session: 298311d7-dc9e-4d73-bbb3-323eaba7d29e
+Intent: Daily ecosystem health check
+```
+
+Format: `[agent:{type}/{hex-id}]` or `[{type}:{hex-id}]`
+
+### When to Include Agent ID
+
+| Situation | Include ID? |
+|-----------|-------------|
+| Main session spawned agent, then commits | **Yes** - ID available from Task output |
+| Agent commits during its own execution | **No** - Agent can't know its ID |
+| Committing work from earlier session | **Optional** - Lookup in logs if needed |
+
+### Traceability Graph
+
+Agent transcripts are stored at:
+```
+~/.claude/projects/{project-hash}/agent-{hex-id}.jsonl
+```
+
+With the agent ID in the commit, you can directly access the execution trace:
+```bash
+# From commit message: [agent:archivist/a3edb0d]
+cat ~/.claude/projects/-home-ygg-Workspace.../agent-a3edb0d.jsonl
+```
+
+### Correlation Tooling
+
+When agent ID is not in the commit, use timestamp correlation:
+
+```bash
+# Find which agent likely made a commit
+python3 .claude/tools/correlate_commits.py
+```
+
+This correlates commits with SubagentStop events within a 2-minute window.
+
+### Integration with FalkorDB
+
+The temporal-kg-memory infrastructure can ingest:
+- SubagentStop events (with agent IDs)
+- Git commits (with hashes and timestamps)
+- Correlation edges linking them
+
+Query example:
+```cypher
+MATCH (c:Commit)-[:LIKELY_BY]->(a:AgentExecution)
+WHERE c.hash = "a3edb0d"
+RETURN a.agent_id, a.agent_type
+```
+
+---
+
+*Document Status: v1.2 - Added agent ID traceability*
 *Maintained by: agent-architect, with input from all agents*
