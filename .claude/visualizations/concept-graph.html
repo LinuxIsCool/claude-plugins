@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concept Graph - Claude Ecosystem</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            overflow: hidden;
+        }
+        #graph {
+            width: 100vw;
+            height: 100vh;
+        }
+        .node {
+            cursor: pointer;
+        }
+        .node circle {
+            stroke: #30363d;
+            stroke-width: 2px;
+        }
+        .node text {
+            font-size: 12px;
+            fill: #c9d1d9;
+            pointer-events: none;
+        }
+        .link {
+            stroke: #30363d;
+            stroke-opacity: 0.6;
+        }
+        .tooltip {
+            position: absolute;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+            max-width: 300px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .tooltip h3 {
+            margin-bottom: 8px;
+            color: #58a6ff;
+        }
+        .tooltip p {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+        .tooltip .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            background: #238636;
+            color: white;
+        }
+        .tooltip .status.verified {
+            background: #1f6feb;
+        }
+        .header {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 20px;
+            color: #58a6ff;
+            margin-bottom: 4px;
+        }
+        .header p {
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .legend {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 12px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Concept Graph</h1>
+        <p>Claude Ecosystem - Semantic Layer</p>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #58a6ff;"></div>
+            <span>Central concept (high connectivity)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #238636;"></div>
+            <span>Active concept</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background: #1f6feb;"></div>
+            <span>Verified concept</span>
+        </div>
+    </div>
+
+    <div id="graph"></div>
+    <div class="tooltip"></div>
+
+    <script>
+        // Concept data from FalkorDB
+        const concepts = [
+            {
+                id: "Phase Transition",
+                definition: "A fundamental reorganization of a system's structure. In this ecosystem: chaos→structure (Phase 1, complete) and structure→semantics (Phase 2, beginning).",
+                introduced: "2025-12-13",
+                source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md",
+                status: "active",
+                connections: 7
+            },
+            {
+                id: "Creation Addiction",
+                definition: "The preference for existence over function. Finding it more satisfying to create new things than to activate existing ones.",
+                introduced: "2025-12-13",
+                source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md",
+                status: "active",
+                connections: 6
+            },
+            {
+                id: "Semantic Coherence",
+                definition: "The degree to which concepts are extracted, linked, and queryable across artifacts. Measured 1-10.",
+                introduced: "2025-12-13",
+                source: ".claude/archive/assessments/2025-12-13-multi-agent-ecosystem-assessment.md",
+                status: "active",
+                connections: 3
+            },
+            {
+                id: "Potential Energy",
+                definition: "Stored capacity to do work that hasn't been released. Defined agents not activated, structures not filled.",
+                introduced: "2025-12-13",
+                source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md",
+                status: "active",
+                connections: 8
+            },
+            {
+                id: "Kinetic Energy",
+                definition: "Work actually happening. Agents producing, concepts flowing, resources catalogued, facts verified.",
+                introduced: "2025-12-13",
+                source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md",
+                status: "active",
+                connections: 4
+            },
+            {
+                id: "Master Skill Pattern",
+                definition: "Plugin architecture using progressive disclosure. One master SKILL.md lists sub-skills; sub-skills loaded on-demand.",
+                introduced: "2025-12-13",
+                source: "CLAUDE.md",
+                status: "verified",
+                connections: 2
+            },
+            {
+                id: "Metabolic Model",
+                definition: "Understanding the ecosystem as organism: ingestion (new info), processing (analysis), output (artifacts), excretion (commits).",
+                introduced: "2025-12-13",
+                source: ".claude/agents/archivist.md",
+                status: "active",
+                connections: 2
+            },
+            {
+                id: "Proactive Commit Discipline",
+                definition: "Committing immediately after semantic units, not batching. Git as coordination layer where commits are messages.",
+                introduced: "2025-12-13",
+                source: ".claude/conventions/coordination.md",
+                status: "active",
+                connections: 2
+            },
+            {
+                id: "Dormant Agents",
+                definition: "Agents defined (markdown files exist) but never activated (never invoked for real work). Potential energy.",
+                introduced: "2025-12-13",
+                source: ".claude/archive/patterns/agent-activity.md",
+                status: "active",
+                connections: 5
+            },
+            {
+                id: "Activation",
+                definition: "Giving a dormant agent its first real task. Converts potential to kinetic energy.",
+                introduced: "2025-12-15",
+                source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md",
+                status: "active",
+                connections: 7
+            }
+        ];
+
+        const links = [
+            { source: "Phase Transition", target: "Creation Addiction" },
+            { source: "Phase Transition", target: "Semantic Coherence" },
+            { source: "Phase Transition", target: "Potential Energy" },
+            { source: "Creation Addiction", target: "Potential Energy" },
+            { source: "Creation Addiction", target: "Activation" },
+            { source: "Potential Energy", target: "Kinetic Energy" },
+            { source: "Potential Energy", target: "Dormant Agents" },
+            { source: "Potential Energy", target: "Creation Addiction" },
+            { source: "Kinetic Energy", target: "Activation" },
+            { source: "Dormant Agents", target: "Activation" },
+            { source: "Dormant Agents", target: "Potential Energy" },
+            { source: "Activation", target: "Kinetic Energy" },
+            { source: "Activation", target: "Phase Transition" },
+            { source: "Activation", target: "Dormant Agents" },
+            { source: "Semantic Coherence", target: "Phase Transition" }
+        ];
+
+        // Set up SVG
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        const g = svg.append("g");
+
+        // Add zoom
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 3])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            });
+
+        svg.call(zoom);
+
+        // Create force simulation
+        const simulation = d3.forceSimulation(concepts)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+            .force("charge", d3.forceManyBody().strength(-400))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide().radius(50));
+
+        // Draw links
+        const link = g.append("g")
+            .selectAll("line")
+            .data(links)
+            .join("line")
+            .attr("class", "link")
+            .attr("stroke-width", 1.5);
+
+        // Draw nodes
+        const node = g.append("g")
+            .selectAll(".node")
+            .data(concepts)
+            .join("g")
+            .attr("class", "node")
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        // Node colors based on status and connectivity
+        const getNodeColor = (d) => {
+            if (d.status === "verified") return "#1f6feb";
+            if (d.connections >= 6) return "#58a6ff";
+            return "#238636";
+        };
+
+        const getNodeRadius = (d) => {
+            return 8 + (d.connections * 2);
+        };
+
+        node.append("circle")
+            .attr("r", getNodeRadius)
+            .attr("fill", getNodeColor);
+
+        node.append("text")
+            .attr("dy", d => getNodeRadius(d) + 14)
+            .attr("text-anchor", "middle")
+            .text(d => d.id);
+
+        // Tooltip
+        const tooltip = d3.select(".tooltip");
+
+        node.on("mouseover", (event, d) => {
+            tooltip
+                .style("opacity", 1)
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY + 15) + "px")
+                .html(`
+                    <h3>${d.id}</h3>
+                    <p>${d.definition}</p>
+                    <p><strong>Introduced:</strong> ${d.introduced}</p>
+                    <p><strong>Source:</strong> ${d.source}</p>
+                    <span class="status ${d.status}">${d.status}</span>
+                `);
+
+            // Highlight connected nodes
+            link.attr("stroke", l =>
+                (l.source.id === d.id || l.target.id === d.id) ? "#58a6ff" : "#30363d"
+            ).attr("stroke-width", l =>
+                (l.source.id === d.id || l.target.id === d.id) ? 2.5 : 1.5
+            );
+        });
+
+        node.on("mouseout", () => {
+            tooltip.style("opacity", 0);
+            link.attr("stroke", "#30363d").attr("stroke-width", 1.5);
+        });
+
+        // Update positions on tick
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node.attr("transform", d => `translate(${d.x},${d.y})`);
+        });
+
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Initial zoom to fit
+        svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(1));
+    </script>
+</body>
+</html>
