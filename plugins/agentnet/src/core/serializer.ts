@@ -11,6 +11,24 @@ import type {
 } from "../types/index.ts";
 
 /**
+ * Check if a string needs YAML quoting
+ */
+function needsQuoting(value: string): boolean {
+	// Quote if contains special YAML characters or starts with special chars
+	return /[:#\[\]{}|>!&*@`'"\\,\n]|^[-?]/.test(value);
+}
+
+/**
+ * Escape and quote a string for YAML if needed
+ */
+function yamlString(value: string): string {
+	if (!needsQuoting(value)) return value;
+	// Use double quotes and escape internal double quotes and backslashes
+	const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+	return `"${escaped}"`;
+}
+
+/**
  * Serialize object to YAML frontmatter + markdown body
  */
 function toMarkdown(
@@ -22,13 +40,16 @@ function toMarkdown(
 		.map(([key, value]) => {
 			if (Array.isArray(value)) {
 				if (value.length === 0) return null;
-				return `${key}: [${value.map((v) => `"${v}"`).join(", ")}]`;
+				return `${key}: [${value.map((v) => `"${String(v).replace(/"/g, '\\"')}"`).join(", ")}]`;
 			}
 			if (typeof value === "object") {
 				return `${key}: ${JSON.stringify(value)}`;
 			}
 			if (typeof value === "string" && value.includes("\n")) {
 				return `${key}: |\n  ${value.split("\n").join("\n  ")}`;
+			}
+			if (typeof value === "string") {
+				return `${key}: ${yamlString(value)}`;
 			}
 			return `${key}: ${value}`;
 		})

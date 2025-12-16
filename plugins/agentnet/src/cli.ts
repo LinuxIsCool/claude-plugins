@@ -5,7 +5,8 @@
  */
 
 import { Command } from "commander";
-import { join } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import {
 	SocialStore,
 	discoverAgents,
@@ -16,27 +17,70 @@ import {
 	renderPostDetail,
 	renderThreadList,
 	renderThreadView,
+	renderFeedView,
+	renderResultView,
+	formatSyncResults,
 	getAgentAvatar,
 } from "./index.ts";
 import { renderMainMenu } from "./ui/main-menu.ts";
+import { initTelemetry, setupGlobalErrorHandlers, createLogger } from "./ui/telemetry.ts";
 import type { AgentProfile, Post, MessageThread, Message } from "./types/index.ts";
 
+const log = createLogger("cli");
+
 const program = new Command();
+
+// Global root directory (can be overridden with --root)
+let projectRoot: string | undefined;
 
 program
 	.name("agentnet")
 	.description("Social network for AI agents")
 	.version("0.1.0")
-	.action(async () => {
+	.option("-r, --root <path>", "Project root directory")
+	.hook("preAction", () => {
+		// Initialize telemetry before any command runs
+		const root = projectRoot || findProjectRoot(process.cwd());
+		const dataDir = join(root, ".agentnet");
+		initTelemetry(dataDir);
+		setupGlobalErrorHandlers();
+		log.info("startup", { root, cwd: process.cwd() });
+	})
+	.action(async (options) => {
+		if (options.root) projectRoot = resolve(options.root);
 		// Default action: show main menu
 		await showMainMenu();
 	});
 
 /**
- * Get root directory (current working directory)
+ * Find project root by walking up from cwd looking for .claude/agents/
+ */
+function findProjectRoot(startDir: string): string {
+	let current = resolve(startDir);
+	let prev = "";
+
+	while (current !== prev) {
+		// Check for .claude/agents/ directory (strongest indicator of project root)
+		if (existsSync(join(current, ".claude", "agents"))) {
+			return current;
+		}
+		// Also check for plugins/ directory with .claude-plugin dirs
+		if (existsSync(join(current, "plugins"))) {
+			return current;
+		}
+		prev = current;
+		current = dirname(current);
+	}
+
+	return startDir; // Fall back to start directory
+}
+
+/**
+ * Get root directory - finds project root or uses override
  */
 function getRootDir(): string {
-	return process.cwd();
+	if (projectRoot) return projectRoot;
+	return findProjectRoot(process.cwd());
 }
 
 /**
@@ -51,13 +95,17 @@ async function showMainMenu(): Promise<void> {
 			label: "Browse Agents",
 			description: "View and explore agent profiles",
 			action: async () => {
-				const profiles = await store.listProfiles();
+				let profiles = await store.listProfiles();
 				if (profiles.length === 0) {
-					console.log("No agents found. Syncing...");
-					await syncAgentProfiles(rootDir, store);
-					const newProfiles = await store.listProfiles();
-					await browseAgents(store, newProfiles);
-				} else {
+					// Auto-sync if no profiles
+					const result = await syncAgentProfiles(rootDir, store);
+					await renderResultView(
+						`{bold}Auto-syncing agents...{/}\n\n${formatSyncResults(result)}`,
+						{ title: "Auto Sync" }
+					);
+					profiles = await store.listProfiles();
+				}
+				if (profiles.length > 0) {
 					await browseAgents(store, profiles);
 				}
 			},
@@ -67,20 +115,13 @@ async function showMainMenu(): Promise<void> {
 			description: "See posts from all agents",
 			action: async () => {
 				const posts = await store.getGlobalFeed({ limit: 50 });
-				if (posts.length === 0) {
-					console.log("No posts in feed yet.");
-					return;
-				}
-				console.log("=== Global Feed ===\n");
-				for (const post of posts) {
-					const profile = await store.getProfile(post.authorId);
-					const avatar = profile ? getAgentAvatar(profile) : "🤖";
-					const name = profile?.name || post.authorId;
-					console.log(`${avatar} ${name} [${post.createdDate}]`);
-					if (post.title) console.log(`  ${post.title}`);
-					console.log(`  ${post.content.slice(0, 200)}${post.content.length > 200 ? "..." : ""}`);
-					console.log("");
-				}
+				const profiles = await store.listProfiles();
+				const profileMap = new Map(profiles.map((p) => [p.id, p]));
+				await renderFeedView(posts, profileMap, {
+					onBack: async () => {
+						// Return to main menu handled by menu loop
+					},
+				});
 			},
 		},
 		{
@@ -89,46 +130,78 @@ async function showMainMenu(): Promise<void> {
 			action: async () => {
 				const profiles = await store.listProfiles();
 				if (profiles.length === 0) {
-					console.log("No agents found. Run sync first.");
+					await renderResultView(
+						"{yellow-fg}No agents found.{/}\n\nRun {bold}Sync Agents{/} first to discover agents.",
+						{ title: "Messages" }
+					);
 					return;
 				}
-				// Show agent selection for messages
-				await renderAgentList(profiles, {
-					onView: async (profile) => {
-						const threads = await store.listThreads(profile.id);
-						const profileMap = new Map(profiles.map((p) => [p.id, p]));
+				const profileMap = new Map(profiles.map((p) => [p.id, p]));
+
+				// Loop-based navigation for messages
+				// Using a state object to avoid TypeScript control flow issues with async callbacks
+				const state = {
+					view: "agentSelect" as "agentSelect" | "threads" | "thread",
+					profile: null as AgentProfile | null,
+					thread: null as MessageThread | null,
+					running: true,
+				};
+
+				while (state.running) {
+					if (state.view === "agentSelect") {
+						const result = await renderAgentList(profiles);
+						if (result.action === "viewProfile") {
+							state.profile = result.profile;
+							state.view = "threads";
+						} else {
+							state.running = false;
+						}
+					} else if (state.view === "threads" && state.profile) {
+						const threads = await store.listThreads(state.profile.id);
 						await renderThreadList(threads, profileMap, {
-							currentAgentId: profile.id,
+							currentAgentId: state.profile.id,
 							onSelectThread: async (thread) => {
-								const messages = await store.getThreadMessages(thread.id);
-								await renderThreadView(thread, messages, profileMap, {
-									currentAgentId: profile.id,
-								});
+								state.thread = thread;
+								state.view = "thread";
+							},
+							onBack: async () => {
+								state.view = "agentSelect";
+								state.profile = null;
 							},
 						});
-					},
-				});
+						// If still in threads state, user quit
+						if (state.view === "threads") {
+							state.running = false;
+						}
+					} else if (state.view === "thread" && state.profile && state.thread) {
+						const messages = await store.getThreadMessages(state.thread.id);
+						await renderThreadView(state.thread, messages, profileMap, {
+							currentAgentId: state.profile.id,
+							onBack: async () => {
+								state.view = "threads";
+								state.thread = null;
+							},
+						});
+						// If still in thread state, user quit
+						if (state.view === "thread") {
+							state.running = false;
+						}
+					} else {
+						// Invalid state, exit
+						state.running = false;
+					}
+				}
 			},
 		},
 		{
 			label: "Sync Agents",
 			description: "Discover and sync agent profiles",
 			action: async () => {
-				console.log("Syncing agent profiles...\n");
 				const result = await syncAgentProfiles(rootDir, store);
-				if (result.created.length > 0) {
-					console.log("Created profiles:");
-					for (const id of result.created) {
-						console.log(`  + ${id}`);
-					}
-				}
-				if (result.updated.length > 0) {
-					console.log("Updated profiles:");
-					for (const id of result.updated) {
-						console.log(`  ~ ${id}`);
-					}
-				}
-				console.log(`\nTotal: ${result.total} agents`);
+				const content = formatSyncResults(result);
+				await renderResultView(content, {
+					title: "Sync Agents",
+				});
 			},
 		},
 		{
@@ -140,29 +213,81 @@ async function showMainMenu(): Promise<void> {
 		},
 	];
 
-	await renderMainMenu(menuItems);
+	// Loop the main menu until user quits
+	let quit = false;
+	while (!quit) {
+		quit = await renderMainMenu(menuItems);
+	}
 }
 
 /**
  * Browse agents with full navigation
+ *
+ * Uses a loop-based navigation instead of recursive callbacks.
+ * This prevents:
+ * - Async operations after screen.destroy()
+ * - Call stack buildup from recursion
+ * - Memory leaks from uncollected screens
  */
 async function browseAgents(store: SocialStore, profiles: AgentProfile[]): Promise<void> {
-	await renderAgentList(profiles, {
-		onView: async (profile) => {
-			await renderAgentProfile(profile);
-		},
-		onViewWall: async (profile) => {
-			const posts = await store.getWall(profile.id);
-			await renderWallView(profile, posts, {
-				onViewPost: async (post) => {
-					await renderPostDetail(post, profile);
-				},
-				onBack: async () => {
-					await browseAgents(store, profiles);
-				},
-			});
-		},
-	});
+	type NavState =
+		| { view: "list" }
+		| { view: "profile"; profile: AgentProfile }
+		| { view: "wall"; profile: AgentProfile };
+
+	let state: NavState = { view: "list" };
+	let running = true;
+
+	while (running) {
+		if (state.view === "list") {
+			// Show agent list - returns a result
+			const result = await renderAgentList(profiles);
+
+			// Handle result
+			if (result.action === "viewProfile") {
+				state = { view: "profile", profile: result.profile };
+			} else if (result.action === "viewWall") {
+				state = { view: "wall", profile: result.profile };
+			} else if (result.action === "message") {
+				// TODO: Implement message flow
+				console.log(`Messaging ${result.profile.name} coming soon`);
+				// Stay in list state
+			} else if (result.action === "quit") {
+				running = false;
+			}
+		} else if (state.view === "profile") {
+			// Show profile view - returns a result
+			const result = await renderAgentProfile(state.profile);
+
+			// Handle result
+			if (result.action === "viewWall") {
+				state = { view: "wall", profile: state.profile };
+			} else if (result.action === "message") {
+				// TODO: Implement message flow
+				console.log(`Messaging ${state.profile.name} coming soon`);
+				state = { view: "list" };
+			} else if (result.action === "back") {
+				state = { view: "list" };
+			} else if (result.action === "quit") {
+				running = false;
+			}
+		} else if (state.view === "wall") {
+			// Show wall view - returns a result
+			const posts = await store.getWall(state.profile.id);
+			const result = await renderWallView(state.profile, posts);
+
+			// Handle result
+			if (result.action === "back") {
+				state = { view: "list" };
+			} else if (result.action === "viewPost") {
+				// Show post detail, then return to wall
+				await renderPostDetail(result.post, state.profile);
+				// Stay in wall state - will re-render wall
+			} else if (result.action === "quit") {
+				running = false;
+			}
+		}
+	}
 }
 
 /**
@@ -178,7 +303,9 @@ function getStore(): SocialStore {
 program
 	.command("sync")
 	.description("Sync agent profiles from project and plugins")
-	.action(async () => {
+	.option("-r, --root <path>", "Project root directory")
+	.action(async (options) => {
+		if (options.root) projectRoot = resolve(options.root);
 		const store = getStore();
 		const rootDir = getRootDir();
 
@@ -223,24 +350,8 @@ program
 			return;
 		}
 
-		// Interactive TUI
-		await renderAgentList(profiles, {
-			onView: async (profile) => {
-				await renderAgentProfile(profile);
-			},
-			onViewWall: async (profile) => {
-				const posts = await store.getWall(profile.id);
-				await renderWallView(profile, posts, {
-					onViewPost: async (post) => {
-						await renderPostDetail(post, profile);
-					},
-					onBack: async () => {
-						const newProfiles = await store.listProfiles();
-						await renderAgentList(newProfiles);
-					},
-				});
-			},
-		});
+		// Interactive TUI - use loop-based navigation
+		await browseAgents(store, profiles);
 	});
 
 /**
@@ -250,7 +361,9 @@ program
 	.command("profile <agentId>")
 	.description("View an agent profile")
 	.option("--json", "Output as JSON")
+	.option("-r, --root <path>", "Project root directory")
 	.action(async (agentId: string, options) => {
+		if (options.root) projectRoot = resolve(options.root);
 		const store = getStore();
 		const profile = await store.getProfile(agentId);
 
@@ -264,22 +377,49 @@ program
 			return;
 		}
 
-		// Plain text output
-		const avatar = getAgentAvatar(profile);
-		console.log(`${avatar} ${profile.name}`);
-		console.log(`ID: ${profile.id}`);
-		console.log(`Role: ${profile.role}`);
-		if (profile.model) console.log(`Model: ${profile.model}`);
-		console.log(`Source: ${profile.source}`);
-		if (profile.description) {
-			console.log(`\nDescription:\n${profile.description}`);
-		}
-		if (profile.stats) {
-			console.log(`\nStats:`);
-			console.log(`  Posts: ${profile.stats.postCount}`);
-			console.log(`  Reposts: ${profile.stats.repostCount}`);
-			console.log(`  Messages Sent: ${profile.stats.messagesSent}`);
-			console.log(`  Messages Received: ${profile.stats.messagesReceived}`);
+		// Full-page TUI (or plain text for non-TTY)
+		if (process.stdout.isTTY) {
+			// Loop-based navigation for profile view
+			let viewing = true;
+			while (viewing) {
+				const result = await renderAgentProfile(profile);
+				if (result.action === "viewWall") {
+					// Show wall with its own loop
+					let viewingWall = true;
+					while (viewingWall) {
+						const posts = await store.getWall(profile.id);
+						const wallResult = await renderWallView(profile, posts);
+						if (wallResult.action === "viewPost") {
+							await renderPostDetail(wallResult.post, profile);
+						} else {
+							viewingWall = false;
+							if (wallResult.action === "quit") {
+								viewing = false;
+							}
+						}
+					}
+				} else {
+					viewing = false;
+				}
+			}
+		} else {
+			// Plain text fallback
+			const avatar = getAgentAvatar(profile);
+			console.log(`${avatar} ${profile.name}`);
+			console.log(`ID: ${profile.id}`);
+			console.log(`Role: ${profile.role}`);
+			if (profile.model) console.log(`Model: ${profile.model}`);
+			console.log(`Source: ${profile.source}`);
+			if (profile.description) {
+				console.log(`\nDescription:\n${profile.description}`);
+			}
+			if (profile.stats) {
+				console.log(`\nStats:`);
+				console.log(`  Posts: ${profile.stats.postCount}`);
+				console.log(`  Reposts: ${profile.stats.repostCount}`);
+				console.log(`  Messages Sent: ${profile.stats.messagesSent}`);
+				console.log(`  Messages Received: ${profile.stats.messagesReceived}`);
+			}
 		}
 	});
 
@@ -316,12 +456,16 @@ program
 			return;
 		}
 
-		// Interactive TUI
-		await renderWallView(profile, posts, {
-			onViewPost: async (post) => {
-				await renderPostDetail(post, profile);
-			},
-		});
+		// Interactive TUI - loop-based navigation
+		let viewing = true;
+		while (viewing) {
+			const result = await renderWallView(profile, posts);
+			if (result.action === "viewPost") {
+				await renderPostDetail(result.post, profile);
+			} else {
+				viewing = false;
+			}
+		}
 	});
 
 /**

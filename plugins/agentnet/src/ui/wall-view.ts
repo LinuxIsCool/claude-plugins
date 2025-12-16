@@ -3,7 +3,6 @@
  * TUI component for viewing an agent's wall (posts)
  */
 
-import type { BoxInterface, ListInterface } from "neo-neo-bblessed";
 import { box, list } from "neo-neo-bblessed";
 import type { AgentProfile, Post } from "../types/index.ts";
 import {
@@ -14,6 +13,9 @@ import {
 	getStalenessIndicator,
 	truncate,
 } from "./screen.ts";
+import { createLogger } from "./telemetry.ts";
+
+const log = createLogger("wall-view");
 
 /**
  * Format post for list display
@@ -45,21 +47,25 @@ function formatPostItem(post: Post, maxWidth = 80): string {
 	return `${icon} {gray-fg}${time}{/} ${staleness}${titlePart}${preview}${metaStr}`;
 }
 
-export interface WallViewOptions {
-	onViewPost?: (post: Post) => Promise<void>;
-	onRepost?: (post: Post) => Promise<void>;
-	onReply?: (post: Post) => Promise<void>;
-	onBack?: () => Promise<void>;
-}
+/**
+ * Result from wall view indicating what action the user took
+ */
+export type WallViewResult =
+	| { action: "back" }
+	| { action: "quit" }
+	| { action: "viewPost"; post: Post };
 
 /**
  * Render wall view TUI
+ *
+ * Returns a result indicating what the user wants to do next.
+ * The caller is responsible for handling navigation - this function
+ * NEVER calls async callbacks after destroying the screen.
  */
 export async function renderWallView(
 	profile: AgentProfile,
-	posts: Post[],
-	options?: WallViewOptions
-): Promise<void> {
+	posts: Post[]
+): Promise<WallViewResult> {
 	if (!process.stdout.isTTY) {
 		// Plain text fallback
 		const avatar = getAgentAvatar(profile);
@@ -71,15 +77,18 @@ export async function renderWallView(
 			console.log(`   ${post.content.slice(0, 200)}`);
 			console.log("");
 		}
-		return;
+		return { action: "quit" };
 	}
 
 	if (posts.length === 0) {
 		console.log(`${profile.name} has no posts yet.`);
-		return;
+		return { action: "back" };
 	}
 
-	await new Promise<void>((resolve) => {
+	// Return result indicating user's action
+	// CRITICAL: We NEVER call async callbacks after screen.destroy()
+	// The caller handles navigation based on the returned result
+	return await new Promise<WallViewResult>((resolve) => {
 		const screen = createScreen({
 			title: `AgentNet - ${profile.name}'s Wall`,
 		});
@@ -114,7 +123,8 @@ export async function renderWallView(
 			left: 1,
 			width: "100%-4",
 			height: "100%-2",
-			keys: false,
+			keys: true,  // Enable built-in key handling
+			vi: true,    // Enable j/k navigation
 			mouse: true,
 			scrollable: true,
 			tags: true,
@@ -133,78 +143,47 @@ export async function renderWallView(
 			width: "100%",
 			tags: true,
 			content:
-				" {cyan-fg}[↑↓]{/} Navigate | {cyan-fg}[Enter]{/} View Post | {cyan-fg}[R]{/} Repost | {cyan-fg}[C]{/} Reply | {cyan-fg}[B]{/} Back | {cyan-fg}[q/Esc]{/} Quit",
+				" {cyan-fg}[↑↓/j/k]{/} Navigate | {cyan-fg}[Enter]{/} View Post | {cyan-fg}[B/Esc]{/} Back | {cyan-fg}[q]{/} Quit",
 		});
 
-		let currentIndex = 0;
+		let resolved = false; // Prevent double-resolve
 
-		const updateSelection = () => {
-			postList.select(currentIndex);
-			screen.render();
-		};
-
-		screen.key(["up", "k"], () => {
-			if (!postList.focused) return; // Focus guard
-			if (currentIndex > 0) {
-				currentIndex--;
-				updateSelection();
-			}
-		});
-
-		screen.key(["down", "j"], () => {
-			if (!postList.focused) return; // Focus guard
-			if (currentIndex < posts.length - 1) {
-				currentIndex++;
-				updateSelection();
-			}
-		});
-
-		screen.key(["enter"], async () => {
-			if (!postList.focused) return; // Focus guard
-			const post = posts[currentIndex];
-			if (post && options?.onViewPost) {
-				await options.onViewPost(post);
-				screen.render();
-			}
-		});
-
-		screen.key(["r", "R"], async () => {
-			if (!postList.focused) return; // Focus guard
-			const post = posts[currentIndex];
-			if (post && options?.onRepost) {
-				await options.onRepost(post);
-				screen.render();
-			}
-		});
-
-		screen.key(["c", "C"], async () => {
-			if (!postList.focused) return; // Focus guard
-			const post = posts[currentIndex];
-			if (post && options?.onReply) {
-				await options.onReply(post);
-				screen.render();
-			}
-		});
-
-		screen.key(["b", "B"], async () => {
-			if (!postList.focused) return; // Focus guard
-			if (options?.onBack) {
-				resolve(); // Resolve FIRST to prevent race condition
-				screen.destroy();
-				await options.onBack();
+		const safeResolve = (result: WallViewResult) => {
+			if (resolved) {
+				log.warn("double-resolve-prevented", { attemptedAction: result.action });
 				return;
 			}
-		});
-
-		screen.key(["q", "escape", "C-c"], () => {
-			if (!postList.focused) return; // Focus guard
-			resolve(); // Resolve FIRST
+			resolved = true;
+			log.info("resolve", { action: result.action });
 			screen.destroy();
-		});
+			resolve(result);
+		};
+
+		// Enter: View post detail - return the post, let caller handle display
+		screen.key(["enter"], log.wrapKeyHandler("enter", () => {
+			if (resolved) return;
+			const post = posts[postList.selected];
+			if (post) {
+				safeResolve({ action: "viewPost", post });
+			}
+		}));
+
+		// B and ESC: Go back to previous view
+		screen.key(["b", "B", "escape"], log.wrapKeyHandler("back", () => {
+			if (resolved) return;
+			safeResolve({ action: "back" });
+		}));
+
+		// q and C-c: Quit entirely
+		screen.key(["q", "C-c"], log.wrapKeyHandler("quit", () => {
+			if (resolved) return;
+			safeResolve({ action: "quit" });
+		}));
 
 		postList.focus();
-		updateSelection();
+		postList.select(0);  // Start with first item selected
 		screen.render();
+		log.info("rendered", { postCount: posts.length, profile: profile.name });
 	});
 }
 
@@ -285,11 +264,11 @@ ${tags}${mentions}${source}${validity}
 		popup.setContent(content);
 
 		const closePopup = () => {
+			resolve(); // Resolve FIRST to prevent race condition
 			popup.destroy();
 			if (!parentScreen) {
 				screen.destroy();
 			}
-			resolve();
 		};
 
 		popup.key(["escape", "q", "enter"], closePopup);

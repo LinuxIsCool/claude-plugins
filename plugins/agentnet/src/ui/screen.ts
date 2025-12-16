@@ -3,8 +3,36 @@
  * TUI screen management following Backlog.md patterns
  */
 
-import type { ScreenInterface } from "neo-neo-bblessed";
 import { screen } from "neo-neo-bblessed";
+
+// Global error handler to suppress blessed's buggy TypeError
+// The issue is in blessed's EventEmitter._emit which does:
+//   if (type === "error") { throw new args[0](); }
+// This expects args[0] to be an Error constructor, but Node passes Error instances
+process.on("uncaughtException", (err) => {
+	// Suppress the specific blessed TypeError bug
+	if (
+		err instanceof TypeError &&
+		err.message.includes("TypeError is not a constructor")
+	) {
+		// Silently ignore this specific blessed bug
+		return;
+	}
+	// Log other errors but don't crash for TUI resilience
+	console.error("Uncaught exception:", err);
+});
+
+// Also handle unhandled promise rejections
+process.on("unhandledRejection", (reason) => {
+	// Suppress blessed's buggy TypeError in promise rejections too
+	if (
+		reason instanceof TypeError &&
+		String(reason.message).includes("TypeError is not a constructor")
+	) {
+		return;
+	}
+	console.error("Unhandled rejection:", reason);
+});
 
 export interface ScreenOptions {
 	title?: string;
@@ -14,13 +42,74 @@ export interface ScreenOptions {
 
 /**
  * Create a blessed screen instance
+ * Includes error handling to prevent blessed's TypeError bug
  */
-export function createScreen(options?: ScreenOptions): ScreenInterface {
-	return screen({
+export function createScreen(options?: ScreenOptions): ReturnType<typeof screen> {
+	const s = screen({
 		title: options?.title || "AgentNet",
-		smartCSR: options?.smartCSR ?? true,
+		// Note: smartCSR can cause "ZwQ" artifacts in some terminals
+		// Set to false by default for better compatibility
+		smartCSR: options?.smartCSR ?? false,
 		fullUnicode: options?.fullUnicode ?? true,
+		// Disable cursor to prevent artifacts
+		cursor: {
+			artificial: true,
+			shape: "block",
+			blink: false,
+		},
+		// Don't dump screen on exit (can cause artifacts)
+		dump: undefined,
+		// Use alternate buffer
+		altScreen: true,
 	});
+
+	// Prevent "ZwQ" artifact from jsbterm mouse mode
+	// The blessed library sends '\x1b[0~ZwQ\x1b\\' when disabling jsbterm mouse
+	// which displays as "ZwQ" in terminals that don't recognize this sequence
+	if (s.program) {
+		// Patch _write to filter out the jsbterm escape sequence
+		const originalWrite = s.program._write.bind(s.program);
+		s.program._write = function(data: string) {
+			// Filter out the jsbterm mouse disable sequence
+			if (data && data.includes('ZwQ')) {
+				data = data.replace(/\x1b\[0~ZwQ\x1b\\/g, '');
+				data = data.replace(/\x1b\[0~ZwLMRK\+1Q\x1b\\/g, '');
+				if (!data) return;
+			}
+			return originalWrite(data);
+		};
+		s.program.clear();
+	}
+
+	// Add error handlers to prevent blessed's internal TypeError bug
+	// When errors are emitted, blessed tries to do `new args[0]()` which fails
+	// if args[0] is an Error instance instead of an Error constructor
+
+	// Handler for screen errors
+	s.on("error", () => {
+		// Silently ignore - blessed's error handling is buggy
+	});
+
+	// Handler for program errors (the underlying terminal interface)
+	if (s.program) {
+		s.program.on("error", () => {
+			// Silently ignore
+		});
+
+		// Add handlers to input/output streams which can emit errors on close
+		if (s.program.input && typeof s.program.input.on === "function") {
+			s.program.input.on("error", () => {
+				// Silently ignore stream errors
+			});
+		}
+		if (s.program.output && typeof s.program.output.on === "function") {
+			s.program.output.on("error", () => {
+				// Silently ignore stream errors
+			});
+		}
+	}
+
+	return s;
 }
 
 /**
@@ -65,6 +154,9 @@ export function truncate(text: string, maxLength: number): string {
 
 /**
  * Get emoji avatar for agent based on model or role
+ * Note: Avoid emojis with variation selectors (U+FE0F) as they cause terminal rendering issues
+ * Safe: 🎭🎵🌸🤖📚📖🧠🎓🧭🔭 (single codepoint)
+ * Unsafe: 🏛️🗺️🖥️ (have variation selectors, cause "ZwQ" rendering bugs)
  */
 export function getAgentAvatar(profile: {
 	avatar?: string;
@@ -86,16 +178,22 @@ export function getAgentAvatar(profile: {
 	}
 
 	// Default avatars based on role keywords
+	// Using safe emojis (no variation selectors)
 	const role = (profile.role || "").toLowerCase();
-	if (role.includes("architect")) return "🏛️";
+	if (role.includes("architect")) return "🏗"; // construction, not 🏛️
 	if (role.includes("thinker") || role.includes("systems")) return "🧠";
 	if (role.includes("archivist") || role.includes("archive")) return "📚";
 	if (role.includes("librarian")) return "📖";
-	if (role.includes("validator")) return "✅";
+	if (role.includes("validator")) return "✓";
 	if (role.includes("mentor")) return "🎓";
-	if (role.includes("cartographer") || role.includes("map")) return "🗺️";
+	if (role.includes("cartographer") || role.includes("map")) return "🧭"; // compass, not 🗺️
 	if (role.includes("navigator")) return "🧭";
 	if (role.includes("explorer")) return "🔭";
+	if (role.includes("curator")) return "🎨";
+	if (role.includes("engineer")) return "🔧";
+	if (role.includes("style")) return "✨";
+	if (role.includes("interface")) return "💻";
+	if (role.includes("backend")) return "⚙";
 
 	return "🤖";
 }

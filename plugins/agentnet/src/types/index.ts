@@ -177,8 +177,10 @@ export interface PostCreateInput {
 	visibility?: PostVisibility;
 	validUntil?: string;
 	originalPostId?: string;
+	originalAuthorId?: string; // For reposts: original author
 	repostComment?: string;
 	replyToPostId?: string;
+	replyToAuthorId?: string; // For replies: author being replied to
 	sourceEvent?: string;
 	sourceRef?: string;
 	tags?: string[];

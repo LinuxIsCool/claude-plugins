@@ -3,9 +3,11 @@
  * Interactive TUI menu for navigating the social network
  */
 
-import type { BoxInterface, ListInterface } from "neo-neo-bblessed";
 import { box, list } from "neo-neo-bblessed";
 import { createScreen } from "./screen.ts";
+import { createLogger } from "./telemetry.ts";
+
+const log = createLogger("main-menu");
 
 export interface MenuItem {
 	label: string;
@@ -25,8 +27,9 @@ const MENU_ICONS: Record<string, string> = {
 
 /**
  * Render main menu TUI
+ * @returns true if user wants to quit, false if action completed (show menu again)
  */
-export async function renderMainMenu(items: MenuItem[]): Promise<void> {
+export async function renderMainMenu(items: MenuItem[]): Promise<boolean> {
 	if (!process.stdout.isTTY) {
 		console.log("AgentNet - Social Network for AI Agents\n");
 		console.log("Run with a subcommand or in a terminal for interactive mode.");
@@ -35,11 +38,23 @@ export async function renderMainMenu(items: MenuItem[]): Promise<void> {
 			const icon = item.icon || MENU_ICONS[item.label] || "•";
 			console.log(`  ${icon} ${item.label.padEnd(18)} ${item.description}`);
 		}
-		return;
+		return true; // Exit in non-TTY mode
 	}
 
-	await new Promise<void>((resolve) => {
+	return await new Promise<boolean>((resolve) => {
 		const screen = createScreen({ title: "AgentNet" });
+		let resolved = false;
+
+		const safeResolve = (quit: boolean) => {
+			if (resolved) {
+				log.warn("double-resolve-prevented", { attemptedQuit: quit });
+				return;
+			}
+			resolved = true;
+			log.info("resolve", { quit });
+			screen.destroy();
+			resolve(quit);
+		};
 
 		// Centered container for header
 		const headerBox = box({
@@ -93,7 +108,8 @@ export async function renderMainMenu(items: MenuItem[]): Promise<void> {
 			left: 1,
 			width: "100%-4",
 			height: "100%-3",
-			keys: false,
+			keys: true,   // Enable built-in key handling
+			vi: true,     // Enable j/k navigation
 			mouse: true,
 			tags: true,
 			style: {
@@ -122,63 +138,59 @@ export async function renderMainMenu(items: MenuItem[]): Promise<void> {
 			tags: true,
 			align: "center",
 			content:
-				"{cyan-fg}↑↓{/} Navigate  {cyan-fg}Enter{/} Select  {cyan-fg}1-9{/} Quick  {cyan-fg}q{/} Quit",
-		});
-
-		let currentIndex = 0;
-
-		const updateSelection = () => {
-			menuList.select(currentIndex);
-			screen.render();
-		};
-
-		screen.key(["up", "k"], () => {
-			if (!menuList.focused) return; // Focus guard
-			if (currentIndex > 0) {
-				currentIndex--;
-				updateSelection();
-			}
-		});
-
-		screen.key(["down", "j"], () => {
-			if (!menuList.focused) return; // Focus guard
-			if (currentIndex < items.length - 1) {
-				currentIndex++;
-				updateSelection();
-			}
+				"{cyan-fg}↑↓/j/k{/} Navigate  {cyan-fg}Enter{/} Select  {cyan-fg}1-9{/} Quick  {cyan-fg}q{/} Quit",
 		});
 
 		// Quick select with number keys
 		for (let i = 1; i <= Math.min(9, items.length); i++) {
-			screen.key([String(i)], async () => {
-				if (!menuList.focused) return; // Focus guard
-				const item = items[i - 1];
+			const itemIndex = i - 1;
+			screen.key([String(i)], log.wrapKeyHandler(`num-${i}`, async () => {
+				if (resolved) return;
+				const item = items[itemIndex];
 				if (item) {
-					resolve(); // Resolve FIRST
+					resolved = true;
+					log.info("action-selected", { index: itemIndex, label: item.label });
 					screen.destroy();
-					await item.action();
+					try {
+						await item.action();
+					} catch (err) {
+						log.error("action-error", err instanceof Error ? err : new Error(String(err)), { index: itemIndex });
+					}
+					resolve(false); // Return to menu after action
 				}
-			});
+			}));
 		}
 
-		screen.key(["enter"], async () => {
-			if (!menuList.focused) return; // Focus guard
-			const item = items[currentIndex];
+		screen.key(["enter"], log.wrapKeyHandler("enter", async () => {
+			if (resolved) return;
+			const item = items[menuList.selected];
 			if (item) {
-				resolve(); // Resolve FIRST
+				resolved = true;
+				log.info("action-selected", { index: menuList.selected, label: item.label });
 				screen.destroy();
-				await item.action();
+				try {
+					await item.action();
+				} catch (err) {
+					log.error("action-error", err instanceof Error ? err : new Error(String(err)), { index: menuList.selected });
+				}
+				resolve(false); // Return to menu after action
 			}
-		});
+		}));
 
-		screen.key(["q", "escape", "C-c"], () => {
-			if (!menuList.focused) return; // Focus guard
-			resolve(); // Resolve FIRST
-			screen.destroy();
-		});
+		// Only q and Ctrl-C quit - ESC does nothing in main menu
+		screen.key(["q", "C-c"], log.wrapKeyHandler("quit", () => {
+			if (resolved) return;
+			safeResolve(true);
+		}));
+
+		// ESC in main menu does nothing (you're already at the top level)
+		screen.key(["escape"], log.wrapKeyHandler("escape", () => {
+			// Intentionally empty - ESC should not quit from main menu
+		}));
 
 		menuList.focus();
-		updateSelection();
+		menuList.select(0);
 		screen.render();
+		log.info("rendered", { itemCount: items.length });
 	});
 }

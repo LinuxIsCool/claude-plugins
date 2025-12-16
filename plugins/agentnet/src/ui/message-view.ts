@@ -3,7 +3,6 @@
  * TUI component for viewing and sending messages (DMs)
  */
 
-import type { BoxInterface, ListInterface } from "neo-neo-bblessed";
 import { box, list } from "neo-neo-bblessed";
 import type { AgentProfile, Message, MessageThread } from "../types/index.ts";
 import {
@@ -12,6 +11,9 @@ import {
 	getAgentAvatar,
 	truncate,
 } from "./screen.ts";
+import { createLogger } from "./telemetry.ts";
+
+const log = createLogger("message-view");
 
 /**
  * Format thread for list display
@@ -108,6 +110,18 @@ export async function renderThreadList(
 
 	await new Promise<void>((resolve) => {
 		const screen = createScreen({ title: "AgentNet - Messages" });
+		let resolved = false;
+
+		const safeResolve = () => {
+			if (resolved) {
+				log.warn("thread-list-double-resolve-prevented");
+				return;
+			}
+			resolved = true;
+			log.info("thread-list-resolve");
+			screen.destroy();
+			resolve();
+		};
 
 		const headerBox = box({
 			parent: screen,
@@ -138,7 +152,8 @@ export async function renderThreadList(
 			left: 1,
 			width: "100%-4",
 			height: "100%-2",
-			keys: false,
+			keys: true,   // Enable built-in key handling
+			vi: true,     // Enable j/k navigation
 			mouse: true,
 			scrollable: true,
 			tags: true,
@@ -161,69 +176,45 @@ export async function renderThreadList(
 			width: "100%",
 			tags: true,
 			content:
-				" {cyan-fg}[↑↓]{/} Navigate | {cyan-fg}[Enter]{/} Open Thread | {cyan-fg}[N]{/} New Thread | {cyan-fg}[B]{/} Back | {cyan-fg}[q/Esc]{/} Quit",
+				" {cyan-fg}[↑↓/j/k]{/} Navigate | {cyan-fg}[Enter]{/} Open Thread | {cyan-fg}[N]{/} New Thread | {cyan-fg}[B]{/} Back | {cyan-fg}[q/Esc]{/} Quit",
 		});
 
-		let currentIndex = 0;
-
-		const updateSelection = () => {
-			threadList.select(currentIndex);
-			screen.render();
-		};
-
-		screen.key(["up", "k"], () => {
-			if (!threadList.focused) return; // Focus guard
-			if (currentIndex > 0) {
-				currentIndex--;
-				updateSelection();
-			}
-		});
-
-		screen.key(["down", "j"], () => {
-			if (!threadList.focused) return; // Focus guard
-			if (currentIndex < threads.length - 1) {
-				currentIndex++;
-				updateSelection();
-			}
-		});
-
-		screen.key(["enter"], async () => {
-			if (!threadList.focused) return; // Focus guard
-			const thread = threads[currentIndex];
+		screen.key(["enter"], log.wrapKeyHandler("thread-list-enter", async () => {
+			if (resolved) return;
+			const thread = threads[threadList.selected];
 			if (thread && options.onSelectThread) {
-				resolve(); // Resolve FIRST
-				screen.destroy();
+				safeResolve();
 				await options.onSelectThread(thread);
 			}
-		});
+		}));
 
-		screen.key(["n", "N"], async () => {
-			if (!threadList.focused) return; // Focus guard
+		screen.key(["n", "N"], log.wrapKeyHandler("thread-list-n", async () => {
+			if (resolved) return;
 			if (options.onNewThread) {
 				await options.onNewThread();
 				screen.render();
 			}
-		});
+		}));
 
-		screen.key(["b", "B"], async () => {
-			if (!threadList.focused) return; // Focus guard
+		// B and ESC both go back (call onBack if provided)
+		screen.key(["b", "B", "escape"], log.wrapKeyHandler("thread-list-back", async () => {
+			if (resolved) return;
+			safeResolve();
 			if (options.onBack) {
-				resolve(); // Resolve FIRST
-				screen.destroy();
 				await options.onBack();
-				return;
 			}
-		});
+		}));
 
-		screen.key(["q", "escape", "C-c"], () => {
-			if (!threadList.focused) return; // Focus guard
-			resolve(); // Resolve FIRST
-			screen.destroy();
-		});
+		// q and C-c quit entirely (don't call onBack)
+		screen.key(["q", "C-c"], log.wrapKeyHandler("thread-list-quit", () => {
+			if (resolved) return;
+			safeResolve();
+		}));
 
 		threadList.focus();
-		updateSelection();
+		threadList.select(0);
 		screen.render();
+		log.info("thread-list-rendered", { threadCount: threads.length });
 	});
 }
 
@@ -260,6 +251,18 @@ export async function renderThreadView(
 
 	await new Promise<void>((resolve) => {
 		const screen = createScreen({ title: "AgentNet - Thread" });
+		let resolved = false;
+
+		const safeResolve = () => {
+			if (resolved) {
+				log.warn("thread-view-double-resolve-prevented");
+				return;
+			}
+			resolved = true;
+			log.info("thread-view-resolve");
+			screen.destroy();
+			resolve();
+		};
 
 		const otherParticipants = thread.participants.filter(
 			(p) => p !== options.currentAgentId
@@ -321,47 +324,47 @@ export async function renderThreadView(
 				"\n {cyan-fg}[↑↓/j/k]{/} Scroll | {cyan-fg}[B]{/} Back | {cyan-fg}[q/Esc]{/} Quit\n {gray-fg}(Message composition coming soon){/}",
 		});
 
-		screen.key(["up", "k"], () => {
-			if (!messageBox.focused) return; // Focus guard
+		screen.key(["up", "k"], log.wrapKeyHandler("thread-view-up/k", () => {
+			if (resolved) return;
 			messageBox.scroll(-1);
 			screen.render();
-		});
+		}));
 
-		screen.key(["down", "j"], () => {
-			if (!messageBox.focused) return; // Focus guard
+		screen.key(["down", "j"], log.wrapKeyHandler("thread-view-down/j", () => {
+			if (resolved) return;
 			messageBox.scroll(1);
 			screen.render();
-		});
+		}));
 
-		screen.key(["pageup"], () => {
-			if (!messageBox.focused) return; // Focus guard
+		screen.key(["pageup"], log.wrapKeyHandler("thread-view-pageup", () => {
+			if (resolved) return;
 			messageBox.scroll(-10);
 			screen.render();
-		});
+		}));
 
-		screen.key(["pagedown"], () => {
-			if (!messageBox.focused) return; // Focus guard
+		screen.key(["pagedown"], log.wrapKeyHandler("thread-view-pagedown", () => {
+			if (resolved) return;
 			messageBox.scroll(10);
 			screen.render();
-		});
+		}));
 
-		screen.key(["b", "B"], async () => {
-			if (!messageBox.focused) return; // Focus guard
+		// B and ESC both go back (call onBack if provided)
+		screen.key(["b", "B", "escape"], log.wrapKeyHandler("thread-view-back", async () => {
+			if (resolved) return;
+			safeResolve();
 			if (options.onBack) {
-				resolve(); // Resolve FIRST
-				screen.destroy();
 				await options.onBack();
-				return;
 			}
-		});
+		}));
 
-		screen.key(["q", "escape", "C-c"], () => {
-			if (!messageBox.focused) return; // Focus guard
-			resolve(); // Resolve FIRST
-			screen.destroy();
-		});
+		// q and C-c quit entirely (don't call onBack)
+		screen.key(["q", "C-c"], log.wrapKeyHandler("thread-view-quit", () => {
+			if (resolved) return;
+			safeResolve();
+		}));
 
 		messageBox.focus();
 		screen.render();
+		log.info("thread-view-rendered", { messageCount: messages.length, threadId: thread.id });
 	});
 }
