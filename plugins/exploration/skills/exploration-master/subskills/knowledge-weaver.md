@@ -1,368 +1,254 @@
 ---
 name: knowledge-weaver
-description: Weave exploration discoveries into a knowledge graph using Neo4j/Graphiti. Transforms flat discoveries into connected nodes and edges, enabling graph traversal, pattern discovery, and relational queries across the environmental model.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, WebFetch
+description: Weave exploration discoveries into a temporal knowledge graph using FalkorDB/Graphiti. Use when persisting discoveries as connected nodes, querying relationships, or finding patterns across circles.
+allowed-tools: Bash, Read, Glob, Grep, Task
 ---
 
 # Knowledge Weaver
 
-Transform exploration discoveries from flat files into a living knowledge graph. This skill bridges the exploration plugin with the graph infrastructure (Neo4j/Graphiti) to enable relational reasoning about the environment.
+Transform exploration discoveries into a living knowledge graph. This skill bridges exploration with the graph infrastructure to enable relational reasoning about the environment.
 
-## When to Use
+## Prerequisites - Reference These Skills
 
-- After recording discoveries to persist them as graph nodes
-- When wanting to query relationships between discovered entities
-- To visualize the environmental model as a graph
-- To find patterns across circles and sessions
-- To answer relational questions ("What do I know about X?")
-- To trace provenance of knowledge
+**For detailed patterns, invoke these skills first:**
 
-## Why a Knowledge Graph?
+| Skill | Use For |
+|-------|---------|
+| `llms:graphiti` | Temporal knowledge graphs, episode ingestion, hybrid search |
+| `llms:falkordb` | OpenCypher queries, graph algorithms, direct operations |
+| `agents:mem0` | Self-improving memory, automatic fact extraction |
+| `awareness:temporal-kg-memory` | Production patterns for conversation → graph |
 
-Flat files capture **what** was discovered. A graph captures **how things relate**.
+This skill focuses on **exploration-specific** usage patterns.
 
+## Critical Insight: Direct Parsing vs LLM
+
+From `awareness:temporal-kg-memory` production experience:
+
+> **LLM extraction is WRONG for structured data.**
+> - LLM extraction: 80-140 seconds per 10 events, creates duplicates
+> - Direct parsing: 2 seconds per 10 events, no duplicates
+
+**Rule**: Use direct JSON/structured parsing for exploration data. Reserve LLM (Graphiti's `add_episode`) for unstructured narrative text only.
+
+## Quick Start
+
+### Unix-Style Tools
+
+```bash
+# Remember something (direct to graph, no LLM)
+echo "Neo4j runs on port 7474" | python tools/remember.py --circle network
+
+# Recall knowledge (keyword search)
+python tools/recall.py "database ports"
+
+# Ingest structured discovery (direct parsing)
+python tools/ingest_exploration.py discovery.json
 ```
-Flat Files:                    Knowledge Graph:
-┌─────────────────┐           ┌─────────────────────────────────┐
-│ discovery-1.md  │           │     ┌─────┐                     │
-│ discovery-2.md  │    →      │     │Neo4j│──[RUNS_ON]──→┌────┐ │
-│ discovery-3.md  │           │     └─────┘               │Host│ │
-│ questions.md    │           │        │                  └────┘ │
-│ mastery.md      │           │   [STORES_DATA]              │   │
-└─────────────────┘           │        ↓                     │   │
-                              │   ┌────────┐    [PART_OF]    │   │
- "I found Neo4j"              │   │Graphiti│←───────────────┘   │
-                              │   └────────┘                     │
-                              └─────────────────────────────────┘
-                               "Neo4j runs on Host, stores data
-                                for Graphiti, which is part of
-                                the AI infrastructure"
+
+### Python API
+
+```python
+from tools.graphiti_config import get_falkordb, get_graphiti
+
+# For structured data - use direct FalkorDB (fast, no LLM)
+graph = get_falkordb()
+graph.query("CREATE (e:Entity {name: 'Neo4j', type: 'container'})")
+
+# For unstructured text - use Graphiti (LLM extraction)
+graphiti = await get_graphiti()
+await graphiti.add_episode(name="discovery", episode_body="Found something interesting...")
 ```
 
-## Graph Schema
+## Exploration Graph Schema
 
 ### Node Types
 
 ```cypher
-// Core exploration nodes
-(:Discovery {id, date, circle, summary, mastery_delta})
-(:Question {id, text, priority, status, circle})
-(:Circle {name, current_mastery, target_mastery})
-(:Session {date, duration, discoveries_count, questions_generated})
+// Exploration domain nodes
+(:Circle {name, mastery, mastery_level, description})
+(:Discovery {id, text, circle, created_at, valid_at})
+(:Entity {id, name, entity_type, circle, first_seen})
+(:Question {id, text, circle, status, priority, created_at})
 
-// Discovered entities
-(:Entity {id, type, name, first_seen, last_updated})
-(:Hardware {name, specs, role})
-(:Software {name, version, purpose})
-(:Service {name, port, protocol, status})
-(:Container {name, image, network})
-(:Network {name, type, cidr})
-(:Location {city, country, timezone, coordinates})
-(:Concept {name, domain, description})
+// Temporal properties on all edges
+[r {created_at, valid_at, confidence}]
 ```
 
-### Edge Types
+### Relationship Types
 
 ```cypher
+// Temporal sequence (following awareness:temporal-kg-memory pattern)
+(:Discovery)-[:THEN]->(:Discovery)     // Linear chain, not hub-and-spoke
+
 // Discovery relationships
-(d:Discovery)-[:ANSWERS]->(q:Question)
-(d:Discovery)-[:RAISES]->(q:Question)
-(d:Discovery)-[:ABOUT]->(e:Entity)
-(d:Discovery)-[:IN_CIRCLE]->(c:Circle)
-(d:Discovery)-[:DURING]->(s:Session)
-(d:Discovery)-[:BUILDS_ON]->(d2:Discovery)
-(d:Discovery)-[:CONTRADICTS]->(d2:Discovery)
+(:Discovery)-[:FOUND]->(:Entity)       // What was discovered
+(:Discovery)-[:RAISED]->(:Question)    // Questions generated
+(:Discovery)-[:IN_CIRCLE]->(:Circle)   // Which circle
 
 // Entity relationships
-(e:Entity)-[:PART_OF]->(e2:Entity)
-(e:Entity)-[:DEPENDS_ON]->(e2:Entity)
-(e:Entity)-[:CONNECTS_TO]->(e2:Entity)
-(e:Entity)-[:RUNS_ON]->(e2:Entity)
-(e:Entity)-[:CONTAINS]->(e2:Entity)
+(:Entity)-[:RUNS_ON]->(:Entity)
+(:Entity)-[:PART_OF]->(:Entity)
+(:Entity)-[:USES]->(:Entity)
+(:Entity)-[:CONNECTS_TO]->(:Entity)
+(:Entity)-[:IN_CIRCLE]->(:Circle)
 
 // Question relationships
-(q:Question)-[:ABOUT]->(e:Entity)
-(q:Question)-[:IN_CIRCLE]->(c:Circle)
-(q:Question)-[:LEADS_TO]->(q2:Question)
-
-// Circle relationships
-(c:Circle)-[:CONTAINS]->(e:Entity)
-(c:Circle)-[:CONNECTS_TO]->(c2:Circle)
-```
-
-## Example Graph Structure
-
-After initial exploration:
-
-```cypher
-// The machine
-CREATE (host:Hardware {name: 'Lenovo 90UT', type: 'desktop'})
-CREATE (cpu:Hardware {name: 'i7-13700F', cores: 16, threads: 24})
-CREATE (gpu:Hardware {name: 'RTX 4070', vram: '12GB'})
-CREATE (ram:Hardware {name: 'RAM', total: '32GB'})
-CREATE (os:Software {name: 'Pop!_OS', version: '22.04'})
-
-// Relationships
-CREATE (cpu)-[:PART_OF]->(host)
-CREATE (gpu)-[:PART_OF]->(host)
-CREATE (ram)-[:PART_OF]->(host)
-CREATE (os)-[:RUNS_ON]->(host)
-
-// Docker infrastructure
-CREATE (neo4j:Container {name: 'graphiti-neo4j', image: 'neo4j:5.26'})
-CREATE (pgvector:Container {name: 'regenai-postgres', image: 'pgvector'})
-CREATE (redis:Container {name: 'autoflow-redis', image: 'redis:7-alpine'})
-CREATE (timescale:Container {name: 'autoflow-timescaledb', image: 'timescaledb'})
-
-CREATE (neo4j)-[:RUNS_ON]->(host)
-CREATE (pgvector)-[:RUNS_ON]->(host)
-
-// Discoveries
-CREATE (d1:Discovery {
-  id: 'discovery-20251212-substrate',
-  summary: 'Host is Lenovo desktop with i7-13700F, 32GB RAM, RTX 4070',
-  circle: 'substrate',
-  date: date('2025-12-12')
-})
-CREATE (d1)-[:ABOUT]->(host)
-CREATE (d1)-[:ABOUT]->(cpu)
-CREATE (d1)-[:ABOUT]->(gpu)
-
-// Questions
-CREATE (q1:Question {
-  text: 'How are Docker containers orchestrated?',
-  priority: 'high',
-  status: 'open',
-  circle: 'network'
-})
-CREATE (q1)-[:ABOUT]->(neo4j)
-CREATE (d1)-[:RAISES]->(q1)
-```
-
-## Connecting to Neo4j
-
-### Check Connection
-
-```bash
-# Verify Neo4j is running
-docker ps | grep neo4j
-
-# Test connection
-curl -s http://localhost:7474 | head -5
-
-# Check Bolt protocol
-nc -zv localhost 7687
-```
-
-### Using Cypher Directly
-
-```bash
-# Via curl to HTTP API
-curl -X POST http://localhost:7474/db/neo4j/tx/commit \
-  -H "Content-Type: application/json" \
-  -d '{"statements": [{"statement": "MATCH (n) RETURN count(n)"}]}'
-
-# Via cypher-shell in container
-docker exec -it graphiti-neo4j cypher-shell -u neo4j -p <password> \
-  "MATCH (n) RETURN labels(n), count(n)"
-```
-
-### Using Python (with neo4j driver)
-
-```python
-from neo4j import GraphDatabase
-
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "password"))
-
-with driver.session() as session:
-    result = session.run("""
-        MATCH (d:Discovery)-[:ABOUT]->(e:Entity)
-        WHERE d.circle = 'substrate'
-        RETURN d.summary, collect(e.name)
-    """)
-    for record in result:
-        print(record)
+(:Question)-[:ABOUT]->(:Entity)
+(:Question)-[:IN_CIRCLE]->(:Circle)
 ```
 
 ## Workflows
 
-### Weave Discovery into Graph
+### 1. Record a Discovery (Direct Parsing)
 
-After creating a discovery entry:
-
-1. **Extract entities** from discovery content
-2. **Identify relationships** between entities
-3. **Create/merge nodes** for new entities
-4. **Create edges** for relationships
-5. **Link to discovery node**
-6. **Update circle aggregates**
-
-```cypher
-// Example: Weaving a network discovery
-MERGE (d:Discovery {id: $discovery_id})
-SET d.summary = $summary, d.date = date($date), d.circle = 'network'
-
-MERGE (container:Container {name: 'graphiti-neo4j'})
-SET container.image = 'neo4j:5.26', container.status = 'healthy'
-
-MERGE (d)-[:ABOUT]->(container)
-
-MERGE (c:Circle {name: 'network'})
-MERGE (d)-[:IN_CIRCLE]->(c)
-MERGE (container)-[:PART_OF]->(c)
+Create a JSON file:
+```json
+{
+  "circle": "network",
+  "summary": "Found Neo4j container with Bolt on 7687",
+  "entities": [
+    {"name": "Neo4j", "type": "container", "properties": {"port": 7687}}
+  ],
+  "questions": ["What data is stored in Neo4j?"]
+}
 ```
 
-### Query the Knowledge Graph
-
-**What do I know about Docker?**
-```cypher
-MATCH (d:Discovery)-[:ABOUT]->(e)
-WHERE e.name CONTAINS 'docker' OR e:Container
-RETURN d.summary, collect(e.name)
+Ingest:
+```bash
+python tools/ingest_exploration.py discovery.json
 ```
 
-**What questions are open for networking?**
-```cypher
-MATCH (q:Question)-[:IN_CIRCLE]->(c:Circle {name: 'network'})
-WHERE q.status = 'open'
-RETURN q.text, q.priority
-ORDER BY q.priority
+### 2. Quick Memory Addition
+
+```bash
+# One-liner additions
+python tools/remember.py "Claude Code version is 2.0.67" --circle tools
+python tools/remember.py "GPU is RTX 4070 with 12GB VRAM" --circle substrate
+
+# From pipe (useful in scripts)
+docker ps --format '{{.Names}}: {{.Image}}' | python tools/remember.py --circle network
 ```
 
-**How are substrate and network connected?**
-```cypher
-MATCH path = (e1)-[*1..3]-(e2)
-WHERE (e1)-[:PART_OF]->(:Circle {name: 'substrate'})
-  AND (e2)-[:PART_OF]->(:Circle {name: 'network'})
-RETURN path
+### 3. Search Knowledge
+
+```bash
+# Keyword search
+python tools/recall.py "database"
+python tools/recall.py --circle network "port"
+python tools/recall.py --type entity "container"
+
+# JSON output for scripting
+python tools/recall.py --json "GPU" | jq '.[] | .text'
 ```
 
-**What led to this understanding?**
-```cypher
-MATCH path = (d:Discovery)-[:BUILDS_ON*]->(earlier:Discovery)
-WHERE d.id = $discovery_id
-RETURN path
-```
+### 4. Direct Cypher Queries
 
-### Visualize in Neo4j Browser
-
-Open http://localhost:7474 and run:
-
-```cypher
-// See all exploration data
-MATCH (n)
-WHERE n:Discovery OR n:Question OR n:Entity OR n:Circle
-RETURN n
-
-// See entity relationships
-MATCH (e1:Entity)-[r]->(e2:Entity)
-RETURN e1, r, e2
-```
-
-## Integration with Graphiti
-
-If using Graphiti (temporal knowledge graphs):
+For complex queries, use FalkorDB directly:
 
 ```python
-from graphiti_core import Graphiti
-from graphiti_core.nodes import EpisodeType
+from tools.graphiti_config import get_falkordb
 
-# Initialize Graphiti client
-client = Graphiti(neo4j_uri, neo4j_user, neo4j_password)
+graph = get_falkordb()
 
-# Add exploration episode
-await client.add_episode(
-    name="substrate-exploration-20251212",
-    episode_body=discovery_content,
-    source=EpisodeType.text,
-    reference_time=datetime.now()
-)
+# What entities are in the network circle?
+result = graph.query("""
+    MATCH (e:Entity)-[:IN_CIRCLE]->(c:Circle {name: 'network'})
+    RETURN e.name, e.entity_type
+""")
 
-# Query with temporal awareness
-results = await client.search("What do I know about the GPU?")
+# What questions are open?
+result = graph.query("""
+    MATCH (q:Question {status: 'open'})
+    RETURN q.text, q.circle, q.priority
+    ORDER BY q.priority
+""")
+
+# Cross-circle connections
+result = graph.query("""
+    MATCH (e1:Entity)-[:IN_CIRCLE]->(c1:Circle),
+          (e1)-[r]-(e2:Entity)-[:IN_CIRCLE]->(c2:Circle)
+    WHERE c1.name <> c2.name
+    RETURN c1.name, e1.name, type(r), e2.name, c2.name
+""")
 ```
 
-## Sync Strategy
+### 5. Semantic Search (When Needed)
 
-### On Discovery Creation
-1. Parse discovery markdown
-2. Extract entities (NER or pattern matching)
-3. Determine relationships
-4. Weave into graph
-5. Store graph reference in discovery metadata
+For unstructured queries requiring LLM understanding:
 
-### On Question Answer
-1. Find question node
-2. Link to answering discovery
-3. Update question status
-4. Create ANSWERS edge
+```python
+from tools.graphiti_config import get_graphiti
 
-### Periodic Reconciliation
-1. Read all discovery files
-2. Compare with graph state
-3. Add missing nodes/edges
-4. Prune orphaned nodes
+graphiti = await get_graphiti()
 
-## Benefits of Graph Representation
+# Hybrid search: semantic + keyword + graph traversal
+results = await graphiti.search("What containers use the GPU?")
+for edge in results.edges:
+    print(edge.fact)
+```
 
-| Flat Files | Knowledge Graph |
-|------------|-----------------|
-| Linear search | Pattern matching |
-| Manual linking | Automatic relationships |
-| Isolated facts | Connected knowledge |
-| Text queries | Graph traversal |
-| No inference | Transitive relationships |
+See `llms:graphiti` for advanced search recipes (RRF fusion, cross-encoder reranking).
 
-**Enables:**
-- "What affects the GPU?" → traverse dependencies
-- "What don't I know about networking?" → find gaps
-- "How did I learn about Docker?" → provenance chain
-- "What's related to this?" → neighborhood query
+## Graph Visualization
 
-## Example Queries for Curiosity
+View the exploration graph at http://localhost:3001 (FalkorDB browser):
 
-**Find knowledge gaps:**
 ```cypher
-MATCH (c:Circle)
-OPTIONAL MATCH (c)<-[:PART_OF]-(e:Entity)
-WITH c, count(e) as entity_count
-WHERE entity_count < 5
-RETURN c.name as circle, entity_count
-ORDER BY entity_count
+-- See everything
+MATCH (n)-[r]->(m) RETURN n, r, m
+
+-- See by circle
+MATCH (c:Circle {name: 'substrate'})<-[:IN_CIRCLE]-(e)
+RETURN c, e
+
+-- See discovery chains
+MATCH path = (d1:Discovery)-[:THEN*]->(d2:Discovery)
+RETURN path
 ```
 
-**Suggest next exploration:**
-```cypher
-MATCH (q:Question {status: 'open'})
-OPTIONAL MATCH (q)-[:ABOUT]->(e:Entity)
-WITH q, count(e) as context_richness
-RETURN q.text, q.priority, context_richness
-ORDER BY q.priority DESC, context_richness DESC
-LIMIT 5
+## When to Use What
+
+| Situation | Use This | Why |
+|-----------|----------|-----|
+| Structured discovery data | `ingest_exploration.py` | Direct parsing, fast |
+| Quick fact to remember | `remember.py` | Simple, Unix-style |
+| Keyword search | `recall.py` | Fast, no LLM needed |
+| Complex graph queries | Direct Cypher | Full control |
+| Unstructured narrative | Graphiti `add_episode()` | LLM extraction |
+| Semantic search | Graphiti `search()` | Hybrid retrieval |
+| Self-improving memory | Mem0 | Automatic contradictions |
+
+## Philosophy
+
+A knowledge graph is not just storage - it's a **model of understanding**.
+
+```
+Flat Files:                 Knowledge Graph:
+  discovery-1.md             ┌─────┐
+  discovery-2.md      →      │Neo4j│──[RUNS_ON]──→┌────┐
+  discovery-3.md             └─────┘              │Host│
+                                │                 └────┘
+                           [STORES_DATA]
+                                ↓
+                           ┌────────┐
+                           │Graphiti│
+                           └────────┘
 ```
 
-**Find cross-circle connections:**
-```cypher
-MATCH (e1:Entity)-[:PART_OF]->(c1:Circle),
-      (e2:Entity)-[:PART_OF]->(c2:Circle),
-      (e1)-[r]-(e2)
-WHERE c1 <> c2
-RETURN c1.name, e1.name, type(r), e2.name, c2.name
-```
+Facts are nodes. Understanding is the graph. The exploration plugin discovers facts; the knowledge weaver transforms them into understanding.
 
-## Philosophical Note
+## Reference Files
 
-A knowledge graph is not just storage - it's a **model of understanding**. When we connect entities with typed relationships, we're encoding not just what we know, but how things relate.
+- Configuration: `tools/graphiti_config.py`
+- Quick add: `tools/remember.py`
+- Search: `tools/recall.py`
+- Batch ingest: `tools/ingest_exploration.py`
+- Bootstrap: `tools/seed_falkordb.py`
+- Architecture: `ARCHITECTURE.md`
 
-> "The meaning of a concept lies in its connections." - Semantic Networks principle
-
-The exploration plugin discovers facts. The knowledge weaver transforms them into understanding. Facts are nodes; understanding is the graph.
-
-This is how knowledge compounds:
-- Each discovery adds nodes
-- Each relationship adds edges
-- Each query reveals patterns
-- Each pattern generates questions
-- Each question motivates exploration
-
-The graph grows more valuable than the sum of its parts.
+For framework documentation:
+- Graphiti: Invoke `llms:graphiti`
+- FalkorDB Cypher: Invoke `llms:falkordb`
+- Mem0 memory: Invoke `agents:mem0`
+- Production patterns: Invoke `awareness:temporal-kg-memory`

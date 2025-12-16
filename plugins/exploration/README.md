@@ -38,6 +38,34 @@ Exploration proceeds in layers, from the most immediate to the most distant:
 
 Each circle builds on the last. You cannot understand the cosmos without first understanding your machine.
 
+## Quick Start
+
+### Unix-Style Tools
+
+```bash
+# Remember a discovery (direct to graph, no LLM)
+echo "Neo4j runs on port 7474" | python tools/remember.py --circle network
+
+# Recall knowledge
+python tools/recall.py "database ports"
+
+# Ingest structured discovery
+python tools/ingest_exploration.py discovery.json
+
+# View graph at http://localhost:3001
+```
+
+### Ecosystem Integration
+
+This plugin integrates with existing skills rather than duplicating them:
+
+| Need | Invoke This Skill |
+|------|-------------------|
+| Temporal knowledge graphs | `llms:graphiti` |
+| FalkorDB Cypher queries | `llms:falkordb` |
+| Self-improving memory | `agents:mem0` |
+| Production patterns | `awareness:temporal-kg-memory` |
+
 ## Master Skill: `exploration`
 
 A single discoverable skill with 7 sub-skills loaded on-demand.
@@ -51,8 +79,23 @@ A single discoverable skill with 7 sub-skills loaded on-demand.
 | **network-prober** | Network | Network topology, Docker, local services |
 | **context-archaeologist** | Digital | Project history, git state, user patterns |
 | **cosmos-contemplator** | Cosmos | Natural laws, physics, philosophical perspective |
-| **curiosity-cultivator** | Meta | Discovery journaling, mastery tracking, question generation |
-| **knowledge-weaver** | Meta | Neo4j knowledge graph integration |
+| **curiosity-cultivator** | Meta | Discovery journaling, mastery tracking, questions |
+| **knowledge-weaver** | Meta | FalkorDB/Graphiti knowledge graph integration |
+
+## Knowledge Graph
+
+Discoveries are stored in a temporal knowledge graph (FalkorDB) with:
+
+- **Typed nodes**: Circle, Discovery, Entity, Question
+- **Temporal edges**: `created_at`, `valid_at`, `confidence` on all relationships
+- **THEN chains**: Linear temporal sequences (not hub-and-spoke)
+
+### Critical Pattern
+
+From `awareness:temporal-kg-memory`:
+
+> **Direct parsing is 100x faster than LLM extraction for structured data.**
+> Use `ingest_exploration.py` for JSON, reserve Graphiti's `add_episode()` for unstructured text.
 
 ## Mastery Framework
 
@@ -68,13 +111,36 @@ Exploration mastery progresses through five levels per circle:
 
 Progress is tracked in `.claude/exploration/mastery.md`.
 
-## Core Principles
+## Directory Structure
 
-1. **Start local, expand outward** - Begin with the runtime, then machine, network, cosmos
-2. **Respect boundaries** - Probe gently, never destructively
-3. **Record discoveries** - Knowledge compounds across sessions
-4. **Seek connections** - How do layers interact?
-5. **Wonder actively** - Curiosity is a virtue; ask "why?" and "what else?"
+```
+exploration/
+├── .claude-plugin/
+│   └── plugin.json              # Plugin manifest
+├── skills/
+│   └── exploration-master/      # Master skill (discoverable)
+│       ├── SKILL.md             # Master skill definition
+│       └── subskills/           # Sub-skills (loaded via Read)
+├── commands/
+│   └── explore.md               # Main exploration command
+├── tools/
+│   ├── graphiti_config.py       # Configuration wrapper
+│   ├── remember.py              # Add knowledge (Unix-style)
+│   ├── recall.py                # Search knowledge (Unix-style)
+│   ├── ingest_exploration.py    # Batch ingest (direct parsing)
+│   └── seed_falkordb.py         # Bootstrap the graph
+├── hooks/
+│   └── capture_discoveries.py   # Auto-capture hook
+├── ARCHITECTURE.md              # Technical architecture docs
+└── README.md
+
+# Exploration data (created on first use):
+.claude/exploration/
+├── discoveries/                 # Discovery journal entries
+├── questions.md                 # Living question bank
+├── mastery.md                   # Mastery level tracking
+└── log.md                       # Weekly exploration log
+```
 
 ## Usage
 
@@ -125,36 +191,10 @@ Or add to marketplace.json:
 }
 ```
 
-## Directory Structure
+## Requirements
 
-```
-exploration/
-├── .claude-plugin/
-│   └── plugin.json              # Plugin manifest
-├── skills/
-│   └── exploration-master/      # Master skill (discoverable)
-│       ├── SKILL.md             # Master skill definition
-│       └── subskills/           # Sub-skills (loaded via Read)
-│           ├── substrate-scanner.md
-│           ├── tool-cartographer.md
-│           ├── network-prober.md
-│           ├── context-archaeologist.md
-│           ├── cosmos-contemplator.md
-│           ├── curiosity-cultivator.md
-│           └── knowledge-weaver.md
-├── commands/
-│   └── explore.md               # Main exploration command
-├── tools/
-│   └── bootstrap_graph.py       # Seed the knowledge graph
-└── README.md
-
-# Exploration data (created on first use):
-.claude/exploration/
-├── discoveries/                 # Discovery journal entries
-├── questions.md                 # Living question bank
-├── mastery.md                   # Mastery level tracking
-└── log.md                       # Weekly exploration log
-```
+- FalkorDB running on port 6380 (graph storage)
+- Ollama with `llama3.2:3b` and `nomic-embed-text` (optional, for semantic features)
 
 ## Roadmap
 
@@ -162,7 +202,9 @@ exploration/
 - [x] Add discovery journal for persistent learnings
 - [x] Add curiosity-cultivator skill for growth over time
 - [x] Add mastery progression framework
-- [ ] Add hooks to log environmental changes automatically
+- [x] Add knowledge-weaver with FalkorDB integration
+- [x] Add Unix-style tools (remember, recall, ingest)
+- [x] Add automatic discovery capture hook
 - [ ] Add MCP server for environment queries
 - [ ] Add session-start environmental snapshot
 - [ ] Add `/explore status` for quick mastery overview
@@ -170,6 +212,7 @@ exploration/
 
 ## Version History
 
+- **0.4.0** - Coherent ecosystem integration: Unix-style tools, references to llms:graphiti/agents:mem0, direct parsing pattern, auto-capture hook
 - **0.3.0** - Added knowledge-weaver skill with Neo4j integration, bootstrap script
 - **0.2.0** - Added curiosity-cultivator skill, mastery framework, discovery journaling
 - **0.1.0** - Initial release with five core exploration skills

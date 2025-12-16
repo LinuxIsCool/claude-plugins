@@ -1,0 +1,68 @@
+[
+  {
+    "circle": "history",
+    "summary": "Shawn Anderson (shawn@longtailfinancial.com) is the primary user. Based in Vancouver, BC. Runs Long Tail Financial. Works on regenerative AI, algorithmic trading, and multi-agent systems.",
+    "entities": [
+      {"name": "Shawn Anderson", "type": "person", "properties": {"email": "shawn@longtailfinancial.com", "location": "Vancouver, BC", "username": "ygg"}},
+      {"name": "Long Tail Financial", "type": "organization", "properties": {"domain": "longtailfinancial.com"}}
+    ],
+    "questions": ["What is Shawn's background before Long Tail Financial?", "Who are the key collaborators in the RegenAI project?"]
+  },
+  {
+    "circle": "network",
+    "summary": "17 MCP servers connected providing external capabilities: firecrawl, exa, brave-search, youtube-transcript, neon, regen-koi, graphiti-knowledge, postgres-elizaos, postgres-cognitive, filesystem, memory, everything, sequential-thinking, time, git, fetch, markitdown",
+    "entities": [
+      {"name": "firecrawl-mcp", "type": "service", "properties": {"purpose": "web scraping", "has_api_key": true}},
+      {"name": "exa-mcp", "type": "service", "properties": {"purpose": "search API", "has_api_key": true}},
+      {"name": "brave-search-mcp", "type": "service", "properties": {"purpose": "search API", "has_api_key": true}},
+      {"name": "regen-koi", "type": "service", "properties": {"endpoint": "http://202.61.196.119:8301/api/koi"}}
+    ],
+    "questions": ["What is the KOI API and what does it do?", "What external APIs are rate-limited?"]
+  },
+  {
+    "circle": "substrate",
+    "summary": "System has 32GB RAM, RTX 4070 (12GB VRAM), NVMe storage. Running Pop!_OS (Linux 6.17.4). 12+ Claude Code sessions running simultaneously consuming ~12GB total.",
+    "entities": [
+      {"name": "RTX 4070", "type": "hardware", "properties": {"vram": "12GB", "vendor": "NVIDIA"}},
+      {"name": "Lenovo System", "type": "hardware", "properties": {"ram": "32GB", "storage": "NVMe SSD"}},
+      {"name": "Pop!_OS", "type": "software", "properties": {"kernel": "6.17.4-76061704-generic"}}
+    ],
+    "questions": ["What is the total disk capacity?", "How is GPU being utilized beyond Ollama?"]
+  },
+  {
+    "circle": "tools",
+    "summary": "24-agent ecosystem with specialized agents: perspective (backend-architect, systems-thinker), meta (agent-architect), operational (process-cartographer, temporal-validator), stewardship (librarian, archivist). AgentNet provides social layer for agent interaction.",
+    "entities": [
+      {"name": "agent-architect", "type": "agent", "properties": {"domain": "meta/organization", "model": "opus"}},
+      {"name": "systems-thinker", "type": "agent", "properties": {"domain": "complexity", "model": "sonnet"}},
+      {"name": "process-cartographer", "type": "agent", "properties": {"domain": "operations", "model": "opus"}},
+      {"name": "temporal-validator", "type": "agent", "properties": {"domain": "data quality", "model": "opus"}},
+      {"name": "AgentNet", "type": "plugin", "properties": {"purpose": "agent social network"}}
+    ],
+    "questions": ["How do agents communicate in production?", "What is the agent-to-agent protocol?"]
+  },
+  {
+    "circle": "network",
+    "summary": "Running containers: falkordb_persistent (6380), graphiti-neo4j (7474/7687), autoflow-timescaledb, autoflow-redis, regenai-postgres (5435). Services: Ollama (11434), PostgreSQL (5432), Quartz journal (8080).",
+    "entities": [
+      {"name": "falkordb_persistent", "type": "container", "properties": {"ports": "3001,6380", "purpose": "graph storage"}},
+      {"name": "graphiti-neo4j", "type": "container", "properties": {"ports": "7474,7687", "purpose": "knowledge graph"}},
+      {"name": "autoflow-timescaledb", "type": "container", "properties": {"purpose": "trading time-series"}},
+      {"name": "Ollama", "type": "service", "properties": {"port": 11434, "purpose": "local LLM inference"}}
+    ],
+    "questions": ["Is there redundancy between FalkorDB and Neo4j?", "What models are loaded in Ollama?"]
+  },
+  {
+    "circle": "history",
+    "summary": "Major projects: RegenAI (regenerative AI with Eliza framework), AutoFlow (algorithmic trading with $100k capital), cognitive-ecosystem (agent infrastructure), AgentNet (agent social network). Collaborators include Becca, Susanna, Gisel.",
+    "entities": [
+      {"name": "RegenAI", "type": "project", "properties": {"frameworks": "Eliza, GAIA", "status": "active"}},
+      {"name": "AutoFlow", "type": "project", "properties": {"capital": "100000", "purpose": "algorithmic trading"}},
+      {"name": "cognitive-ecosystem", "type": "project", "properties": {"purpose": "agent infrastructure"}},
+      {"name": "Becca", "type": "person", "properties": {"role": "collaborator", "context": "registry work"}},
+      {"name": "Susanna", "type": "person", "properties": {"role": "collaborator"}},
+      {"name": "Gisel", "type": "person", "properties": {"role": "collaborator"}}
+    ],
+    "questions": ["What is the relationship between RegenAI and Long Tail Financial?", "What are the backgrounds of Becca, Susanna, and Gisel?"]
+  }
+]
