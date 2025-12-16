@@ -1,9 +1,9 @@
 ---
 id: ADR-001
-title: "Persona Memory Architecture: Markdown-Native vs External Infrastructure"
-status: Proposed
+title: "Persona Memory Architecture: Activation of Existing Infrastructure"
+status: Accepted
 created: 2025-12-12
-decision_date: null
+decision_date: 2025-12-15
 deciders: ["@claude", "@user"]
 ---
 
@@ -11,164 +11,168 @@ deciders: ["@claude", "@user"]
 
 ## Status
 
-**Proposed** - Awaiting final decision
+**Accepted** - Decision made based on discovery that architecture already exists
 
 ## Context
 
-We are building persona subagents - intelligent ambassadors for each plugin with persistent memory. A critical architectural decision is how to implement the memory system.
+We set out to build persona subagents - intelligent ambassadors for each plugin with persistent memory.
 
-### The Problem
+### Original Problem Statement (2025-12-12)
 
 Personas need:
-1. **Identity persistence** - Maintain consistent personality across sessions
-2. **User context** - Remember user preferences and history
-3. **Plugin knowledge** - Understand their associated plugin deeply
-4. **Inter-agent coordination** - Share information with other personas
-5. **Temporal awareness** - Recall past interactions accurately
+1. Identity persistence
+2. User context memory
+3. Plugin knowledge
+4. Inter-agent coordination
+5. Temporal awareness
 
-### The Options
+### Discovery (2025-12-15)
 
-Two architectural approaches have been identified:
+Reading `.claude/README.md` and `.claude/registry/agents.md` revealed:
 
-## Option A: External Infrastructure (Letta/Mem0/Graphiti)
+**The persona architecture already exists.**
 
-Use sophisticated external systems for memory management.
+| Component | Status | Location |
+|-----------|--------|----------|
+| 9 custom agents | Defined | `.claude/agents/` |
+| 11 plugin personas | Catalogued | Registry |
+| Agent registry | Active | `.claude/registry/agents.md` |
+| Process registry | Active | `.claude/registry/processes.md` |
+| Archivist | DORMANT | `.claude/agents/archivist.md` |
+| Librarian | DORMANT | `.claude/agents/librarian.md` |
+| Temporal-Validator | DORMANT | `.claude/agents/temporal-validator.md` |
+| Archive infrastructure | Ready | `.claude/archive/` |
+| Library infrastructure | Ready | `.claude/library/` |
+| Journal memory | Active | `.claude/journal/` |
+| Session logging | Active | `.claude/logging/` |
+| Perspectives | Active | `.claude/perspectives/` |
 
-### Components
-- **Letta (MemGPT)**: Self-editing memory blocks with PostgreSQL persistence
-- **Mem0**: Automatic LLM-powered fact extraction
-- **Graphiti**: Temporal knowledge graphs with FalkorDB backend
-- **A2A Protocol**: Formal agent-to-agent communication
+## Options Considered
 
-### Pros
-- Self-editing memory (agent modifies own context)
-- Automatic fact extraction without manual prompting
-- Sophisticated temporal queries across all history
-- Sub-millisecond graph traversal for complex queries
-- Proven patterns from MemGPT research
+### Option A: External Infrastructure (Original Proposal)
+- Letta (MemGPT) for self-editing memory
+- Mem0 for automatic fact extraction
+- Graphiti + FalkorDB for knowledge graphs
 
-### Cons
-- **External Dependencies**: Requires running Letta server, PostgreSQL
-- **Philosophical Mismatch**: Every other plugin uses markdown-native storage
-- **Operational Complexity**: More moving parts to maintain
-- **Portability**: Harder to backup, version control, migrate
-- **Human Readability**: Memory not directly inspectable as files
+**Rejected**: Infrastructure already exists; external dependencies unnecessary.
 
-### When Appropriate
-- Scale: Hundreds of personas or millions of memory entries
-- Complex Queries: Multi-hop reasoning across temporal relationships
-- Real-time: Multiple agents editing shared state simultaneously
+### Option B: Build New Markdown-Native System
+- Create `.claude/personas/` directory
+- New schema for persona memory
+- New processes for memory flow
 
-## Option B: Markdown-Native (File-Based Memory)
+**Rejected**: This duplicates what already exists. The ecosystem already has:
+- Journal (temporal memory)
+- Archive (pattern observation)
+- Library (external resources)
+- Logging (full-fidelity history)
 
-Use the same markdown + YAML pattern as all other plugins.
+### Option C: Activate Existing Infrastructure (Chosen)
+- Invoke dormant agents (archivist, librarian, temporal-validator)
+- Use existing memory systems (journal, archive, library)
+- Plugin personas contribute to ecosystem memory, not separate from it
 
-### Components
-- **Identity files**: `identity.md` with personality definition
-- **State files**: `state.md` with current context
-- **Memory directories**: Temporal hierarchy (daily → monthly → permanent)
-- **Wikilinks**: Knowledge graph via `[[references]]`
-- **YAML frontmatter**: Structured metadata
-
-### Architecture
-```
-.claude/personas/
-├── _schema/                    # Templates
-├── _shared/                    # Cross-persona state
-│   ├── user-profile.md
-│   └── project-context.md
-└── {persona}/
-    ├── identity.md             # Core (always loaded)
-    ├── state.md                # Current context
-    └── memory/
-        ├── permanent/          # Long-term
-        └── YYYY-MM/            # Temporal
-```
-
-### Pros
-- **Philosophical Consistency**: Same pattern as all plugins
-- **Zero Dependencies**: Just files and existing tools
-- **Human Readable**: Memory always inspectable
-- **Portability**: Trivial backup, git version control
-- **Offline**: Works without network
-- **Extensible**: Can add Graphiti layer later if needed
-
-### Cons
-- No self-editing memory blocks (must use Edit tool)
-- No automatic fact extraction (must explicitly record)
-- Limited query sophistication (grep/glob vs graph queries)
-- Slower for large memory sets (file I/O vs database)
-
-### When Appropriate
-- MVP: Getting the system working initially
-- Consistency: When philosophical alignment matters
-- Simplicity: When operational overhead should be minimal
-
-## Team Consultation
-
-A brainstorm session (STORM-001) consulted all ten plugin "ambassadors":
-
-| Persona | Recommendation |
-|---------|----------------|
-| Archivist | "Full fidelity doesn't require complexity. Store in files the human can read." |
-| Mentor | "Progressive disclosure - don't overwhelm. Memory should follow master skill pattern." |
-| Explorer | "The filesystem IS the memory hierarchy." |
-| Scribe | "Obsidian compatibility means human-readable, tool-accessible, portable." |
-| Coordinator | "The schedule IS the preference database. No separate storage needed." |
-| Organizer | "If a task can persist in markdown, why not persona memory?" |
-| Synthesizer | "Tags and wikilinks ARE a knowledge graph in markdown." |
-| Architect | "Start simple. Add complexity only when markdown fails." |
-| Scholar | "Semantic search can work on markdown files. BM25 exists in logging." |
-| Cartographer | "Wikilinks ARE edges. Files ARE nodes. We just need schema." |
-
-**Unanimous recommendation**: Markdown-native for MVP.
-
-## Recommendation
-
-**Option B: Markdown-Native** for v1.0-personas-mvp
-
-### Rationale
-
-1. **Philosophical Alignment**: This project has a clear aesthetic - markdown is the medium, humans are the audience, files are the truth. Every plugin follows this pattern. Breaking it for personas would create dissonance.
-
-2. **Incremental Complexity**: We can always add Graphiti/FalkorDB layer on top of markdown files later. Starting with external infrastructure locks us into dependencies.
-
-3. **Validated Pattern**: The logging plugin already demonstrates full-fidelity persistence in markdown. The journal plugin shows temporal organization works. The exploration plugin shows mastery tracking in files.
-
-4. **Zero Dependency**: The system works offline, requires no servers, backs up trivially, and can be version controlled with git.
-
-### Escape Hatch
-
-If markdown-native proves insufficient for:
-- Query performance at scale
-- Real-time multi-agent coordination
-- Complex temporal reasoning
-
-We can add Graphiti as a **read layer** on top of the markdown files. The markdown remains source of truth; Graphiti provides query acceleration.
+**Accepted**: Honors existing architecture, minimal new work, philosophically consistent.
 
 ## Decision
 
-**[Pending user confirmation]**
+**Activate existing infrastructure rather than build new.**
 
-Proposed: Adopt Option B (Markdown-Native) for initial implementation, with Option A available as future enhancement if scale requires.
+### What This Means
+
+1. **Dormant agents get invoked**, not redefined
+2. **Journal becomes shared memory** for all personas (author attribution)
+3. **Archive becomes pattern storage** (archivist manages)
+4. **Library becomes resource cache** (librarian manages)
+5. **Plugin personas participate in ecosystem memory**
+
+### Memory Access Pattern
+
+```
+Plugin Persona Invoked
+        │
+        ▼
+┌───────────────────────┐
+│ CONTEXT GATHERING     │
+│ - Load skill (identity)│
+│ - Query logging       │
+│ - Check journal       │
+│ - Load archive        │
+└───────────────────────┘
+        │
+        ▼
+┌───────────────────────┐
+│ TASK EXECUTION        │
+│ With ecosystem context│
+└───────────────────────┘
+        │
+        ▼
+┌───────────────────────┐
+│ MEMORY CONTRIBUTION   │
+│ - Journal atomic      │
+│   (author: persona:X) │
+│ - Archive pattern     │
+└───────────────────────┘
+```
+
+### Author Attribution in Journal
+
+The journal's atomic format supports multi-author entries:
+- `author: user`
+- `author: claude-opus-4`
+- `author: agent:archivist`
+- `author: persona:coordinator`
+
+This maintains unified memory while enabling persona-specific attribution.
 
 ## Consequences
 
-### If Markdown-Native is chosen:
-- Memory stored in `.claude/personas/`
-- Wikilinks for knowledge graph
-- Progressive disclosure for memory loading
-- grep/glob for queries
-- Manual memory recording (no auto-extraction)
+### Positive
+- No new infrastructure to build
+- Immediate activation possible
+- Philosophically consistent with ecosystem
+- Leverages existing investment in agents and processes
+- Single source of truth for memory
 
-### Future work enabled:
-- Graphiti overlay for query acceleration
-- Semantic search via embeddings
-- A2A protocol for formal agent communication
+### Negative
+- Limited query sophistication (grep vs graph database)
+- No automatic fact extraction (manual recording)
+- Archivist/Librarian need invocation (not automatic)
+
+### Future Options Preserved
+- Can add Graphiti layer on top of markdown
+- Can add Letta if self-editing memory needed
+- Can add Mem0 if auto-extraction valuable
+
+## Implementation
+
+### Phase 1: Agent Activation
+1. Invoke archivist → begins artifact observation
+2. Invoke librarian → begins resource cataloguing
+3. Execute historical archaeology → backfill journal
+
+### Phase 2: Plugin Persona Memory
+1. Define memory access pattern (task-1.5)
+2. Prototype with The Coordinator (task-1.6)
+3. Roll out to all 11 plugin personas
+
+### Phase 3: Knowledge Graph (Optional)
+1. Connect temporal-validator to FalkorDB
+2. Enable sophisticated temporal queries
+3. Only if markdown-native proves insufficient
+
+## Key Insight
+
+From `.claude/README.md`:
+> "This repository is alive. It has metabolism, organs, nervous system, memory, and immune system. The skeleton is built. Some organs circulate. Others await activation."
+
+**The persona subagents work is organ activation, not organ construction.**
 
 ## Related Documents
 
-- [[PERSONA_SUBAGENTS_STRATEGY.md]] - Original external infrastructure proposal
-- [[.claude/storms/2025-12-12.md]] - Team consultation brainstorm
-- [[task-1.1]] - External infrastructure evaluation
-- [[task-1.2]] - Markdown-native evaluation
+- [[.claude/README.md]] - Ecosystem orientation
+- [[.claude/registry/agents.md]] - Agent catalogue
+- [[.claude/registry/processes.md]] - Process mapping
+- [[.claude/storms/2025-12-15.md]] - Discovery brainstorm
+- [[PERSONA_SUBAGENTS_STRATEGY.md]] - Original strategy (historical)
+- [[task-1]] - Revised epic

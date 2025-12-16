@@ -1,89 +1,105 @@
 ---
 id: task-1
-title: "Persona Subagents: Plugin Ambassadors with Persistent Memory"
+title: "Ecosystem Activation: Awakening Dormant Agents and Adding Memory to Plugin Personas"
 status: "In Progress"
 priority: high
-labels: [architecture, personas, memory, infrastructure]
-milestone: v1.0-personas-mvp
+labels: [architecture, activation, memory, infrastructure]
+milestone: v1.0-activation
 created: 2025-12-12
+updated: 2025-12-15
 assignee: ["@claude"]
 ---
 
-# Persona Subagents: Plugin Ambassadors with Persistent Memory
+# Ecosystem Activation: Awakening Dormant Agents and Adding Memory to Plugin Personas
 
 ## Description
 
-Create intelligent, persistent ambassador subagents for each plugin in the ecosystem. Each persona will:
-- Embody their plugin's identity and philosophy
-- Maintain long-term memory across conversations
-- Have full knowledge of their plugin's capabilities and trajectory
-- Collaborate with other personas via standardized protocols
+**Revised framing after discovery on 2025-12-15**: The persona subagent architecture already exists. This epic is about **activation and completion**, not construction.
 
-This is the parent epic for all persona-related work.
+### What Already Exists
 
-## Background
+| Component | Location | Status |
+|-----------|----------|--------|
+| 9 custom agents | `.claude/agents/` | 4 active, 5 dormant |
+| 11 plugin personas | `plugins/*/skills/` + registry | Established via skills |
+| Agent registry | `.claude/registry/agents.md` | Active, comprehensive |
+| Process registry | `.claude/registry/processes.md` | 9 processes mapped |
+| Archivist infrastructure | `.claude/archive/` | Directory exists, agent dormant |
+| Librarian infrastructure | `.claude/library/` | Directory populated, agent dormant |
+| Journal memory system | `.claude/journal/` | Active, atomic-first model |
+| Perspectives namespaces | `.claude/perspectives/` | Active for some agents |
+| Session logging | `.claude/logging/` | Active, 51+ sessions captured |
 
-### The Ten Personas
+### What Needs Activation
 
-| Persona | Plugin | Archetype |
-|---------|--------|-----------|
-| The Archivist | logging | Historian / Keeper of Records |
-| The Mentor | awareness | Teacher / Guide to Self-Improvement |
-| The Explorer | exploration | Scientist / Environmental Cartographer |
-| The Scribe | journal | Reflective Practitioner / Knowledge Curator |
-| The Coordinator | schedule | Time Manager / Preference Learner |
-| The Organizer | backlog | Project Manager / Task Orchestrator |
-| The Synthesizer | brainstorm | Creative Thinker / Idea Weaver |
-| The Architect | agents | Systems Builder / Framework Expert |
-| The Scholar | llms | Researcher / Knowledge Systematizer |
-| The Cartographer | knowledge-graphs | Relationship Mapper / Semantic Navigator |
+1. **Dormant agents**: archivist, librarian, temporal-validator, git-historian, obsidian-quartz
+2. **Historical archaeology**: Process 9 defined but never executed
+3. **Memory persistence**: Plugin personas lack cross-session memory
 
-### Architectural Decision Pending
+### Original vs Revised Understanding
 
-Two approaches are under consideration:
-
-1. **External Infrastructure Approach** (task-1.1)
-   - Letta (MemGPT) for self-editing memory blocks
-   - Mem0 for automatic fact extraction
-   - Graphiti + FalkorDB for temporal knowledge graphs
-   - A2A protocol for inter-agent communication
-
-2. **Markdown-Native Approach** (task-1.2)
-   - Memory stored as markdown files with YAML frontmatter
-   - Wikilinks for knowledge graph relationships
-   - Temporal hierarchy (daily → monthly → permanent)
-   - Zero external dependencies
-
-See decision record: [[ADR-001-persona-memory-architecture]]
+| Original Task | Revised Understanding |
+|---------------|----------------------|
+| "Build persona subagents" | Activate existing dormant agents |
+| "Create persona identities" | Already exist in registry |
+| "Design memory architecture" | Use existing journal + archive + library |
+| "Build infrastructure" | Infrastructure exists, needs wiring |
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Architecture decision documented with rationale
-- [ ] #2 Standard infrastructure schema defined
-- [ ] #3 One persona fully implemented as prototype
-- [ ] #4 Memory persistence validated across sessions
-- [ ] #5 All ten personas have identity definitions
-- [ ] #6 Inter-persona communication pattern established
-- [ ] #7 Integration with logging plugin confirmed
-- [ ] #8 Documentation complete for persona development
+- [ ] #1 Archivist agent activated and producing observations
+- [ ] #2 Librarian agent activated and cataloguing resources
+- [ ] #3 Historical archaeology executed (backfill journal from logs)
+- [ ] #4 Plugin personas have memory access pattern defined
+- [ ] #5 Temporal-validator connected to knowledge graph
+- [ ] #6 Memory persistence validated across sessions
+- [ ] #7 Documentation updated to reflect activated state
 <!-- AC:END -->
 
-## Subtasks
+## Subtasks (Revised)
 
-- [[task-1.1]] - Evaluate External Infrastructure Approach
-- [[task-1.2]] - Evaluate Markdown-Native Approach
-- [[task-1.3]] - Define Standard Infrastructure Schema
-- [[task-1.4]] - Implement Prototype Persona (The Archivist)
-- [[task-1.5]] - Create Identity Definitions for All Personas
-- [[task-1.6]] - Implement Inter-Persona Communication
-- [[task-1.7]] - Documentation and Developer Guide
+### Phase 1: Agent Activation
+- [[task-1.1]] - Activate Archivist (artifact observation process)
+- [[task-1.2]] - Activate Librarian (resource acquisition process)
+- [[task-1.3]] - Execute Historical Archaeology (backfill journal)
+
+### Phase 2: Knowledge Graph
+- [[task-1.4]] - Connect Temporal-Validator to FalkorDB/Graphiti
+
+### Phase 3: Plugin Persona Memory
+- [[task-1.5]] - Define memory access pattern for plugin personas
+- [[task-1.6]] - Prototype memory persistence with one plugin persona
+
+### Future (v2.0)
+- [[task-1.7]] - External infrastructure (Letta/Mem0) if markdown insufficient
+- [[task-1.8]] - Advanced inter-agent coordination (A2A protocol)
+
+## Key Insight
+
+From `.claude/README.md`:
+> "This repository is alive. It has metabolism, organs, nervous system, memory, and immune system. The skeleton is built. Some organs circulate. Others await activation."
+
+**This work is organ activation, not organ construction.**
 
 ## Related Documents
 
-- [[PERSONA_SUBAGENTS_STRATEGY.md]] - Original strategy document
-- [[.claude/storms/2025-12-12.md]] - Brainstorm on holistic alignment
-- [[ADR-001-persona-memory-architecture]] - Architecture decision record
+- [[.claude/README.md]] - Ecosystem orientation
+- [[.claude/registry/agents.md]] - Agent catalogue
+- [[.claude/registry/processes.md]] - Process mapping
+- [[.claude/storms/2025-12-15.md]] - Discovery brainstorm
+- [[PERSONA_SUBAGENTS_STRATEGY.md]] - Original strategy (historical reference)
+- [[ADR-001-persona-memory-architecture]] - Architecture decision
 
 ## Implementation Notes
 
-Research phase complete. Team consultation via brainstorm revealed strong preference for markdown-native approach to maintain philosophical consistency with existing plugins.
+### Session 2025-12-12
+Research phase. Created original strategy proposing Letta/Mem0/Graphiti. Team consultation (STORM-001) favored markdown-native approach.
+
+### Session 2025-12-15
+Discovery: The persona architecture already exists. The ecosystem has:
+- Defined agents with full system prompts
+- Infrastructure directories ready for use
+- Process documentation showing how things should flow
+- Active logging capturing everything needed
+
+The backlog has been revised to reflect activation rather than construction.
