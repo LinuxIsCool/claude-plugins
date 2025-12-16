@@ -1,0 +1,417 @@
+{
+  "https://code.claude.com/docs/en/plugins-reference": {
+    "domain": "code.claude.com",
+    "sessions": [
+      "09-44-28-7b98de99"
+    ],
+    "access_count": 1,
+    "first_seen": "15",
+    "last_seen": "15"
+  },
+  "https://docs.anthropic.com/en/docs/claude-code/mcp": {
+    "domain": "docs.anthropic.com",
+    "sessions": [
+      "09-44-28-7b98de99"
+    ],
+    "access_count": 1,
+    "first_seen": "15",
+    "last_seen": "15"
+  },
+  "https://scottspence.com/posts/configuring-mcp-tools-in-claude-code": {
+    "domain": "scottspence.com",
+    "sessions": [
+      "09-44-28-7b98de99"
+    ],
+    "access_count": 1,
+    "first_seen": "15",
+    "last_seen": "15"
+  },
+  "https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push": {
+    "domain": "docs.github.com",
+    "sessions": [
+      "09-39-15-dcb257e6"
+    ],
+    "access_count": 1,
+    "first_seen": "15",
+    "last_seen": "15"
+  },
+  "https://github.com/LinuxIsCool/claude-plugins/security/secret-scanning/unblock-secret/36tKHHxKfzuRQS93Kcd4itmVs5J": {
+    "domain": "github.com",
+    "sessions": [
+      "09-39-15-dcb257e6"
+    ],
+    "access_count": 1,
+    "first_seen": "15",
+    "last_seen": "15"
+  },
+  "https://claude.com/claude-code": {
+    "domain": "claude.com",
+    "sessions": [
+      "09-39-15-dcb257e6",
+      "14-01-39-d49e6b0a"
+    ],
+    "access_count": 2,
+    "first_seen": "13",
+    "last_seen": "15"
+  },
+  "https://github.com/polyipseity/obsidian-show-hidden-files": {
+    "domain": "github.com",
+    "sessions": [
+      "14-24-24-538cc19c"
+    ],
+    "access_count": 1,
+    "first_seen": "13",
+    "last_seen": "13"
+  },
+  "https://forum.obsidian.md/t/enable-use-of-hidden-files-and-folders-starting-with-a-dot-dotfiles-dotfolders-within-obsidian/26908": {
+    "domain": "forum.obsidian.md",
+    "sessions": [
+      "14-24-24-538cc19c"
+    ],
+    "access_count": 1,
+    "first_seen": "13",
+    "last_seen": "13"
+  },
+  "https://github.com/polyipseity/obsidian-show-hidden-files/releases/latest/download/manifest.json": {
+    "domain": "github.com",
+    "sessions": [
+      "14-24-24-538cc19c"
+    ],
+    "access_count": 1,
+    "first_seen": "13",
+    "last_seen": "13"
+  },
+  "https://github.com/polyipseity/obsidian-show-hidden-files/releases/latest/download/main.js": {
+    "domain": "github.com",
+    "sessions": [
+      "14-24-24-538cc19c"
+    ],
+    "access_count": 1,
+    "first_seen": "13",
+    "last_seen": "13"
+  },
+  "https://github.com/polyipseity/obsidian-show-hidden-files/releases/latest/download/styles.css": {
+    "domain": "github.com",
+    "sessions": [
+      "14-24-24-538cc19c"
+    ],
+    "access_count": 1,
+    "first_seen": "13",
+    "last_seen": "13"
+  },
+  "https://snyk.io/advisor/python/module-hot-reload": {
+    "domain": "snyk.io",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://news.ycombinator.com/item?id=23515897": {
+    "domain": "news.ycombinator.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://gist.github.com/yano3nora/49bbe455ea8529f6276627a9391118c5": {
+    "domain": "gist.github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://medium.com/@jnavarr56/use-file-watching-and-subprocesses-to-develop-python-scripts-with-live-reloading-9ffaa66fd648": {
+    "domain": "medium.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://pypi.org/project/watchgod/": {
+    "domain": "pypi.org",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://pypi.org/project/watchdog/": {
+    "domain": "pypi.org",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://github.com/samuelcolvin/watchfiles": {
+    "domain": "github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://github.com/adamchainz/django-watchfiles": {
+    "domain": "github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://pyquesthub.com/creating-a-dynamic-plugin-system-in-python": {
+    "domain": "pyquesthub.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://ipython.org/ipython-doc/3/config/extensions/autoreload.html": {
+    "domain": "ipython.org",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://pytutorial.com/reloading-modules-in-python-with-importlibreload/": {
+    "domain": "pytutorial.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://blog.hediet.de/post/hot_reload_for_vs_code_extension_development/": {
+    "domain": "blog.hediet.de",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://github.com/microsoft/vscode/issues/190917": {
+    "domain": "github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://docs.nestjs.com/recipes/hot-reload": {
+    "domain": "docs.nestjs.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://github.com/microsoft/vscode/issues/15614": {
+    "domain": "github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://github.com/gorakhargosh/watchdog": {
+    "domain": "github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://michaelcho.me/article/using-pythons-watchdog-to-monitor-changes-to-a-directory/": {
+    "domain": "michaelcho.me",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://dev.to/morethancoder/hot-reloading-in-any-language-1fb8": {
+    "domain": "dev.to",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://github.com/sgtdi/watch": {
+    "domain": "github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://pytutorial.com/python-importlibreload-guide/": {
+    "domain": "pytutorial.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://pierce.dev/notes/misadventures-in-hot-reloading/": {
+    "domain": "pierce.dev",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://switowski.com/blog/ipython-autoreload/": {
+    "domain": "switowski.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://labex.io/tutorials/python-how-to-force-module-reloading-in-python-397998": {
+    "domain": "labex.io",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://note.nkmk.me/en/python-os-stat-file-timestamp/": {
+    "domain": "note.nkmk.me",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://pynative.com/python-file-creation-modification-datetime/": {
+    "domain": "pynative.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://www.claude.com/blog/claude-code-plugins": {
+    "domain": "www.claude.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://code.claude.com/docs/en/hooks": {
+    "domain": "code.claude.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://claude-plugins.dev/skills/@anthropics/claude-code/plugin-structure": {
+    "domain": "claude-plugins.dev",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://github.com/anthropics/claude-code/blob/main/plugins/README.md": {
+    "domain": "github.com",
+    "sessions": [
+      "17-48-29-0143495c"
+    ],
+    "access_count": 1,
+    "first_seen": "08",
+    "last_seen": "08"
+  },
+  "https://www.emberstudiosduncan.com/schedule'": {
+    "domain": "www.emberstudiosduncan.com",
+    "sessions": [
+      "15-31-44-0d56ffcb"
+    ],
+    "access_count": 1,
+    "first_seen": "11",
+    "last_seen": "11"
+  },
+  "https://github.com/anthropics/claude-code/issues/13343": {
+    "domain": "github.com",
+    "sessions": [
+      "15-01-09-0a8bf3f1"
+    ],
+    "access_count": 1,
+    "first_seen": "12",
+    "last_seen": "12"
+  },
+  "https://github.com/anthropics/claude-code/issues/13344": {
+    "domain": "github.com",
+    "sessions": [
+      "15-01-09-0a8bf3f1"
+    ],
+    "access_count": 1,
+    "first_seen": "12",
+    "last_seen": "12"
+  },
+  "https://leehanchung.github.io/blogs/2025/10/26/claude-skills-deep-dive/": {
+    "domain": "leehanchung.github.io",
+    "sessions": [
+      "15-01-09-0a8bf3f1"
+    ],
+    "access_count": 1,
+    "first_seen": "12",
+    "last_seen": "12"
+  },
+  "https://tylerfolkman.substack.com/p/the-complete-guide-to-claude-skills": {
+    "domain": "tylerfolkman.substack.com",
+    "sessions": [
+      "15-01-09-0a8bf3f1"
+    ],
+    "access_count": 1,
+    "first_seen": "12",
+    "last_seen": "12"
+  },
+  "https://github.com/MrLesk/Backlog.md": {
+    "domain": "github.com",
+    "sessions": [
+      "09-36-27-f25ad4cb"
+    ],
+    "access_count": 1,
+    "first_seen": "12",
+    "last_seen": "12"
+  }
+}

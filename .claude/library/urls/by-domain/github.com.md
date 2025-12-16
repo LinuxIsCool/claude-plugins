@@ -8,13 +8,62 @@
 
 | Metric | Value |
 |--------|-------|
-| Resources tracked | 1 |
-| First accessed | 2025-12-15 |
-| Freshness policy | 7 days |
+| Resources tracked | 16 unique URLs |
+| Total references | 22 |
+| First accessed | 2025-12-08 |
+| Category | Code Repositories |
+| Domains | github.com, gist.github.com |
 
 ---
 
-## Resources
+## Overview
+
+GitHub resources include code repositories, gists, security alerts, and plugin dependencies. These represent the primary code hosting and collaboration platform for the ecosystem.
+
+---
+
+## Resources by Category
+
+### Security & Secrets (1 resources)
+
+Security-related URLs including secret scanning and push protection alerts.
+
+**URL**: https://github.com/LinuxIsCool/claude-plugins/security/secret-scanning/unblock-secret/36tKHHxKfzuRQS93Kcd4itmVs5J
+- Sessions: 1
+- Context: Security scanning and secret management
+
+
+### Code Repositories (14 resources)
+
+**URL**: https://github.com/polyipseity/obsidian-show-hidden-files
+- Sessions: 1
+
+**URL**: https://github.com/polyipseity/obsidian-show-hidden-files/releases/latest/download/manifest.json
+- Sessions: 1
+
+**URL**: https://github.com/polyipseity/obsidian-show-hidden-files/releases/latest/download/main.js
+- Sessions: 1
+
+**URL**: https://github.com/polyipseity/obsidian-show-hidden-files/releases/latest/download/styles.css
+- Sessions: 1
+
+**URL**: https://github.com/samuelcolvin/watchfiles
+- Sessions: 1
+
+
+*... and 9 more repositories*
+
+### Gists (1 resources)
+
+Code snippets and examples shared via GitHub Gists.
+
+**URL**: https://gist.github.com/yano3nora/49bbe455ea8529f6276627a9391118c5
+- Sessions: 1
+
+
+---
+
+## Notable Resources
 
 ### graphiti
 
@@ -59,8 +108,14 @@ Graphiti is an open-source framework by Zep for building and querying temporally
 - Academic Paper: https://arxiv.org/abs/2501.13956
 - MCP Server: Included in repository
 
-**Why Catalogued**:
-Foundation resource for temporal knowledge graph capabilities in this ecosystem.
+---
+
+## Access Patterns
+
+- **Frequency**: Medium-High (20 unique URLs)
+- **Type**: Mixed (manual references, automated alerts)
+- **Purpose**: Code dependencies, security scanning, examples
+- **Caching**: Varies by resource type
 
 ---
 
