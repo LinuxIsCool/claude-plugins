@@ -138,3 +138,7 @@ When scheduling conflicts arise:
 ---
 
 *This atomic demonstrates the persona memory pattern: plugin personas observe, record to journal, and recall in future sessions.*
+
+---
+
+*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*

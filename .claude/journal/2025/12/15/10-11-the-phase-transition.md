@@ -320,3 +320,7 @@ This would create:
 ---
 
 *Not theory. Practice. Tomorrow.*
+
+---
+
+*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*

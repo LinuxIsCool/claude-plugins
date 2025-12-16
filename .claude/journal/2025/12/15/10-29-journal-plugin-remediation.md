@@ -132,3 +132,7 @@ Before creating a journal entry:
 ---
 
 *The foundation must be solid before the structure can grow.*
+
+---
+
+*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*
