@@ -1,7 +1,7 @@
 # Agent Registry
 
 *Maintained by: agent-architect*
-*Last updated: 2025-12-13*
+*Last updated: 2025-12-15*
 
 ## Overview
 
@@ -232,11 +232,20 @@ Native to Claude Code (not file-defined)
 
 | Status | Agents |
 |--------|--------|
-| **Active & Healthy** | backend-architect, systems-thinker, agent-architect |
+| **Active & Healthy** | backend-architect, systems-thinker, agent-architect, archivist, librarian |
 | **Newly Created** | process-cartographer, temporal-validator |
 | **Established** | All plugin personas (via skills) |
+| **Memory-Enabled** | The Coordinator (Schedule.md) - first persona with memory |
 | **Under-utilized** | Explore (often bypassed for direct Grep/Glob) |
 | **Needs Definition** | product-thinker, security-analyst, financial-analyst |
+
+### Activation Log (Dec 15, 2025)
+
+| Agent | Activated | First Output |
+|-------|-----------|--------------|
+| archivist | 2025-12-15 | `.claude/archive/metabolism.md` - Ecosystem metabolic scan |
+| librarian | 2025-12-15 | `.claude/library/` - 46 URLs catalogued from 60+ sessions |
+| persona:coordinator | 2025-12-15 | Journal atomic: User scheduling preferences observed |
 
 ---
 
