@@ -5,5 +5,7 @@
   "author": {
     "name": "linuxiscool"
   },
-  "keywords": ["brainstorm", "planning", "thinking", "reflecting"]
+  "keywords": ["brainstorm", "planning", "thinking", "reflecting"],
+  "commands": ["./commands/"],
+  "agents": ["./agents/muse.md"]
 }

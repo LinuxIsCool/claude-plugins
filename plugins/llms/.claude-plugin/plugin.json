@@ -6,5 +6,6 @@
     "name": "linuxiscool"
   },
   "keywords": ["llms", "embeddings", "vectors", "knowledge-graphs", "rag", "agents", "learning"],
-  "skills": ["./skills/"]
+  "skills": ["./skills/"],
+  "agents": ["./agents/modeler.md"]
 }

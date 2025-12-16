@@ -34,16 +34,20 @@ Obsidian-style linked journaling with zettelkasten atomic notes.
 
 ```
 .claude/journal/
-├── yearly/           # Annual reviews and goals
-│   └── 2025.md
-├── monthly/          # Monthly entries and summaries
-│   └── 2025-12.md
-├── daily/            # Daily entries
-│   └── 2025-12-12.md
-├── notes/            # Atomic zettelkasten notes
-│   └── {title}.md
-└── index.md          # Master index with links
+├── index.md                    # Master index
+├── YYYY/
+│   ├── YYYY.md                 # Yearly summary (synthesized)
+│   └── MM/
+│       ├── YYYY-MM.md          # Monthly summary (synthesized)
+│       └── DD/
+│           ├── YYYY-MM-DD.md   # Daily summary (synthesized)
+│           └── HH-MM-title.md  # Atomic entries (PRIMARY)
 ```
+
+**Key principle**: Atomic entries (`HH-MM-title.md`) are the PRIMARY unit.
+Daily/monthly/yearly are SYNTHESIZED from atomics.
+
+**Critical**: Entries MUST go in TODAY's date folder. Use current date, not event date.
 
 ## How to Use
 

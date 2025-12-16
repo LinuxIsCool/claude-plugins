@@ -6,5 +6,6 @@
     "name": "linuxiscool"
   },
   "keywords": ["agents", "multi-agent", "orchestration", "memory", "tools", "protocols", "a2a", "mcp"],
-  "skills": ["./skills/"]
+  "skills": ["./skills/"],
+  "agents": ["./agents/orchestrator.md"]
 }

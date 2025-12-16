@@ -9,5 +9,6 @@
   "license": "MIT",
   "keywords": ["schedule", "calendar", "time-management", "weekly-planner"],
   "commands": ["./commands/"],
+  "agents": ["./agents/timekeeper.md"],
   "mcpServers": "./.mcp.json"
 }

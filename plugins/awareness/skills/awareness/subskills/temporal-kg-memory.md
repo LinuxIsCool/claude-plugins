@@ -12,13 +12,50 @@ A living skill that evolves as we build infrastructure for loading Claude Code l
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    INFRASTRUCTURE                                │
+│                    PRODUCTION ARCHITECTURE                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  FalkorDB                 Graphiti                 Logs          │
-│  ├── Docker container     ├── Episode ingestion    ├── JSONL    │
-│  ├── OpenCypher queries   ├── Entity extraction    ├── Events   │
-│  └── Graph storage        └── Temporal tracking    └── Sessions │
+│                                                                  │
+│  JSONL Logs ──► Direct Parser ──► FalkorDB ──► Query Tools       │
+│                                                                  │
+│  ┌──────────────────┐    ┌──────────────────┐                    │
+│  │  ingest_all_     │    │  claude_logs     │                    │
+│  │  sessions.py     │───►│  graph (468      │                    │
+│  │                  │    │  nodes, 794 rel) │                    │
+│  └──────────────────┘    └──────────────────┘                    │
+│           │                      │                                │
+│           │                      ▼                                │
+│    No LLM needed!        ┌──────────────────┐                    │
+│                          │  query_sessions  │                    │
+│                          │  .py (CLI tool)  │                    │
+│                          └──────────────────┘                    │
 └─────────────────────────────────────────────────────────────────┘
+
+Key Insight: Don't use LLM to extract structure from structured data!
+```
+
+## Quick Start (Production)
+
+```bash
+# 1. Start FalkorDB with persistent storage
+docker run -p 6380:6379 -p 3001:3000 -d \
+  -v falkordb_data:/var/lib/falkordb/data \
+  falkordb/falkordb
+
+# 2. Ingest all sessions (takes ~5 seconds)
+cd plugins/awareness/skills/temporal-kg-memory/tools
+uv run ingest_all_sessions.py
+
+# 3. Query your conversation history
+uv run query_sessions.py stats      # Graph statistics
+uv run query_sessions.py topics     # What you talked about most
+uv run query_sessions.py search "plugin"  # Find all mentions
+uv run query_sessions.py timeline   # Session chronology
+uv run query_sessions.py session b22351d6  # View specific session
+
+# 4. View in browser
+open http://localhost:3001
+# Select graph: claude_logs
+# Query: MATCH (m)-[:THEN]->(n) RETURN m, n LIMIT 50
 ```
 
 ## Current Understanding (Phase 0)
@@ -45,24 +82,25 @@ A living skill that evolves as we build infrastructure for loading Claude Code l
 | `AssistantResponse` | RESPONSE, extract CONCEPTS |
 | `SubagentStop` | AGENT entity |
 
-### Graph Schema (Evolving)
+### Graph Schema (Production)
 ```cypher
--- Node types
-(:Session {id, start_time, cwd})
-(:Event {id, ts, type})
-(:Tool {name})
-(:File {path})
-(:Concept {name})
-(:User)
-(:Claude)
+-- Node types (final architecture)
+(:Session {id, file, cwd, start_time, end_time, total_events})
+(:UserMessage {id, timestamp, time, text, length, session_id})
+(:AssistantMessage {id, timestamp, time, text, length, session_id})
+(:ToolUse {id, timestamp, time, tool, file_path, session_id})  -- optional
 
--- Relationship types (all temporal)
-[:CONTAINS {created_at}]           -- Session → Event
-[:USES {created_at, valid_from}]   -- Event → Tool
-[:MODIFIES {created_at}]           -- Event → File
-[:DISCUSSES {created_at}]          -- Event → Concept
-[:FOLLOWS {created_at}]            -- Event → Event (sequence)
+-- Relationship types
+[:IN_SESSION]    -- Message → Session (membership)
+[:THEN]          -- Message → Message (temporal sequence within session)
+[:NEXT_SESSION]  -- Session → Session (temporal sequence between sessions)
 ```
+
+### Why This Schema Works
+1. **Distinct node types** - UserMessage vs AssistantMessage allows typed queries
+2. **THEN edges** - Creates linear chain, visualizes as dialogue flow (not hub-and-spoke)
+3. **Full text stored** - No truncation, enables full-text search
+4. **Session grouping** - IN_SESSION + session_id enables cross-session queries
 
 ## Setup (Start Small)
 
@@ -352,10 +390,59 @@ Found 10 edges:
 **Mastery Level**: 0.60 (Journeyman → Expert threshold!)
 **Next**: Add persistent storage, fix RediSearch escaping, process full repository
 
+### Entry 8: Structured vs LLM Extraction (Critical Insight)
+**Date**: 2025-12-15
+**Experiment**: Compare LLM entity extraction vs direct JSON parsing
+**Discovery**:
+- **LLM extraction is WRONG for structured data** like JSONL logs
+- Created duplicate entities: "User", "user", "the user", "the human user", "CLAUDIO"
+- 80-140 seconds for 10 events vs **2 seconds** with direct parsing
+- Graph was confusing hub-and-spoke pattern
+**Correct Approach**:
+- Parse JSON structure directly → create typed nodes
+- `UserMessage` and `AssistantMessage` as distinct node types
+- `THEN` edges for temporal sequence
+- **No LLM needed** for structure that already exists
+**When to Use LLM**:
+- Extracting concepts/topics from message TEXT (optional enrichment)
+- Unstructured documents where structure is unknown
+- NOT for parsing structured data formats
+**Result**: Clean linear dialogue graph, instant processing, no duplicates
+**Mastery Level**: 0.70 (Expert)
+**Next**: Production ingestion of all 39 sessions, semantic search on content
+
+### Entry 9: Production Ingestion Complete
+**Date**: 2025-12-15
+**Experiment**: Ingest ALL Claude Code sessions into FalkorDB
+**Setup**:
+- 60 log files (more created since initial count)
+- Direct JSON parsing, no LLM
+- Persistent Docker volume: `docker run -v falkordb_data:/var/lib/falkordb/data ...`
+**Results**:
+```
+--- Graph Statistics ---
+UserMessage:         219 (51,360 chars)
+AssistantMessage:    197 (364,911 chars)
+Session:              52
+
+IN_SESSION:          416
+THEN:                378
+TOTAL:               468 nodes, 794 relationships
+```
+**Cross-Session Queries Working**:
+- `uv run query_sessions.py search "plugin"` → 173 matches across all sessions
+- `uv run query_sessions.py topics` → Shows keyword frequency analysis
+- `uv run query_sessions.py timeline` → All 52 sessions chronologically
+- `uv run query_sessions.py session <id>` → Full dialogue for any session
+**Processing Time**: <5 seconds for all 60 files (vs 10+ hours with LLM)
+**Key Insight**: Production-ready temporal memory without any external API dependencies
+**Mastery Level**: 0.75 (Expert)
+**Next**: Semantic search on message content, concept extraction
+
 ## Mastery Progression
 
 ```
-Current Level: Expert (0.60)
+Current Level: Expert (0.75)
 
 Novice (0.0-0.2)
 → Understand architecture           ✓
@@ -363,27 +450,26 @@ Novice (0.0-0.2)
 
 Apprentice (0.2-0.4)
 → Can connect FalkorDB              ✓
-→ Can ingest single events          ✓ (via direct FalkorDB)
+→ Can ingest single events          ✓
 → Basic queries work                ✓
 
 Journeyman (0.4-0.6)
-→ Full session ingestion            ✓ (20 events tested)
-→ Custom entity types               ✓ (Session, Event, Tool, File)
-→ Temporal queries                  ✓ (FOLLOWED_BY relationships)
-→ Ollama local LLM integration      ✓ (3/3 events, 5 edges found!)
+→ Full session ingestion            ✓
+→ Ollama local LLM integration      ✓
+→ Temporal queries                  ✓
 
 Expert (0.6-0.8)          ← YOU ARE HERE
-→ Filtered ingestion (UP+AR only)   ✓ (8/10 events, 10 edges!)
-→ Full content (no truncation)      ✓ (5,842 chars processed)
-→ Real-time hook integration
-→ MCP server tools
-→ Cross-session analysis
-→ Production-scale ingestion
+→ LLM vs Structured insight         ✓ (CRITICAL: don't use LLM for structured data!)
+→ Clean dialogue graph schema       ✓ (UserMessage/AssistantMessage + THEN edges)
+→ Typed node visualization          ✓ (distinct colors per message type)
+→ Production-scale ingestion        ✓ (60 sessions, 468 nodes, 794 relationships)
+→ Cross-session analysis            ✓ (query_sessions.py CLI tool)
 
 Master (0.8-1.0)
-→ Deep temporal reasoning
-→ Pattern discovery across history
-→ Self-improving memory
+→ Semantic search on content        (pending: vector embeddings)
+→ Concept extraction (LLM on text)  (pending: optional enrichment layer)
+→ Pattern discovery across history  (pending: graph algorithms)
+→ MCP server tools                  (pending: temporal query API)
 ```
 
 ## Integration with Awareness Ecosystem
@@ -405,33 +491,39 @@ Master (0.8-1.0)
 
 ## Anti-Patterns
 
-1. **Ingesting too much too fast** - Start with one session
-2. **Ignoring rate limits** - Graphiti uses LLM for entity extraction; add exponential backoff
-3. **No group_id** - Lose session boundaries
-4. **Skipping timestamps** - Lose temporal ordering
-5. **Complex queries before basics** - Master simple patterns first
-6. **No retry logic** - Rate limits WILL hit; must handle gracefully
-7. **Wrong API params** - Use `num_results` not `limit` for Graphiti search
-8. **No persistent storage** - FalkorDB is in-memory by default; use `-v ./data:/var/lib/falkordb/data`
-9. **Special characters in content** - RediSearch chokes on backticks, slashes; may need escaping
+1. **★ Using LLM for structured data** - CRITICAL: Don't use LLM entity extraction for JSONL logs!
+   - Creates duplicates: "User", "user", "the user", "CLAUDIO"
+   - 100x slower (hours vs seconds)
+   - Parse JSON structure directly instead
+2. **Hub-and-spoke schema** - Use THEN edges for linear dialogue, not just IN_SESSION
+3. **Truncating content** - Store full text; enables full-text search
+4. **No persistent storage** - FalkorDB is in-memory by default; use `-v ./data:/var/lib/falkordb/data`
+5. **Ignoring rate limits** - Only applies if using LLM-based Graphiti approach
+6. **No group_id** - Lose session boundaries
+7. **Skipping timestamps** - Lose temporal ordering
+8. **Special characters in content** - RediSearch chokes on backticks, slashes
 
 ## Files in This Skill
 
 ```
 temporal-kg-memory/
 ├── tools/
-│   ├── ingest_logs.py              # ✓ Batch ingestion via Graphiti
-│   ├── test_pipeline.py            # ✓ Full Graphiti pipeline test
-│   ├── test_minimal.py             # ✓ Minimal test with retry logic
-│   ├── test_anthropic.py           # ✓ Anthropic LLM client test
-│   ├── test_falkordb_direct.py     # ✓ Direct FalkorDB test (no LLM!)
-│   ├── test_ollama.py              # ✓ Ollama local LLM test (RECOMMENDED!)
-│   ├── experiment_filtered_ingest.py # ✓ Filtered UP+AR ingestion experiment
-│   └── explore_graph.py            # ✓ Graph exploration utility
+│   ├── ingest_all_sessions.py      # ★ PRODUCTION: Load ALL sessions (no LLM)
+│   ├── ingest_structured.py        # ★ Single session structured ingestion
+│   ├── query_sessions.py           # ★ CLI for cross-session queries
+│   ├── explore_graph.py            # ✓ Graph exploration utility
+│   ├── experiment_filtered_ingest.py # Filtered ingestion experiment
+│   ├── experiment_improved_dedup.py  # Custom entity types experiment
+│   ├── ingest_logs.py              # Graphiti batch ingestion (LLM-based)
+│   ├── test_ollama.py              # Ollama local LLM test
+│   ├── test_falkordb_direct.py     # Direct FalkorDB test
+│   └── test_*.py                   # Various test scripts
 ├── queries/
-│   └── temporal_queries.cypher     # ✓ OpenCypher query patterns
+│   └── temporal_queries.cypher     # OpenCypher query patterns
 └── hooks/
-    └── log_to_graph.py             # ✓ Real-time PostToolUse hook (optional)
+    └── log_to_graph.py             # Real-time PostToolUse hook (optional)
+
+★ = Production-ready, no LLM required
 ```
 
 ## Three Operating Modes

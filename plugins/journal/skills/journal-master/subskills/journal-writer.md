@@ -75,13 +75,20 @@ related: []                        # Other atomic entries this connects to
 
 | Field | Purpose | Example |
 |-------|---------|---------|
-| `created` | Timestamp of creation | `2025-12-13T14:30:00` |
+| `created` | **When file was created** (NOT event time) | `2025-12-15T14:30:00` |
 | `author` | Who/what created this entry | `claude-opus-4`, `user`, `backend-architect` |
 | `title` | Entry title | `"Subagent Exploration"` |
 | `description` | One-line summary | `"Discovered CLI supports custom system prompts"` |
 | `tags` | Categorization | `[subagents, cli, discovery]` |
-| `parent_daily` | Link UP to daily note | `[[2025-12-13]]` |
+| `parent_daily` | Link UP to **TODAY's** daily note | `[[2025-12-15]]` |
 | `related` | Links to related atomics | `[[14-45-agent-architecture]]` |
+
+### Optional Fields
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `references_date` | Date of event being documented (if different from created) | `2025-12-13` |
+| `session` | Session ID for traceability | `2025-12-15-10-30-abc123` |
 
 ## Daily Note Template (SYNTHESIZED)
 
@@ -94,6 +101,8 @@ type: daily
 created: YYYY-MM-DDTHH:MM:SS
 synthesized: true
 parent_monthly: [[YYYY-MM]]
+prev_day: [[YYYY-MM-DD]]              # TEMPORAL NAV: yesterday's date
+next_day: [[YYYY-MM-DD]]              # TEMPORAL NAV: tomorrow's date
 children:
   - [[HH-MM-title]]
   - [[HH-MM-title]]
@@ -101,6 +110,10 @@ tags: [daily]
 ---
 
 # YYYY-MM-DD Day-of-Week
+
+← [[YYYY-MM-DD]] · **[[YYYY-MM]]** · [[YYYY-MM-DD]] →
+
+---
 
 ## Summary
 
@@ -130,6 +143,8 @@ type: monthly
 created: YYYY-MM-DDTHH:MM:SS
 synthesized: true
 parent_yearly: [[YYYY]]
+prev_month: [[YYYY-MM]]               # TEMPORAL NAV: previous month
+next_month: [[YYYY-MM]]               # TEMPORAL NAV: next month
 children:
   - [[YYYY-MM-DD]]
   - [[YYYY-MM-DD]]
@@ -138,6 +153,10 @@ themes: []
 ---
 
 # YYYY Month-Name
+
+← [[YYYY-MM]] · **[[YYYY]]** · [[YYYY-MM]] →
+
+---
 
 ## Summary
 
@@ -169,6 +188,8 @@ year: YYYY
 type: yearly
 created: YYYY-MM-DDTHH:MM:SS
 synthesized: true
+prev_year: [[YYYY]]                   # TEMPORAL NAV: previous year
+next_year: [[YYYY]]                   # TEMPORAL NAV: next year
 children:
   - [[YYYY-MM]]
   - [[YYYY-MM]]
@@ -177,6 +198,10 @@ themes: []
 ---
 
 # YYYY
+
+← [[YYYY]] · [[YYYY]] →
+
+---
 
 ## Summary
 
@@ -219,24 +244,57 @@ the spiral/helix structure in force-directed layout.
 
 ## Creating Entries
 
+### CRITICAL: Use TODAY's Date
+
+**Entries ALWAYS go in TODAY's folder**, regardless of what you're writing about.
+
+```bash
+# ALWAYS get current date for the folder path
+TODAY=$(date +%Y/%m/%d)        # e.g., 2025/12/15
+DAILY_DATE=$(date +%Y-%m-%d)   # e.g., 2025-12-15
+NOW=$(date +%H-%M)             # e.g., 14-30
+```
+
 ### Create Atomic Entry (Primary Action)
 
-```python
-# 1. Get current time
-timestamp = "14-30"  # HH-MM format
-title_slug = "subagent-exploration"
-filename = f"{timestamp}-{title_slug}.md"
+```bash
+# 1. Get current date/time (MUST use actual current values)
+TODAY=$(date +%Y/%m/%d)
+NOW=$(date +%H-%M)
+title_slug="subagent-exploration"
+filename="${NOW}-${title_slug}.md"
 
-# 2. Ensure directory exists
-path = f".claude/journal/2025/12/13/{filename}"
+# 2. Create directory if it doesn't exist (IMPORTANT!)
+mkdir -p ".claude/journal/${TODAY}"
 
-# 3. Create with mandatory fields
-# - created (timestamp)
-# - author (who is writing)
-# - description (one line)
-# - parent_daily (link up)
+# 3. Create file path using TODAY's date
+path=".claude/journal/${TODAY}/${filename}"
+
+# 4. Create with mandatory fields
+# - created: NOW (when file is created, not event time)
+# - author: who is writing
+# - description: one line
+# - parent_daily: link UP (using today's date)
 # - tags
 ```
+
+### Documenting Past Events
+
+If you're writing about something that happened on a different day:
+- **File location**: Still use TODAY's folder
+- **`created` field**: Use NOW (actual file creation time)
+- **Add `references_date` field**: The date the event occurred
+- **In content**: Mention "On [date], ..." or "Reflecting on [date]..."
+
+```yaml
+---
+created: 2025-12-15T10:30:00     # When this file was created
+references_date: 2025-12-13      # When the event happened
+title: "Reflection on Dec 13 Architecture"
+---
+```
+
+This preserves temporal accuracy while keeping the journal structure correct.
 
 ### Synthesize Daily from Atomics
 
@@ -270,6 +328,24 @@ dailies = glob(".claude/journal/2025/12/*/YYYY-MM-DD.md")
 | Atomic | Daily | `parent_daily: [[YYYY-MM-DD]]` |
 | Daily | Monthly | `parent_monthly: [[YYYY-MM]]` |
 | Monthly | Yearly | `parent_yearly: [[YYYY]]` |
+
+### Temporal Navigation Links (Mandatory for Summary Notes)
+
+| Entry Type | Previous | Next |
+|------------|----------|------|
+| Daily | `prev_day: [[YYYY-MM-DD]]` | `next_day: [[YYYY-MM-DD]]` |
+| Monthly | `prev_month: [[YYYY-MM]]` | `next_month: [[YYYY-MM]]` |
+| Yearly | `prev_year: [[YYYY]]` | `next_year: [[YYYY]]` |
+
+**Notes**:
+- Links to non-existent notes are valid (Obsidian will show them as unresolved)
+- Handle month/year boundaries: Dec 31 links to Jan 1 of next year
+- These links enable keyboard-style navigation through time
+
+**IMPORTANT**: Temporal nav links MUST appear in the body content, not just frontmatter!
+- Graph visualizers (Quartz, Obsidian) only crawl links in the body
+- Frontmatter fields are metadata, not navigable links
+- Use the nav bar pattern: `← [[prev]] · **[[parent]]** · [[next]] →`
 
 ### Downward Links (In Synthesis)
 
@@ -331,3 +407,63 @@ Common tags:
 - **One idea per atomic**: Keep entries focused
 - **Link liberally**: Connections create the DNA spiral
 - **Author is mandatory**: Track provenance
+
+## Common Mistakes (AVOID THESE)
+
+### 1. Wrong Date Folder
+```
+❌ WRONG: Writing on Dec 15 but putting file in .claude/journal/2025/12/13/
+✅ RIGHT: Always use TODAY's date: .claude/journal/2025/12/15/
+```
+
+### 2. Backdating `created` Field
+```
+❌ WRONG: created: 2025-12-13T17:00:00 (when actually writing on Dec 15)
+✅ RIGHT: created: 2025-12-15T10:30:00 (actual creation time)
+         references_date: 2025-12-13 (if documenting past event)
+```
+
+### 3. Wrong `parent_daily` Link
+```
+❌ WRONG: parent_daily: [[2025-12-13]] (when file is in 2025/12/15/)
+✅ RIGHT: parent_daily: [[2025-12-15]] (matches folder location)
+```
+
+### 4. Inconsistent Filename Format
+```
+❌ WRONG: 151500-title.md (HHMMSS format)
+✅ RIGHT: 15-15-title.md (HH-MM format with hyphens)
+```
+
+### 5. Forgetting to Create Directory
+```bash
+# Always ensure directory exists before writing
+mkdir -p ".claude/journal/$(date +%Y/%m/%d)"
+```
+
+### Pre-Flight Checklist
+
+Before creating a journal entry:
+1. [ ] `TODAY=$(date +%Y/%m/%d)` - Get current date
+2. [ ] `mkdir -p ".claude/journal/${TODAY}"` - Ensure folder exists
+3. [ ] Filename uses `HH-MM-title.md` format
+4. [ ] `created` field uses actual NOW timestamp
+5. [ ] `parent_daily` matches the folder's date
+6. [ ] If documenting past event, add `references_date` field
+7. [ ] **Footer present**: End with `*Parent: [[YYYY-MM-DD]] → [[YYYY-MM]] → [[YYYY]]*`
+
+### Body Links for Graph Connectivity
+
+**CRITICAL**: Wikilinks in YAML frontmatter are NOT crawled by graph visualizers.
+
+For full graph connectivity, ensure these appear in the **body** (not just frontmatter):
+
+| Entry Type | Body Requirement |
+|------------|------------------|
+| Atomic | Footer: `*Parent: [[YYYY-MM-DD]] → [[YYYY-MM]] → [[YYYY]]*` |
+| Daily | Nav bar: `← [[prev-day]] · **[[YYYY-MM]]** · [[next-day]] →` |
+| Daily | Children section: `## Atomic Entries` with wikilinks |
+| Monthly | Nav bar: `← [[prev-month]] · **[[YYYY]]** · [[next-month]] →` |
+| Yearly | Nav bar: `← [[prev-year]] · [[next-year]] →` |
+
+Without body links, entries appear as isolated nodes in Quartz/Obsidian graphs.
