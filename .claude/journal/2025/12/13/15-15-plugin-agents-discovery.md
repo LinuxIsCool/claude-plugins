@@ -1,11 +1,14 @@
 ---
-id: 2025-12-13-151500
+id: 2025-12-13-1515
 title: "Plugin Agents: Native Namespacing Discovery"
 type: atomic
+created: 2025-12-13T15:27:00
+author: claude-opus-4
+description: "Discovered Claude Code natively supports plugin-defined agents with automatic namespacing via plugin.json agents field"
 tags: [discovery, architecture, agents, plugins, claude-code]
-links: [awareness-plugin, mentor-agent, task-tool]
-source: session-exploration
-created: 2025-12-13T15:15:00
+parent_daily: [[2025-12-13]]
+related:
+  - [[15-15-agent-architecture-emerges]]
 ---
 
 # Plugin Agents: Native Namespacing Discovery
@@ -88,4 +91,5 @@ This explicit listing gives plugin authors control over which agents to expose.
 - [[persona-subagents-strategy]]
 
 ---
-*Links: [[2025-12-13]]*
+
+*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
