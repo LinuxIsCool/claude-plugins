@@ -1,0 +1,22 @@
+{
+  "name": "statusline",
+  "version": "0.1.0",
+  "description": "Instance identity and statusline management for multi-Claude coordination",
+  "author": {
+    "name": "linuxiscool"
+  },
+  "keywords": [
+    "statusline",
+    "identity",
+    "instances",
+    "multi-agent",
+    "coordination",
+    "tracking"
+  ],
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ]
+}
