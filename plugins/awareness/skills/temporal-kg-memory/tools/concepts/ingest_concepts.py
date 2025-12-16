@@ -23,8 +23,10 @@ Database: concepts (FalkorDB)
 from datetime import datetime
 from falkordb import FalkorDB
 
-# Concept definitions extracted from .claude/concepts/index.md
+# Concept definitions extracted from ecosystem documents
+# Manual ingestion: 2025-12-16
 CONCEPTS = [
+    # === PHASE 1: Original concepts (Dec 13-15) ===
     {
         "name": "Phase Transition",
         "definition": "A fundamental reorganization of a system's structure. In this ecosystem: chaos→structure (Phase 1, complete) and structure→semantics (Phase 2, beginning).",
@@ -47,7 +49,7 @@ CONCEPTS = [
         "introduced": "2025-12-13",
         "source": ".claude/archive/assessments/2025-12-13-multi-agent-ecosystem-assessment.md",
         "status": "active",
-        "related": ["Structural Coherence", "External Coherence", "Phase Transition"]
+        "related": ["Coherence Maintenance", "Phase Transition"]
     },
     {
         "name": "Potential Energy",
@@ -71,7 +73,7 @@ CONCEPTS = [
         "introduced": "2025-12-13",
         "source": "CLAUDE.md",
         "status": "verified",
-        "related": ["Progressive Disclosure", "Plugin Architecture"]
+        "related": ["Progressive Disclosure"]
     },
     {
         "name": "Metabolic Model",
@@ -79,7 +81,7 @@ CONCEPTS = [
         "introduced": "2025-12-13",
         "source": ".claude/agents/archivist.md",
         "status": "active",
-        "related": ["Metabolic Health", "Archivist"]
+        "related": ["Metabolic Mapping", "Coherence Maintenance"]
     },
     {
         "name": "Proactive Commit Discipline",
@@ -87,7 +89,7 @@ CONCEPTS = [
         "introduced": "2025-12-13",
         "source": ".claude/conventions/coordination.md",
         "status": "active",
-        "related": ["Git as Coordination Layer", "Semantic Unit"]
+        "related": ["Git as Nervous System", "Conventions over Protocols"]
     },
     {
         "name": "Dormant Agents",
@@ -104,7 +106,165 @@ CONCEPTS = [
         "source": ".claude/journal/2025/12/13/19-00-the-phase-transition.md",
         "status": "active",
         "related": ["Dormant Agents", "Kinetic Energy", "Phase Transition"]
-    }
+    },
+
+    # === PHASE 2: Architecture concepts (from registry, agents) ===
+    {
+        "name": "Three-Layer Architecture",
+        "definition": "Agent organization pattern: Perspective (why/what) → Operational (how) → Execution (do). Meta agents observe all layers.",
+        "introduced": "2025-12-13",
+        "source": ".claude/registry/agents.md",
+        "status": "active",
+        "related": ["Fleet Management", "Observer Pattern"]
+    },
+    {
+        "name": "Plugin-as-Persona",
+        "definition": "Each plugin embodies a character with identity, voice, and values - not just functions. Plugins are agents.",
+        "introduced": "2025-12-13",
+        "source": ".claude/registry/agents.md",
+        "status": "verified",
+        "related": ["Progressive Disclosure", "Master Skill Pattern"]
+    },
+    {
+        "name": "Namespace Ownership",
+        "definition": "Each agent has designated write locations. Write to your space, read from anywhere. Prevents conflicts through clear boundaries.",
+        "introduced": "2025-12-13",
+        "source": ".claude/conventions/coordination.md",
+        "status": "verified",
+        "related": ["Conventions over Protocols", "Git as Nervous System"]
+    },
+    {
+        "name": "Fleet Management",
+        "definition": "Cataloguing, tracking, and managing agents across the ecosystem. Maintained by agent-architect in the registry.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/agent-architect.md",
+        "status": "active",
+        "related": ["Three-Layer Architecture", "Observer Pattern"]
+    },
+    {
+        "name": "Observer Pattern",
+        "definition": "Observe before organizing, describe don't prescribe. Illuminate current state; let humans decide direction.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/agent-architect.md",
+        "status": "active",
+        "related": ["Map vs Territory", "Fleet Management"]
+    },
+    {
+        "name": "Map vs Territory",
+        "definition": "The map is never the territory. Understanding is always approximate. Stay curious, embrace incompleteness.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/agent-architect.md",
+        "status": "active",
+        "related": ["Observer Pattern", "Identity Anchors"]
+    },
+    {
+        "name": "Identity Anchors",
+        "definition": "Core question, stance, value, and humility that maintain agent coherence during rapid ecosystem evolution.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/agent-architect.md",
+        "status": "active",
+        "related": ["Drift Detection", "Observer Pattern"]
+    },
+    {
+        "name": "Drift Detection",
+        "definition": "Noticing when reality diverges from intention, when agents deviate from patterns, when conventions erode.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/agent-architect.md",
+        "status": "active",
+        "related": ["Identity Anchors", "Coherence Maintenance"]
+    },
+
+    # === PHASE 3: Stewardship concepts (from librarian, archivist) ===
+    {
+        "name": "Provenance",
+        "definition": "Tracing knowledge to sources. Every piece of knowledge traces back to origin. Citation management as infrastructure.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/librarian.md",
+        "status": "active",
+        "related": ["Zero Redundant Fetches", "Metabolic Model"]
+    },
+    {
+        "name": "Zero Redundant Fetches",
+        "definition": "Check cache first. We shouldn't make the same web request twice unnecessarily. Efficiency over completeness.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/librarian.md",
+        "status": "active",
+        "related": ["Provenance", "Context as Currency"]
+    },
+    {
+        "name": "Metabolic Mapping",
+        "definition": "Tracking what's ingested, processed, produced, and excreted in the system. The archivist's primary function.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/archivist.md",
+        "status": "active",
+        "related": ["Metabolic Model", "Coherence Maintenance"]
+    },
+    {
+        "name": "Coherence Maintenance",
+        "definition": "Ensuring the system makes sense as a whole. Alignment between plans and actions, no contradictions between artifacts.",
+        "introduced": "2025-12-13",
+        "source": ".claude/agents/archivist.md",
+        "status": "active",
+        "related": ["Semantic Coherence", "Drift Detection", "Metabolic Mapping"]
+    },
+
+    # === PHASE 4: Strategic concepts (from planning/fusion) ===
+    {
+        "name": "Context as Currency",
+        "definition": "Every token has cost (monetary + attention). CLAUDE.md as routing table, not knowledge store. Load context on-demand.",
+        "introduced": "2025-12-13",
+        "source": ".claude/planning/2025-12-13-planning.md",
+        "status": "active",
+        "related": ["Progressive Disclosure", "Zero Redundant Fetches"]
+    },
+    {
+        "name": "Network of Networks",
+        "definition": "Heterogeneous graphs with multiple edge types: temporal, topical, causal, authorial, citational, semantic, hierarchical.",
+        "introduced": "2025-12-13",
+        "source": ".claude/planning/2025-12-13-planning.md",
+        "status": "active",
+        "related": ["Semantic Coherence", "Provenance"]
+    },
+    {
+        "name": "Progressive Disclosure",
+        "definition": "Appear small while being vast. Like Google Earth zoom - orbital view to street level. System scales without polluting environment.",
+        "introduced": "2025-12-13",
+        "source": ".claude/planning/2025-12-13-planning.md",
+        "status": "verified",
+        "related": ["Master Skill Pattern", "Context as Currency", "Plugin-as-Persona"]
+    },
+    {
+        "name": "Financial Metabolism",
+        "definition": "Agents have budgets. Value creates survival. Natural selection pressure on agents - profitable agents expand, unprofitable get pruned.",
+        "introduced": "2025-12-13",
+        "source": ".claude/planning/2025-12-13-planning.md",
+        "status": "active",
+        "related": ["Metabolic Model", "Context as Currency"]
+    },
+    {
+        "name": "Conventions over Protocols",
+        "definition": "Git + simple conventions beat complex infrastructure. Emergent coordination through shared patterns rather than engineered protocols.",
+        "introduced": "2025-12-13",
+        "source": ".claude/planning/2025-12-13-planning.md",
+        "status": "verified",
+        "related": ["Git as Nervous System", "Namespace Ownership"]
+    },
+    {
+        "name": "Git as Nervous System",
+        "definition": "Commits are messages observable by all agents. Every meaningful action leaves a trace. Persistent, ordered, annotated coordination.",
+        "introduced": "2025-12-13",
+        "source": ".claude/planning/2025-12-13-planning.md",
+        "status": "verified",
+        "related": ["Conventions over Protocols", "Proactive Commit Discipline"]
+    },
+    {
+        "name": "Digital Twin",
+        "definition": "Agent representing complete integrated understanding of a person - life history, relationships, preferences, financial context.",
+        "introduced": "2025-12-13",
+        "source": ".claude/planning/2025-12-13-planning.md",
+        "status": "active",
+        "related": ["Network of Networks", "Provenance"]
+    },
 ]
 
 
