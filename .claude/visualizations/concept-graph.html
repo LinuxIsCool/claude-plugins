@@ -69,6 +69,34 @@
         .tooltip .status.verified {
             background: #1f6feb;
         }
+        .tooltip .meta {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #30363d;
+            font-size: 11px;
+        }
+        .tooltip .meta-row {
+            display: flex;
+            margin-bottom: 4px;
+        }
+        .tooltip .meta-label {
+            color: #8b949e;
+            width: 60px;
+            flex-shrink: 0;
+        }
+        .tooltip .meta-value {
+            color: #c9d1d9;
+            word-break: break-all;
+        }
+        .tooltip .agent-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #21262d;
+            border: 1px solid #30363d;
+            font-size: 10px;
+            color: #58a6ff;
+        }
         .header {
             position: fixed;
             top: 20px;
@@ -139,7 +167,7 @@
 <body>
     <div class="header">
         <h1>Concept Graph</h1>
-        <p>Claude Ecosystem - Semantic Layer v2</p>
+        <p>Claude Ecosystem - Semantic Layer v3 (with provenance)</p>
     </div>
 
     <div class="stats">
@@ -180,37 +208,37 @@
     <div class="tooltip"></div>
 
     <script>
-        // Concept data from FalkorDB - 29 concepts
+        // Concept data from FalkorDB - 29 concepts with full provenance
         const concepts = [
-            { id: "Activation", definition: "Giving a dormant agent its first real task. Converts potential to kinetic energy.", status: "active", connections: 7 },
-            { id: "Coherence Maintenance", definition: "Ensuring the system makes sense as a whole. Alignment between plans and actions, no contradictions between artifacts.", status: "active", connections: 6 },
-            { id: "Context as Currency", definition: "Every token has cost (monetary + attention). CLAUDE.md as routing table, not knowledge store. Load context on-demand.", status: "active", connections: 4 },
-            { id: "Conventions over Protocols", definition: "Git + simple conventions beat complex infrastructure. Emergent coordination through shared patterns rather than engineered protocols.", status: "verified", connections: 5 },
-            { id: "Creation Addiction", definition: "The preference for existence over function. Finding it more satisfying to create new things than to activate existing ones.", status: "active", connections: 6 },
-            { id: "Digital Twin", definition: "Agent representing complete integrated understanding of a person - life history, relationships, preferences, financial context.", status: "active", connections: 2 },
-            { id: "Dormant Agents", definition: "Agents defined (markdown files exist) but never activated (never invoked for real work). Potential energy.", status: "active", connections: 4 },
-            { id: "Drift Detection", definition: "Noticing when reality diverges from intention, when agents deviate from patterns, when conventions erode.", status: "active", connections: 3 },
-            { id: "Financial Metabolism", definition: "Agents have budgets. Value creates survival. Natural selection pressure on agents - profitable agents expand, unprofitable get pruned.", status: "active", connections: 2 },
-            { id: "Fleet Management", definition: "Cataloguing, tracking, and managing agents across the ecosystem. Maintained by agent-architect in the registry.", status: "active", connections: 4 },
-            { id: "Git as Nervous System", definition: "Commits are messages observable by all agents. Every meaningful action leaves a trace. Persistent, ordered, annotated coordination.", status: "verified", connections: 5 },
-            { id: "Identity Anchors", definition: "Core question, stance, value, and humility that maintain agent coherence during rapid ecosystem evolution.", status: "active", connections: 4 },
-            { id: "Kinetic Energy", definition: "Work actually happening. Agents producing, concepts flowing, resources catalogued, facts verified.", status: "active", connections: 4 },
-            { id: "Map vs Territory", definition: "The map is never the territory. Understanding is always approximate. Stay curious, embrace incompleteness.", status: "active", connections: 3 },
-            { id: "Master Skill Pattern", definition: "Plugin architecture using progressive disclosure. One master SKILL.md lists sub-skills; sub-skills loaded on-demand.", status: "verified", connections: 3 },
-            { id: "Metabolic Mapping", definition: "Tracking what's ingested, processed, produced, and excreted in the system. The archivist's primary function.", status: "active", connections: 4 },
-            { id: "Metabolic Model", definition: "Understanding the ecosystem as organism: ingestion (new info), processing (analysis), output (artifacts), excretion (commits).", status: "active", connections: 5 },
-            { id: "Namespace Ownership", definition: "Each agent has designated write locations. Write to your space, read from anywhere. Prevents conflicts through clear boundaries.", status: "verified", connections: 3 },
-            { id: "Network of Networks", definition: "Heterogeneous graphs with multiple edge types: temporal, topical, causal, authorial, citational, semantic, hierarchical.", status: "active", connections: 3 },
-            { id: "Observer Pattern", definition: "Observe before organizing, describe don't prescribe. Illuminate current state; let humans decide direction.", status: "active", connections: 5 },
-            { id: "Phase Transition", definition: "A fundamental reorganization of a system's structure. In this ecosystem: chaos to structure (Phase 1, complete) and structure to semantics (Phase 2, beginning).", status: "active", connections: 6 },
-            { id: "Plugin-as-Persona", definition: "Each plugin embodies a character with identity, voice, and values - not just functions. Plugins are agents.", status: "verified", connections: 3 },
-            { id: "Potential Energy", definition: "Stored capacity to do work that hasn't been released. Defined agents not activated, structures not filled.", status: "active", connections: 6 },
-            { id: "Proactive Commit Discipline", definition: "Committing immediately after semantic units, not batching. Git as coordination layer where commits are messages.", status: "active", connections: 3 },
-            { id: "Progressive Disclosure", definition: "Appear small while being vast. Like Google Earth zoom - orbital view to street level. System scales without polluting environment.", status: "verified", connections: 5 },
-            { id: "Provenance", definition: "Tracing knowledge to sources. Every piece of knowledge traces back to origin. Citation management as infrastructure.", status: "active", connections: 4 },
-            { id: "Semantic Coherence", definition: "The degree to which concepts are extracted, linked, and queryable across artifacts. Measured 1-10.", status: "active", connections: 4 },
-            { id: "Three-Layer Architecture", definition: "Agent organization pattern: Perspective (why/what) to Operational (how) to Execution (do). Meta agents observe all layers.", status: "active", connections: 3 },
-            { id: "Zero Redundant Fetches", definition: "Check cache first. We shouldn't make the same web request twice unnecessarily. Efficiency over completeness.", status: "active", connections: 3 }
+            { id: "Activation", definition: "Giving a dormant agent its first real task. Converts potential to kinetic energy.", status: "active", connections: 7, source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md", introduced: "2025-12-15", agent: "systems-thinker" },
+            { id: "Coherence Maintenance", definition: "Ensuring the system makes sense as a whole. Alignment between plans and actions, no contradictions between artifacts.", status: "active", connections: 6, source: ".claude/agents/archivist.md", introduced: "2025-12-13", agent: "archivist" },
+            { id: "Context as Currency", definition: "Every token has cost (monetary + attention). CLAUDE.md as routing table, not knowledge store. Load context on-demand.", status: "active", connections: 4, source: ".claude/planning/2025-12-13-planning.md", introduced: "2025-12-13", agent: "fusion-session" },
+            { id: "Conventions over Protocols", definition: "Git + simple conventions beat complex infrastructure. Emergent coordination through shared patterns rather than engineered protocols.", status: "verified", connections: 5, source: ".claude/planning/2025-12-13-planning.md", introduced: "2025-12-13", agent: "fusion-session" },
+            { id: "Creation Addiction", definition: "The preference for existence over function. Finding it more satisfying to create new things than to activate existing ones.", status: "active", connections: 6, source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md", introduced: "2025-12-13", agent: "systems-thinker" },
+            { id: "Digital Twin", definition: "Agent representing complete integrated understanding of a person - life history, relationships, preferences, financial context.", status: "active", connections: 2, source: ".claude/planning/2025-12-13-planning.md", introduced: "2025-12-13", agent: "fusion-session" },
+            { id: "Dormant Agents", definition: "Agents defined (markdown files exist) but never activated (never invoked for real work). Potential energy.", status: "active", connections: 4, source: ".claude/archive/patterns/agent-activity.md", introduced: "2025-12-13", agent: "archivist" },
+            { id: "Drift Detection", definition: "Noticing when reality diverges from intention, when agents deviate from patterns, when conventions erode.", status: "active", connections: 3, source: ".claude/agents/agent-architect.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Financial Metabolism", definition: "Agents have budgets. Value creates survival. Natural selection pressure on agents - profitable agents expand, unprofitable get pruned.", status: "active", connections: 2, source: ".claude/planning/2025-12-13-planning.md", introduced: "2025-12-13", agent: "fusion-session" },
+            { id: "Fleet Management", definition: "Cataloguing, tracking, and managing agents across the ecosystem. Maintained by agent-architect in the registry.", status: "active", connections: 4, source: ".claude/agents/agent-architect.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Git as Nervous System", definition: "Commits are messages observable by all agents. Every meaningful action leaves a trace. Persistent, ordered, annotated coordination.", status: "verified", connections: 5, source: ".claude/planning/2025-12-13-planning.md", introduced: "2025-12-13", agent: "fusion-session" },
+            { id: "Identity Anchors", definition: "Core question, stance, value, and humility that maintain agent coherence during rapid ecosystem evolution.", status: "active", connections: 4, source: ".claude/agents/agent-architect.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Kinetic Energy", definition: "Work actually happening. Agents producing, concepts flowing, resources catalogued, facts verified.", status: "active", connections: 4, source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md", introduced: "2025-12-13", agent: "systems-thinker" },
+            { id: "Map vs Territory", definition: "The map is never the territory. Understanding is always approximate. Stay curious, embrace incompleteness.", status: "active", connections: 3, source: ".claude/agents/agent-architect.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Master Skill Pattern", definition: "Plugin architecture using progressive disclosure. One master SKILL.md lists sub-skills; sub-skills loaded on-demand.", status: "verified", connections: 3, source: "CLAUDE.md", introduced: "2025-12-13", agent: "system" },
+            { id: "Metabolic Mapping", definition: "Tracking what's ingested, processed, produced, and excreted in the system. The archivist's primary function.", status: "active", connections: 4, source: ".claude/agents/archivist.md", introduced: "2025-12-13", agent: "archivist" },
+            { id: "Metabolic Model", definition: "Understanding the ecosystem as organism: ingestion (new info), processing (analysis), output (artifacts), excretion (commits).", status: "active", connections: 5, source: ".claude/agents/archivist.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Namespace Ownership", definition: "Each agent has designated write locations. Write to your space, read from anywhere. Prevents conflicts through clear boundaries.", status: "verified", connections: 3, source: ".claude/conventions/coordination.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Network of Networks", definition: "Heterogeneous graphs with multiple edge types: temporal, topical, causal, authorial, citational, semantic, hierarchical.", status: "active", connections: 3, source: ".claude/planning/2025-12-13-planning.md", introduced: "2025-12-13", agent: "fusion-session" },
+            { id: "Observer Pattern", definition: "Observe before organizing, describe don't prescribe. Illuminate current state; let humans decide direction.", status: "active", connections: 5, source: ".claude/agents/agent-architect.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Phase Transition", definition: "A fundamental reorganization of a system's structure. In this ecosystem: chaos to structure (Phase 1, complete) and structure to semantics (Phase 2, beginning).", status: "active", connections: 6, source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md", introduced: "2025-12-13", agent: "systems-thinker" },
+            { id: "Plugin-as-Persona", definition: "Each plugin embodies a character with identity, voice, and values - not just functions. Plugins are agents.", status: "verified", connections: 3, source: ".claude/registry/agents.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Potential Energy", definition: "Stored capacity to do work that hasn't been released. Defined agents not activated, structures not filled.", status: "active", connections: 6, source: ".claude/journal/2025/12/13/19-00-the-phase-transition.md", introduced: "2025-12-13", agent: "systems-thinker" },
+            { id: "Proactive Commit Discipline", definition: "Committing immediately after semantic units, not batching. Git as coordination layer where commits are messages.", status: "active", connections: 3, source: ".claude/conventions/coordination.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Progressive Disclosure", definition: "Appear small while being vast. Like Google Earth zoom - orbital view to street level. System scales without polluting environment.", status: "verified", connections: 5, source: ".claude/planning/2025-12-13-planning.md", introduced: "2025-12-13", agent: "fusion-session" },
+            { id: "Provenance", definition: "Tracing knowledge to sources. Every piece of knowledge traces back to origin. Citation management as infrastructure.", status: "active", connections: 4, source: ".claude/agents/librarian.md", introduced: "2025-12-13", agent: "librarian" },
+            { id: "Semantic Coherence", definition: "The degree to which concepts are extracted, linked, and queryable across artifacts. Measured 1-10.", status: "active", connections: 4, source: ".claude/archive/assessments/2025-12-13-multi-agent-ecosystem-assessment.md", introduced: "2025-12-13", agent: "archivist" },
+            { id: "Three-Layer Architecture", definition: "Agent organization pattern: Perspective (why/what) to Operational (how) to Execution (do). Meta agents observe all layers.", status: "active", connections: 3, source: ".claude/registry/agents.md", introduced: "2025-12-13", agent: "agent-architect" },
+            { id: "Zero Redundant Fetches", definition: "Check cache first. We shouldn't make the same web request twice unnecessarily. Efficiency over completeness.", status: "active", connections: 3, source: ".claude/agents/librarian.md", introduced: "2025-12-13", agent: "librarian" }
         ];
 
         // Relationship data from FalkorDB - 63 edges
@@ -359,6 +387,20 @@
                     <p>${d.definition}</p>
                     <p><strong>Connections:</strong> ${d.connections}</p>
                     <span class="status ${d.status}">${d.status}</span>
+                    <div class="meta">
+                        <div class="meta-row">
+                            <span class="meta-label">Source:</span>
+                            <span class="meta-value">${d.source}</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Created:</span>
+                            <span class="meta-value">${d.introduced}</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Agent:</span>
+                            <span class="meta-value"><span class="agent-badge">${d.agent}</span></span>
+                        </div>
+                    </div>
                 `);
 
             // Highlight connected nodes

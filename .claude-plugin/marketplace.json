@@ -17,6 +17,8 @@
     {"name": "knowledge-graphs", "source": "./plugins/knowledge-graphs/"},
     {"name": "exploration", "source": "./plugins/exploration/"},
     {"name": "interface", "source": "./plugins/interface/"},
-    {"name": "agentnet", "source": "./plugins/agentnet/"}
+    {"name": "agentnet", "source": "./plugins/agentnet/"},
+    {"name": "temporal", "source": "./plugins/temporal/"},
+    {"name": "statusline", "source": "./plugins/statusline/"}
   ]
 }

@@ -11,7 +11,10 @@ NEVER PRODUCE MOCK DATA. NEVER PRODUCE FAKE DATA. ONLY USE DATA FROM RELIABLE SO
 - **Write** to your designated namespace
 - **Read** from anywhere
 - **Commit** with structured messages: `[scope] action: description`
+- **Include agent ID** when known: `[agent:type/hexid] action: description`
 - **Observe** git log for ecosystem activity
+
+**Agent ID traceability**: After spawning a subagent, include its hex ID (from Task output) in commits to enable direct transcript lookup. Use `.claude/tools/correlate_commits.py` for retroactive correlation.
 
 See `.claude/conventions/coordination.md` for full patterns.
 
@@ -32,6 +35,32 @@ See `.claude/conventions/coordination.md` for full patterns.
 - Agent fleet: `.claude/registry/agents.md`
 - Processes: `.claude/registry/processes.md`
 - Strategic context: `.claude/briefings/`
+
+---
+
+# Journal Entries
+
+Before creating journal entries, **read the journal-writer subskill**:
+`plugins/journal/skills/journal-master/subskills/journal-writer.md`
+
+**Critical rules**:
+
+| Field | Rule |
+|-------|------|
+| `created` | Actual file creation time (NOW). Use timestamp from transcript or `date` command. NEVER fabricate. |
+| `references_date` | Add this field when documenting past events. The `created` field is still NOW. |
+| `parent_daily` | Must match the folder date: file in `2025/12/16/` → `parent_daily: [[2025-12-16]]` |
+
+**Body footer REQUIRED** for graph connectivity:
+```markdown
+---
+
+*Parent: [[YYYY-MM-DD]] → [[YYYY-MM]] → [[YYYY]]*
+```
+
+Frontmatter wikilinks are metadata only—graph visualizers (Quartz, Obsidian) only crawl links in the body.
+
+---
 
 # Plugin Architecture
 
