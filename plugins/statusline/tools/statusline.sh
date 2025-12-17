@@ -101,8 +101,10 @@ else
 fi
 
 # Extract short model name (Opus 4.5, Sonnet 4, Haiku 3.5, etc.)
-MODEL_SHORT=$(echo "$MODEL" | sed -E 's/.*(Opus|Sonnet|Haiku)( [0-9.]+)?/\1\2/')
-if [ -z "$MODEL_SHORT" ] || [ "$MODEL_SHORT" = "$MODEL" ]; then
+# Check if model contains a known name, then extract it with version
+if echo "$MODEL" | grep -qE '(Opus|Sonnet|Haiku)'; then
+    MODEL_SHORT=$(echo "$MODEL" | sed -E 's/.*(Opus|Sonnet|Haiku)( [0-9.]+)?.*/\1\2/')
+else
     MODEL_SHORT="Claude"
 fi
 
