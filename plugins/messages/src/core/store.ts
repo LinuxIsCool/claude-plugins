@@ -166,6 +166,10 @@ export class MessageStore {
 
   /**
    * Create a new message
+   *
+   * Write order: content file first, then event log.
+   * This ensures that if crash occurs after content write, we have the content
+   * and can detect missing event on next scan. Event without content is harder to recover.
    */
   async createMessage(input: MessageInput): Promise<Message> {
     const id = generateCID(input);
@@ -176,16 +180,16 @@ export class MessageStore {
       imported_at: Date.now(),
     };
 
-    // Append to event log
+    // Write content file first (recoverable if event write fails)
+    await this.writeContentFile(message);
+
+    // Then append to event log (source of truth)
     const event: MessageCreatedEvent = {
       ts: new Date().toISOString(),
       op: "message.created",
       data: message,
     };
     this.appendEvent(event);
-
-    // Write content file
-    this.writeContentFile(message);
 
     return message;
   }

@@ -184,7 +184,13 @@ def get_git_status(cwd: str) -> tuple[list[dict], str]:
             if not line:
                 continue
             status = line[:2].strip()
-            filepath = line[3:].strip()
+            # Git porcelain format: XY PATH
+            # When Y is a space (e.g., "M "), there's no extra separator - path starts at position 2
+            # When Y is not a space (e.g., " M", "??"), separator is at position 2, path at position 3
+            if len(line) > 2 and line[2] == ' ':
+                filepath = line[3:].strip()
+            else:
+                filepath = line[2:].strip()
 
             # Get file size if it exists
             full_path = Path(cwd) / filepath
