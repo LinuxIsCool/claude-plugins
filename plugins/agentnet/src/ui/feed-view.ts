@@ -132,8 +132,9 @@ export async function renderFeedView(
 			left: 1,
 			width: "100%-4",
 			height: "100%-2",
-			keys: true,   // Enable built-in key handling
-			vi: true,     // Enable j/k navigation
+			keys: true,     // Enable built-in key handling
+			vi: true,       // Enable j/k navigation
+			keyable: true,  // Register with screen for keypress events
 			mouse: true,
 			scrollable: true,
 			tags: true,

@@ -2,14 +2,17 @@
  * DayColumn component - displays a single day in the weekly grid
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import type { ScheduleBlock, ScheduleConfig, DayOfWeek } from "../../types";
 import { TimeBlock } from "./TimeBlock";
-import { capitalize } from "../../utils/time";
+import { capitalize, formatDateShort } from "../../utils/time";
+import { calculateBlockLayouts } from "../utils/overlap";
 
 interface DayColumnProps {
   day: DayOfWeek;
+  date?: Date;
   blocks: ScheduleBlock[];
+  visibleBlockIds: Set<string>;
   config: ScheduleConfig;
   hourHeight: number;
   onBlockClick?: (block: ScheduleBlock) => void;
@@ -17,7 +20,9 @@ interface DayColumnProps {
 
 export function DayColumn({
   day,
+  date,
   blocks,
+  visibleBlockIds,
   config,
   hourHeight,
   onBlockClick,
@@ -78,27 +83,45 @@ export function DayColumn({
           top: 0,
           backgroundColor: isToday ? "#dbeafe" : "#f9fafb",
           borderBottom: "1px solid #e5e7eb",
-          padding: "8px",
+          padding: "6px 8px",
           textAlign: "center",
-          fontWeight: 600,
-          fontSize: "14px",
-          color: isToday ? "#1d4ed8" : "#374151",
           zIndex: 5,
         }}
       >
-        {capitalize(day)}
-        {isToday && (
-          <span
+        <div
+          style={{
+            fontWeight: 600,
+            fontSize: "14px",
+            color: isToday ? "#1d4ed8" : "#374151",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "4px",
+          }}
+        >
+          {capitalize(day)}
+          {isToday && (
+            <span
+              style={{
+                display: "inline-block",
+                width: "6px",
+                height: "6px",
+                backgroundColor: "#1d4ed8",
+                borderRadius: "50%",
+              }}
+            />
+          )}
+        </div>
+        {date && (
+          <div
             style={{
-              display: "inline-block",
-              width: "6px",
-              height: "6px",
-              backgroundColor: "#1d4ed8",
-              borderRadius: "50%",
-              marginLeft: "6px",
-              verticalAlign: "middle",
+              fontSize: "11px",
+              color: isToday ? "#3b82f6" : "#9ca3af",
+              marginTop: "2px",
             }}
-          />
+          >
+            {formatDateShort(date)}
+          </div>
         )}
       </div>
 
@@ -140,17 +163,22 @@ export function DayColumn({
           </div>
         )}
 
-        {/* Blocks */}
-        {blocks.map((block) => (
-          <TimeBlock
-            key={block.id}
-            block={block}
-            config={config}
-            dayStartHour={dayStartHour}
-            hourHeight={hourHeight}
-            onClick={onBlockClick}
-          />
-        ))}
+        {/* Blocks with overlap layout */}
+        {useMemo(() => {
+          const layouts = calculateBlockLayouts(blocks);
+          return layouts.map(({ block, column, totalColumns }) => (
+            <TimeBlock
+              key={block.id}
+              block={block}
+              config={config}
+              dayStartHour={dayStartHour}
+              hourHeight={hourHeight}
+              onClick={onBlockClick}
+              layout={{ column, totalColumns }}
+              hidden={!visibleBlockIds.has(block.id)}
+            />
+          ));
+        }, [blocks, config, dayStartHour, hourHeight, onBlockClick, visibleBlockIds])}
       </div>
     </div>
   );

@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+# Environment variables
+.env
+.env.local
+
 # Cache
 .cache/
 
@@ -13,3 +17,6 @@ node_modules/
 # Editor
 *.swp
 *.swo
+
+# Auto-synced Google Calendar events (user data, regenerated from API)
+schedule/blocks/gcal-*.md

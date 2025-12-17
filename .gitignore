@@ -207,10 +207,13 @@ marimo/_lsp/
 __marimo__/
 resources/
 
-# Claude Code logging
-.claude/logging/**/*.jsonl
-.claude/logging/**/*.cache.json
+# Claude Code logging (anywhere in tree)
+**/.claude/logging/
 .obsidian/
+
+# Claude Code runtime data (statusline plugin)
+.claude/instances/
+.claude/statusline.conf
 
 # Node.js / JavaScript / TypeScript
 node_modules/

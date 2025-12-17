@@ -139,3 +139,86 @@ export function getDayFromIndex(index: number): DayOfWeek {
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+/**
+ * Get the dates for the current week based on weekStartsOn config
+ * Returns a map of DayOfWeek -> Date
+ */
+export function getWeekDates(weekStartsOn: DayOfWeek = "monday"): Map<DayOfWeek, Date> {
+  const today = new Date();
+  const currentDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ...
+
+  // Map DayOfWeek to JS Date day index (0 = Sunday)
+  const dayToJsIndex: Record<DayOfWeek, number> = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+
+  // Order of days starting from weekStartsOn
+  const orderedDays: DayOfWeek[] = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
+
+  // Calculate the start of the week
+  const weekStartJsIndex = dayToJsIndex[weekStartsOn];
+  let daysToSubtract = currentDayOfWeek - weekStartJsIndex;
+  if (daysToSubtract < 0) daysToSubtract += 7;
+
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - daysToSubtract);
+  weekStart.setHours(0, 0, 0, 0);
+
+  // Build the map
+  const result = new Map<DayOfWeek, Date>();
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+    result.set(orderedDays[i], date);
+  }
+
+  return result;
+}
+
+/**
+ * Check if a date string (YYYY-MM-DD) is in the current week
+ */
+export function isDateInCurrentWeek(
+  dateStr: string,
+  weekStartsOn: DayOfWeek = "monday"
+): boolean {
+  const weekDates = getWeekDates(weekStartsOn);
+  const targetDate = new Date(dateStr + "T00:00:00");
+
+  // Get the first and last date of the week
+  const dates = Array.from(weekDates.values());
+  const weekStartDate = dates[0];
+  const weekEndDate = dates[6];
+
+  // Set to end of the last day
+  const weekEnd = new Date(weekEndDate);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  return targetDate >= weekStartDate && targetDate <= weekEnd;
+}
+
+/**
+ * Format date as "Dec 17"
+ */
+export function formatDateShort(date: Date): string {
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+  return `${months[date.getMonth()]} ${date.getDate()}`;
+}

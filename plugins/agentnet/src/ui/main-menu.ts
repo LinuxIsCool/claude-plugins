@@ -108,8 +108,9 @@ export async function renderMainMenu(items: MenuItem[]): Promise<boolean> {
 			left: 1,
 			width: "100%-4",
 			height: "100%-3",
-			keys: true,   // Enable built-in key handling
-			vi: true,     // Enable j/k navigation
+			keys: true,     // Enable built-in key handling
+			vi: true,       // Enable j/k navigation
+			keyable: true,  // Register with screen for keypress events
 			mouse: true,
 			tags: true,
 			style: {

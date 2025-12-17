@@ -9,6 +9,13 @@ import { readFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { Schedule } from "../core/schedule";
 import type { CreateBlockInput, EditBlockInput, BlockFilter, DayOfWeek } from "../types";
+import {
+  listCalendars,
+  syncGoogleCalendar,
+  startPeriodicSync,
+  stopPeriodicSync,
+  getSyncStatus,
+} from "../integrations/google-calendar";
 
 // Get the web directory (relative to this file)
 const WEB_DIR = join(dirname(import.meta.dir), "web");
@@ -114,6 +121,23 @@ export async function startServer(options: ServerOptions) {
 
   console.log(`Schedule.md server running at http://localhost:${port}`);
 
+  // Start Google Calendar sync if configured
+  const config = schedule.getConfig();
+  if (
+    config.integrations?.googleCalendar?.enabled &&
+    process.env.GOOGLE_CLIENT_ID &&
+    process.env.GOOGLE_CLIENT_SECRET &&
+    process.env.GOOGLE_REFRESH_TOKEN
+  ) {
+    const gcalConfig = config.integrations.googleCalendar;
+    const calendarIds = (gcalConfig.calendars || [])
+      .map((cal) => cal.id)
+      .filter(Boolean);
+    if (calendarIds.length > 0) {
+      startPeriodicSync(scheduleDir, calendarIds, 30);
+    }
+  }
+
   return server;
 }
 
@@ -203,6 +227,111 @@ async function handleApiRequest(
       return json(summary);
     }
 
+    // === Google Calendar API ===
+
+    // GET /api/google-calendar/status
+    if (path === "google-calendar/status" && method === "GET") {
+      const status = getSyncStatus();
+      return json(status);
+    }
+
+    // GET /api/google-calendar/calendars
+    if (path === "google-calendar/calendars" && method === "GET") {
+      try {
+        const calendars = await listCalendars();
+        return json(calendars);
+      } catch (error) {
+        return json(
+          { error: error instanceof Error ? error.message : "Failed to fetch calendars" },
+          500
+        );
+      }
+    }
+
+    // POST /api/google-calendar/sync
+    if (path === "google-calendar/sync" && method === "POST") {
+      try {
+        const config = schedule.getConfig();
+        const calendarIds = (config.integrations?.googleCalendar?.calendars || [])
+          .map((cal) => cal.id)
+          .filter(Boolean);
+
+        if (calendarIds.length === 0) {
+          return json({ error: "No calendars configured for sync" }, 400);
+        }
+
+        const results = await syncGoogleCalendar(
+          schedule.getScheduleDir(),
+          calendarIds,
+          30
+        );
+
+        // Reload schedule to pick up new blocks
+        await schedule.reload();
+
+        return json(results);
+      } catch (error) {
+        return json(
+          { error: error instanceof Error ? error.message : "Sync failed" },
+          500
+        );
+      }
+    }
+
+    // POST /api/google-calendar/enable
+    if (path === "google-calendar/enable" && method === "POST") {
+      const body = await req.json();
+      const calendarIds = body.calendars as string[];
+
+      if (!calendarIds || calendarIds.length === 0) {
+        return json({ error: "No calendars specified" }, 400);
+      }
+
+      // Convert string IDs to CalendarConfig objects
+      const calendarConfigs = calendarIds.map((id) => ({
+        id,
+        name: id === "primary" ? "Primary Calendar" : id,
+        enabled: true,
+      }));
+
+      // Update config with enabled calendars
+      const config = schedule.getConfig();
+      const updatedConfig = await schedule.updateConfig({
+        integrations: {
+          ...config.integrations,
+          googleCalendar: {
+            ...config.integrations.googleCalendar,
+            enabled: true,
+            calendars: calendarConfigs,
+          },
+        },
+      });
+
+      // Start sync with new calendars
+      startPeriodicSync(schedule.getScheduleDir(), calendarIds, 30);
+
+      return json({ success: true, config: updatedConfig.integrations.googleCalendar });
+    }
+
+    // POST /api/google-calendar/disable
+    if (path === "google-calendar/disable" && method === "POST") {
+      stopPeriodicSync();
+
+      // Update config
+      const config = schedule.getConfig();
+      const updatedConfig = await schedule.updateConfig({
+        integrations: {
+          ...config.integrations,
+          googleCalendar: {
+            ...config.integrations.googleCalendar,
+            enabled: false,
+          },
+        },
+      });
+
+      return json({ success: true, config: updatedConfig.integrations.googleCalendar });
+    }
+
     // Not found
     return json({ error: "Not found" }, 404);
   } catch (error) {
@@ -232,6 +361,18 @@ async function handleStaticRequest(path: string): Promise<Response> {
       const js = await readFile(join(WEB_DIR, "dist", "index.js"), "utf-8");
       return new Response(js, {
         headers: { "Content-Type": "application/javascript" },
+      });
+    } catch {
+      return new Response("Not found", { status: 404 });
+    }
+  }
+
+  // Serve favicon (SVG emoji)
+  if (path === "/favicon.ico" || path === "/favicon.svg") {
+    try {
+      const svg = await readFile(join(WEB_DIR, "favicon.svg"), "utf-8");
+      return new Response(svg, {
+        headers: { "Content-Type": "image/svg+xml" },
       });
     } catch {
       return new Response("Not found", { status: 404 });

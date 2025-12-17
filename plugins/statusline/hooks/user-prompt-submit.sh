@@ -4,23 +4,25 @@
 #
 # Receives JSON via stdin with:
 # - session_id: Unique session identifier
+# - cwd: Current working directory
 #
 # Increments counter in .claude/instances/counts/{session_id}.txt
 
 # Read JSON input
 INPUT=$(cat)
 
-# Parse session ID
+# Parse fields
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 
 # Exit if no session ID
 if [ -z "$SESSION_ID" ]; then
     exit 0
 fi
 
-# Find instances directory
+# Find instances directory (use absolute CWD path, fallback to HOME)
 INSTANCES_DIR=""
-for loc in ".claude/instances" "$HOME/.claude/instances"; do
+for loc in "$CWD/.claude/instances" "$HOME/.claude/instances"; do
     if [ -d "$loc" ]; then
         INSTANCES_DIR="$loc"
         break

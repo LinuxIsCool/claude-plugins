@@ -2,12 +2,14 @@
  * WeekView component - displays the full weekly calendar grid
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import type { ScheduleBlock, ScheduleConfig, DayOfWeek } from "../../types";
 import { DayColumn } from "./DayColumn";
+import { getWeekDates } from "../../utils/time";
 
 interface WeekViewProps {
   blocks: ScheduleBlock[];
+  visibleBlockIds: Set<string>;
   config: ScheduleConfig;
   onBlockClick?: (block: ScheduleBlock) => void;
 }
@@ -24,7 +26,12 @@ const DAYS: DayOfWeek[] = [
 
 const HOUR_HEIGHT = 60; // pixels per hour
 
-export function WeekView({ blocks, config, onBlockClick }: WeekViewProps) {
+export function WeekView({ blocks, visibleBlockIds, config, onBlockClick }: WeekViewProps) {
+  // Calculate dates for the current week
+  const weekDates = useMemo(
+    () => getWeekDates(config.weekStartsOn),
+    [config.weekStartsOn]
+  );
   const { dayStartHour, dayEndHour } = config;
   const totalHours = dayEndHour - dayStartHour;
 
@@ -115,7 +122,9 @@ export function WeekView({ blocks, config, onBlockClick }: WeekViewProps) {
           <DayColumn
             key={day}
             day={day}
+            date={weekDates.get(day)}
             blocks={blocksByDay[day]}
+            visibleBlockIds={visibleBlockIds}
             config={config}
             hourHeight={HOUR_HEIGHT}
             onBlockClick={onBlockClick}

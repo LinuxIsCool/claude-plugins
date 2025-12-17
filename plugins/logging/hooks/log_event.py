@@ -29,6 +29,59 @@ EMOJIS = {
 }
 
 
+def get_session_state_path(cwd: str) -> Path:
+    """Get path to session state file."""
+    return Path(cwd) / ".claude/logging/session-state.json"
+
+
+def load_session_state(cwd: str) -> dict:
+    """Load session state from JSON file."""
+    state_path = get_session_state_path(cwd)
+    try:
+        if state_path.exists():
+            return json.loads(state_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        pass
+    return {"agent_session": 0}
+
+
+def save_session_state(cwd: str, state: dict) -> None:
+    """Save session state to JSON file."""
+    state_path = get_session_state_path(cwd)
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        state_path.write_text(json.dumps(state, indent=2))
+    except OSError:
+        pass
+
+
+def get_agent_session(cwd: str, source: str) -> int:
+    """Get and update agent session counter based on source.
+
+    Behavior:
+    - startup: Reset to 0 (new session)
+    - compact/clear: Increment (context reset within session)
+    - resume: Keep same (just resuming)
+    """
+    state = load_session_state(cwd)
+
+    if source == "startup":
+        state["agent_session"] = 0
+        save_session_state(cwd, state)
+    elif source in ("compact", "clear"):
+        state["agent_session"] += 1
+        save_session_state(cwd, state)
+    # For "resume" and "unknown", keep current state
+
+    return state["agent_session"]
+
+
+def get_current_agent_session(cwd: str) -> int:
+    """Read current agent session without modifying."""
+    state = load_session_state(cwd)
+    return state.get("agent_session", 0)
+
+
 def get_paths(cwd, sid, ts):
     """Get log file paths, reusing existing timestamp prefix or creating new."""
     base = Path(cwd) / ".claude/logging" / ts.strftime("%Y/%m/%d")
@@ -227,9 +280,16 @@ def generate_markdown(jsonl_path, md_path, sid):
             if agent_id and tool_use_id in tool_use_prompts:
                 agent_prompts[agent_id] = tool_use_prompts[tool_use_id]
 
+    # Get agent session from first event
+    agent_session = events[0].get("agent_session", 0)
+
+    # Build session label: shortid:agent format
+    session_label = f"{sid[:8]}:{agent_session}"
+
     lines = [
-        f"# Session {sid[:8]}",
+        f"# Session {session_label}",
         f"**ID:** `{sid}`",
+        f"**Agent Session:** {agent_session} (context resets)",
         f"**Started:** {events[0]['ts'][:19].replace('T', ' ')}",
         "",
         "---",
@@ -389,13 +449,33 @@ def main():
     )
     jsonl, md = get_paths(cwd, sid, ts)
 
+    # Handle agent session counter (tracks compactions within a session)
+    agent_session = None
+    if event == "SessionStart":
+        source = data.get("source", "unknown")
+        agent_session = get_agent_session(cwd, source)
+        # Export for other plugins (e.g., statusline) via CLAUDE_ENV_FILE
+        env_file = os.environ.get("CLAUDE_ENV_FILE")
+        if env_file:
+            try:
+                with open(env_file, "a") as ef:
+                    ef.write(f"AGENT_SESSION_NUMBER={agent_session}\n")
+            except OSError:
+                pass
+    else:
+        # For non-SessionStart events, read current value
+        agent_session = get_current_agent_session(cwd)
+
     # Append to JSONL (source of truth)
     with open(jsonl, "a") as f:
-        json.dump(
-            {"ts": ts.isoformat(), "type": event, "session_id": sid, "data": data},
-            f,
-            default=str,
-        )
+        log_entry = {
+            "ts": ts.isoformat(),
+            "type": event,
+            "session_id": sid,
+            "agent_session": agent_session,
+            "data": data,
+        }
+        json.dump(log_entry, f, default=str)
         f.write("\n")
 
         # Capture assistant response on Stop (append before closing file)
@@ -407,6 +487,7 @@ def main():
                         "ts": ts.isoformat(),
                         "type": "AssistantResponse",
                         "session_id": sid,
+                        "agent_session": agent_session,
                         "data": {"response": response},
                     },
                     f,

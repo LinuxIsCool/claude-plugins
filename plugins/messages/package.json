@@ -1,0 +1,18 @@
+{
+  "name": "@plugins/messages",
+  "version": "0.1.0",
+  "description": "Universal messaging backbone with content-addressed storage and DID-based identity",
+  "type": "module",
+  "main": "src/cli.ts",
+  "scripts": {
+    "cli": "bun src/cli.ts",
+    "mcp": "bun src/server/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}

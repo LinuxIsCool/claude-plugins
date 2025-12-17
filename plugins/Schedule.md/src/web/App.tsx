@@ -2,12 +2,38 @@
  * Schedule.md - Main React Application
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import type { ScheduleBlock, ScheduleConfig, ScheduleSummary } from "../types";
 import { Header } from "./components/Header";
 import { WeekView } from "./components/WeekView";
 import { BlockModal } from "./components/BlockModal";
+import { SettingsPanel } from "./components/SettingsPanel";
 import { api, ws } from "./lib/api";
+import { isDateInCurrentWeek } from "../utils/time";
+
+// Load preferences from localStorage
+const PREFS_KEY = "schedule-md:calendar-preferences";
+
+interface CalendarPreferences {
+  showGoogleCalendar: boolean;
+  selectedCalendars: string[];
+}
+
+function loadPreferences(): CalendarPreferences {
+  try {
+    const stored = localStorage.getItem(PREFS_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return { showGoogleCalendar: true, selectedCalendars: [] };
+}
+
+function savePreferences(prefs: CalendarPreferences): void {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+}
 
 export function App() {
   const [config, setConfig] = useState<ScheduleConfig | null>(null);
@@ -16,6 +42,17 @@ export function App() {
   const [selectedBlock, setSelectedBlock] = useState<ScheduleBlock | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Calendar visibility preferences
+  const [showGoogleCalendar, setShowGoogleCalendar] = useState(() =>
+    loadPreferences().showGoogleCalendar
+  );
+  const [selectedCalendars, setSelectedCalendars] = useState<string[]>(() =>
+    loadPreferences().selectedCalendars
+  );
+
+  // Settings panel state
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 
   // Load initial data
   const loadData = useCallback(async () => {
@@ -66,6 +103,75 @@ export function App() {
   const handleCloseModal = useCallback(() => {
     setSelectedBlock(null);
   }, []);
+
+  // Calendar toggle handlers
+  const handleToggleGoogleCalendar = useCallback(() => {
+    setShowGoogleCalendar((prev) => {
+      const newValue = !prev;
+      savePreferences({ showGoogleCalendar: newValue, selectedCalendars });
+      return newValue;
+    });
+  }, [selectedCalendars]);
+
+  const handleSelectedCalendarsChange = useCallback(
+    (ids: string[]) => {
+      setSelectedCalendars(ids);
+      savePreferences({ showGoogleCalendar, selectedCalendars: ids });
+    },
+    [showGoogleCalendar]
+  );
+
+  // Filter blocks to current week (for layout stability)
+  // This includes all blocks that COULD be displayed, regardless of calendar toggle
+  const currentWeekBlocks = useMemo(() => {
+    const weekStartsOn = config?.weekStartsOn || "monday";
+
+    return blocks.filter((block) => {
+      // Always include non-google-calendar blocks
+      if (block.source !== "google-calendar") {
+        return true;
+      }
+
+      // Filter Google Calendar events to current week only
+      // This prevents duplicates from recurring events spanning multiple weeks
+      if (block.eventDate && !isDateInCurrentWeek(block.eventDate, weekStartsOn)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [blocks, config?.weekStartsOn]);
+
+  // Determine which blocks are currently visible (affected by calendar toggle)
+  const visibleBlockIds = useMemo(() => {
+    const ids = new Set<string>();
+
+    for (const block of currentWeekBlocks) {
+      // Manual blocks are always visible
+      if (block.source !== "google-calendar") {
+        ids.add(block.id);
+        continue;
+      }
+
+      // Google Calendar blocks depend on toggle state
+      if (!showGoogleCalendar) {
+        continue;
+      }
+
+      // If specific calendars are selected, check calendar ID
+      if (selectedCalendars.length > 0) {
+        if (block.calendarId && selectedCalendars.includes(block.calendarId)) {
+          ids.add(block.id);
+        }
+        continue;
+      }
+
+      // Show all calendar blocks if no specific selection
+      ids.add(block.id);
+    }
+
+    return ids;
+  }, [currentWeekBlocks, showGoogleCalendar, selectedCalendars]);
 
   // Loading state
   if (loading) {
@@ -125,7 +231,11 @@ export function App() {
         backgroundColor: "#f9fafb",
       }}
     >
-      <Header config={config} summary={summary} />
+      <Header
+        config={config}
+        summary={summary}
+        onOpenSettings={() => setSettingsPanelOpen(true)}
+      />
 
       <main style={{ flex: 1, overflow: "hidden", padding: "16px" }}>
         <div
@@ -139,7 +249,8 @@ export function App() {
         >
           {config && (
             <WeekView
-              blocks={blocks}
+              blocks={currentWeekBlocks}
+              visibleBlockIds={visibleBlockIds}
               config={config}
               onBlockClick={handleBlockClick}
             />
@@ -155,6 +266,21 @@ export function App() {
           onClose={handleCloseModal}
         />
       )}
+
+      {/* Settings panel */}
+      <SettingsPanel
+        isOpen={settingsPanelOpen}
+        onClose={() => setSettingsPanelOpen(false)}
+        showGoogleCalendar={showGoogleCalendar}
+        onToggleGoogleCalendar={handleToggleGoogleCalendar}
+        selectedCalendars={selectedCalendars}
+        onSelectedCalendarsChange={handleSelectedCalendarsChange}
+        enabledCalendars={
+          (config?.integrations?.googleCalendar?.calendars || []).map(
+            (c) => c.id
+          )
+        }
+      />
     </div>
   );
 }

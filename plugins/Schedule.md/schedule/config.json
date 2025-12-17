@@ -13,5 +13,17 @@
     "therapy": { "id": "therapy", "label": "Therapy", "color": "#ec4899" },
     "chores": { "id": "chores", "label": "Chores", "color": "#a855f7" },
     "groceries": { "id": "groceries", "label": "Groceries", "color": "#f97316" }
+  },
+  "integrations": {
+    "googleCalendar": {
+      "enabled": true,
+      "calendars": [
+        {
+          "id": "primary",
+          "name": "Primary Calendar",
+          "enabled": true
+        }
+      ]
+    }
   }
 }

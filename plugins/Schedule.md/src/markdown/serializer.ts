@@ -48,6 +48,10 @@ function buildFrontmatter(block: ScheduleBlock): string {
     lines.push(`externalId: "${block.externalId}"`);
   }
 
+  if (block.calendarId) {
+    lines.push(`calendarId: "${block.calendarId}"`);
+  }
+
   lines.push(`createdAt: "${block.createdAt}"`);
   lines.push(`updatedAt: "${block.updatedAt}"`);
 
@@ -133,6 +137,7 @@ export function updateBlockMarkdown(
     tags: updatedData.tags || [],
     source: updatedData.source || "manual",
     externalId: updatedData.externalId,
+    calendarId: updatedData.calendarId,
     createdAt: updatedData.createdAt,
     updatedAt: updatedData.updatedAt,
   };

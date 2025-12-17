@@ -8,9 +8,14 @@ import type { ScheduleConfig, ScheduleSummary } from "../../types";
 interface HeaderProps {
   config: ScheduleConfig | null;
   summary: ScheduleSummary | null;
+  onOpenSettings: () => void;
 }
 
-export function Header({ config, summary }: HeaderProps) {
+export function Header({
+  config,
+  summary,
+  onOpenSettings,
+}: HeaderProps) {
   return (
     <header
       style={{
@@ -37,30 +42,59 @@ export function Header({ config, summary }: HeaderProps) {
         </h1>
       </div>
 
-      {/* Stats */}
-      {summary && (
-        <div
+      {/* Stats + Settings */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "24px",
+        }}
+      >
+        {/* Stats */}
+        {summary && (
+          <div
+            style={{
+              display: "flex",
+              gap: "20px",
+              fontSize: "13px",
+              color: "#6b7280",
+            }}
+          >
+            <div>
+              <span style={{ fontWeight: 600, color: "#374151" }}>
+                {summary.totalBlocks}
+              </span>{" "}
+              blocks
+            </div>
+            <div>
+              <span style={{ fontWeight: 600, color: "#374151" }}>
+                {summary.totalHours.toFixed(1)}
+              </span>{" "}
+              hours/week
+            </div>
+          </div>
+        )}
+
+        {/* Settings button */}
+        <button
+          onClick={onOpenSettings}
+          title="Settings"
           style={{
-            display: "flex",
-            gap: "20px",
-            fontSize: "13px",
+            background: "none",
+            border: "1px solid #e5e7eb",
+            borderRadius: "6px",
+            padding: "6px 10px",
+            cursor: "pointer",
             color: "#6b7280",
+            fontSize: "16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <div>
-            <span style={{ fontWeight: 600, color: "#374151" }}>
-              {summary.totalBlocks}
-            </span>{" "}
-            blocks
-          </div>
-          <div>
-            <span style={{ fontWeight: 600, color: "#374151" }}>
-              {summary.totalHours.toFixed(1)}
-            </span>{" "}
-            hours/week
-          </div>
-        </div>
-      )}
+          ⚙
+        </button>
+      </div>
 
       {/* Legend - sorted by hours descending */}
       {config && summary && (

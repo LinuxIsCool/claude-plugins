@@ -2,8 +2,13 @@
 #
 # Claude Code Statusline - Instance Identity Display
 #
-# Displays: [Name:id] Model X.X | dir | ctx:N% | $X.XX | #N Tm | branch +X/-Y
+# Displays: [Name:id] Model X.X | dir | ctx:N% | $X.XX | ID:A#N Tm | branch +X/-Y
 #           comprehensive summary (on second line)
+#
+# Session tracking format: <short_id>:<agent>#<prompt>
+#   ID = Short session ID (5-char UUID prefix)
+#   A  = Agent session (context resets: 0=fresh, increments on compact/clear)
+#   N  = Prompt count (persists across context compaction)
 #
 # Branch color: blue=clean, red=dirty
 #
@@ -126,6 +131,23 @@ if [ -f "$COUNT_FILE" ]; then
     MSG_COUNT=$(cat "$COUNT_FILE" 2>/dev/null)
 fi
 
+# Read agent session (compaction counter) from logging plugin or env
+AGENT_SESSION=""
+
+# First try environment variable (set by logging on SessionStart)
+if [ -n "$AGENT_SESSION_NUMBER" ]; then
+    AGENT_SESSION="$AGENT_SESSION_NUMBER"
+fi
+
+# Fallback: read from logging plugin's session state JSON
+if [ -z "$AGENT_SESSION" ]; then
+    SESSION_STATE_FILE="$CURRENT_DIR/.claude/logging/session-state.json"
+    if [ -f "$SESSION_STATE_FILE" ] && command -v jq &> /dev/null; then
+        AGENT_SESSION=$(jq -r '.agent_session // "0"' "$SESSION_STATE_FILE" 2>/dev/null)
+    fi
+fi
+[ -z "$AGENT_SESSION" ] && AGENT_SESSION="0"
+
 # Calculate session duration (default to 0m for new sessions)
 DURATION="0m"
 if [ -n "$REGISTRY" ] && [ -n "$SESSION_ID" ]; then
@@ -199,12 +221,13 @@ RED="\033[31m"
 # Build the first line
 LINE1="${CYAN}[${NAME}:${SHORT_ID}]${RST} ${YELLOW}${MODEL_SHORT}${RST} | ${DIM}${CWD_DISPLAY}${RST} | ${CTX_COLOR}ctx:${PCT}%${RST} | ${GREEN}\$${COST_FMT}${RST}"
 
-# Add message count and duration (with pipe between them)
-if [ -n "$MSG_COUNT" ]; then
-    LINE1="${LINE1} | ${MAGENTA}#${MSG_COUNT}${RST}"
-    if [ -n "$DURATION" ]; then
-        LINE1="${LINE1} | ${DIM}${DURATION}${RST}"
-    fi
+# Add session tracking: ID:A#N format
+# Format: <short_id>:<agent_session>#<prompt_count>
+SESSION_TRACK="${SHORT_ID}:${AGENT_SESSION}#${MSG_COUNT}"
+
+LINE1="${LINE1} | ${MAGENTA}${SESSION_TRACK}${RST}"
+if [ -n "$DURATION" ]; then
+    LINE1="${LINE1} | ${DIM}${DURATION}${RST}"
 fi
 
 # Add git info: branch (blue=clean, red=dirty) and diff stats

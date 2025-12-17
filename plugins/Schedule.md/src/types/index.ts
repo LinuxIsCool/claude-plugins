@@ -64,6 +64,8 @@ export interface ScheduleBlock {
   tags: string[];
   source: BlockSource;
   externalId?: string; // ID from external source (Google Calendar, etc.)
+  calendarId?: string; // For Google Calendar events, which calendar it belongs to
+  eventDate?: string; // ISO date string (YYYY-MM-DD) for date-specific events like Google Calendar
   createdAt: string;
   updatedAt: string;
 }
@@ -84,6 +86,8 @@ export interface BlockFrontmatter {
   tags?: string[];
   source?: BlockSource;
   externalId?: string;
+  calendarId?: string;
+  eventDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -125,6 +129,12 @@ export interface EditBlockInput {
 /**
  * Schedule configuration
  */
+export interface CalendarConfig {
+  id: string;
+  name: string;
+  enabled?: boolean;
+}
+
 export interface ScheduleConfig {
   projectName: string;
   weekStartsOn: DayOfWeek;
@@ -138,7 +148,7 @@ export interface ScheduleConfig {
       enabled: boolean;
       clientId?: string;
       refreshToken?: string;
-      calendars?: string[];
+      calendars?: CalendarConfig[];
     };
     yogaStudio: {
       enabled: boolean;
