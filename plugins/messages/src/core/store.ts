@@ -197,7 +197,7 @@ export class MessageStore {
   /**
    * Write message as markdown content file
    */
-  private writeContentFile(message: Message): void {
+  private async writeContentFile(message: Message): Promise<void> {
     const path = this.getContentPath(message.id);
 
     // Build YAML frontmatter
@@ -246,7 +246,7 @@ ${yamlLines.join("\n")}
 ${message.content}
 `;
 
-    Bun.write(path, content);
+    await Bun.write(path, content);
   }
 
   /**

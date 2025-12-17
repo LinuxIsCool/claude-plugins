@@ -19,6 +19,7 @@
     {"name": "interface", "source": "./plugins/interface/"},
     {"name": "agentnet", "source": "./plugins/agentnet/"},
     {"name": "temporal", "source": "./plugins/temporal/"},
-    {"name": "statusline", "source": "./plugins/statusline/"}
+    {"name": "statusline", "source": "./plugins/statusline/"},
+    {"name": "autocommit", "source": "./plugins/autocommit/"}
   ]
 }
