@@ -2,7 +2,7 @@
 #
 # Claude Code Statusline - Instance Identity Display
 #
-# Displays: [Name:id] Model | dir | ctx:N% | $X.XX | #N Tm | branch +X/-Y
+# Displays: [Name:id] Model X.X | dir | ctx:N% | $X.XX | #N Tm | branch +X/-Y
 #           comprehensive summary (on second line)
 #
 # Branch color: blue=clean, red=dirty
@@ -100,8 +100,8 @@ else
     CTX_COLOR="\033[31m"  # Red
 fi
 
-# Extract short model name (Opus, Sonnet, Haiku)
-MODEL_SHORT=$(echo "$MODEL" | sed -E 's/.*(Opus|Sonnet|Haiku).*/\1/')
+# Extract short model name (Opus 4.5, Sonnet 4, Haiku 3.5, etc.)
+MODEL_SHORT=$(echo "$MODEL" | sed -E 's/.*(Opus|Sonnet|Haiku)( [0-9.]+)?/\1\2/')
 if [ -z "$MODEL_SHORT" ] || [ "$MODEL_SHORT" = "$MODEL" ]; then
     MODEL_SHORT="Claude"
 fi
