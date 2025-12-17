@@ -52,6 +52,10 @@ function buildFrontmatter(block: ScheduleBlock): string {
     lines.push(`calendarId: "${block.calendarId}"`);
   }
 
+  if (block.eventDate) {
+    lines.push(`eventDate: "${block.eventDate}"`);
+  }
+
   lines.push(`createdAt: "${block.createdAt}"`);
   lines.push(`updatedAt: "${block.updatedAt}"`);
 

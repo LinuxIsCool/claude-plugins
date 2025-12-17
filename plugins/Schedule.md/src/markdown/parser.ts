@@ -71,6 +71,8 @@ export function parseBlockMarkdown(content: string, filePath: string): ScheduleB
     tags: fm.tags || [],
     source,
     externalId: fm.externalId,
+    calendarId: fm.calendarId,
+    eventDate: fm.eventDate,
     createdAt: fm.createdAt || now,
     updatedAt: fm.updatedAt || now,
   };

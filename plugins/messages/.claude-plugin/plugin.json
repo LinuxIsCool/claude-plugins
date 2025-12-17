@@ -18,5 +18,6 @@
     "agent-communication"
   ],
   "skills": ["./skills/"],
-  "commands": ["./commands/"]
+  "commands": ["./commands/"],
+  "mcp": ["./.mcp.json"]
 }

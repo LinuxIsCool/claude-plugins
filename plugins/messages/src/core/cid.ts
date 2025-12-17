@@ -122,6 +122,8 @@ export function sha256(content: string): Uint8Array {
  *
  * This ensures the same message always gets the same ID,
  * but different timestamps or authors produce different IDs.
+ *
+ * Uses full SHA-256 hash (no truncation) to preserve content-addressing guarantees.
  */
 export function generateCID(input: MessageInput): string {
   const payload = canonicalize({
@@ -134,8 +136,8 @@ export function generateCID(input: MessageInput): string {
   const hash = sha256(payload);
   const encoded = base58Encode(hash);
 
-  // Truncate to 32 chars for readability while maintaining uniqueness
-  return "msg_" + encoded.slice(0, 32);
+  // Use full hash - no truncation to preserve collision resistance
+  return "msg_" + encoded;
 }
 
 /**
@@ -151,11 +153,14 @@ export function verifyCID(cid: string, input: MessageInput): boolean {
 export function generateContentCID(content: string): string {
   const hash = sha256(content);
   const encoded = base58Encode(hash);
-  return "cid_" + encoded.slice(0, 32);
+  return "cid_" + encoded;
 }
 
 /**
  * Check if a string is a valid CID format
+ *
+ * Validates structure only (prefix + base58 characters).
+ * For content verification, use verifyCID().
  */
 export function isValidCID(str: string): boolean {
   if (!str.startsWith("msg_") && !str.startsWith("cid_")) {
@@ -163,7 +168,9 @@ export function isValidCID(str: string): boolean {
   }
 
   const encoded = str.slice(4);
-  if (encoded.length !== 32) {
+  // SHA-256 produces 32 bytes, base58 encoded is typically 43-44 chars
+  // Allow some variance for leading zeros
+  if (encoded.length < 40 || encoded.length > 50) {
     return false;
   }
 
