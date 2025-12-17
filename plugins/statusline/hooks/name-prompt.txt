@@ -1,0 +1,18 @@
+Based on this user's first message, generate a creative 1-2 word name for this Claude session.
+
+The name should be evocative and memorable - like a codename or callsign that hints at the session's purpose.
+
+Examples of good names:
+- "Navigator" (for navigation/exploration tasks)
+- "Architect" (for design/planning tasks)
+- "Debugger" (for fixing issues)
+- "Scribe" (for documentation)
+- "Refactor" (for code cleanup)
+- "Phoenix" (for resurrection/restart tasks)
+- "Sentinel" (for monitoring/security)
+- "Catalyst" (for transformation tasks)
+
+User's first message:
+{user_prompt}
+
+Respond with ONLY the 1-2 word name, nothing else:
