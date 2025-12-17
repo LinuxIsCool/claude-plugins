@@ -1,6 +1,6 @@
 {
   "name": "messages",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Universal messaging backbone - content-addressed messages with DID-based identity across all platforms",
   "author": {
     "name": "linuxiscool"
@@ -19,5 +19,10 @@
   ],
   "skills": ["./skills/"],
   "commands": ["./commands/"],
+  "agents": [
+    "./agents/correspondent.md",
+    "./agents/indexer.md",
+    "./agents/analyst.md"
+  ],
   "mcp": ["./.mcp.json"]
 }

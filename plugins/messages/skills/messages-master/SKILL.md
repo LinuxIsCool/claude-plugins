@@ -1,115 +1,127 @@
 ---
-name: messages
-description: "Universal messaging backbone with content-addressed storage and DID-based identity. Sub-skills: store, adapters, accounts, threads, search, tui. Invoke for message management, platform imports, and agent-to-agent communication."
-allowed-tools: Read, Glob, Grep, Bash, Write, Edit
+name: messages-master
+description: Master skill for universal messaging backbone (5 sub-skills). Covers message search, platform imports (Telegram, Claude Code logs), content-addressed storage (CID), decentralized identity (DID), CLI usage, and MCP tools. This skill should be used when the user asks to "search messages", "import messages", "find conversations", "import telegram", "import logs", mentions CID/DID/content-addressing, or needs cross-platform message access. (plugin:messages@linuxiscool-claude-plugins)
 ---
 
-# Messages Plugin - Master Skill
+# Messages - Universal Messaging Backbone
 
-Universal messaging backbone that unifies messages from all platforms.
+Content-addressed message storage with DID-based identity across all platforms.
 
-## Quick Reference
+## Overview
 
-| Action | How |
-|--------|-----|
-| Import messages | Use platform adapter |
-| Search messages | `messages search "query"` |
-| View thread | `messages thread <id>` |
-| List accounts | `messages accounts` |
-| View timeline | `messages timeline` |
+The messages plugin provides a unified local store for messages from any source:
+- **Telegram** exports (JSON format)
+- **Claude Code** conversation logs
+- Future: WhatsApp, Signal, email, forum posts, HTTP requests
+
+All messages receive content-addressed identifiers (CIDs) ensuring integrity and deduplication.
 
 ## Sub-Skills Index
 
 | Sub-Skill | Use When | File |
 |-----------|----------|------|
-| **store** | Understanding storage architecture, CIDs, events | `subskills/store.md` |
-| **adapters** | Importing from platforms (Telegram, Email, Claude Code) | `subskills/adapters.md` |
-| **accounts** | Managing identities and DIDs | `subskills/accounts.md` |
-| **threads** | Working with conversations | `subskills/threads.md` |
-| **search** | Finding messages | `subskills/search.md` |
-| **tui** | Terminal interface navigation | `subskills/tui.md` |
+| **message-search** | Searching messages, finding conversations, querying by platform/kind/time | `subskills/message-search.md` |
+| **platform-imports** | Importing from Telegram, Claude Code logs, understanding adapters | `subskills/platform-imports.md` |
+| **identity-crypto** | Working with CIDs, DIDs, content-addressing, verification | `subskills/identity-crypto.md` |
+| **cli-usage** | Using the messages CLI for import, search, stats | `subskills/cli-usage.md` |
+| **mcp-tools** | Using MCP server tools for programmatic access | `subskills/mcp-tools.md` |
 
-## Core Concepts
+## Quick Reference
 
-### Content-Addressed Messages
+### Data Location
 
-Every message has a CID (Content Identifier) - a hash of its content. This provides:
-- **Immutability**: Content can't change without changing ID
-- **Verification**: Anyone can verify content matches CID
-- **Deduplication**: Same content = same CID = store once
-
-### DID-Based Identity
-
-Accounts use Decentralized Identifiers (DIDs) for portable identity:
-- **Portable**: Identity isn't tied to any platform
-- **Verifiable**: Cryptographically authenticated
-- **Linkable**: Connect multiple platform handles to one identity
-
-### Platform Adapters
-
-Import messages from any source:
-- **Telegram**: Chat exports or Bot API
-- **Email**: IMAP or export files
-- **Claude Code**: Session events, prompts, responses
-- **More**: Discord, Slack, forums, etc.
-
-## Directory Structure
+All data stored at `.claude/messages/`:
 
 ```
 .claude/messages/
 ├── store/
-│   ├── events/              # Append-only event log
-│   │   └── YYYY/MM/DD/
-│   │       └── events.jsonl
-│   └── content/             # Content-addressed blobs
-│       └── XX/
-│           └── {cid}.md
-├── views/                   # Materialized projections
+│   ├── events/           # Append-only JSONL (source of truth)
+│   │   └── YYYY/MM/DD/events.jsonl
+│   └── content/          # Content-addressed markdown files
+│       └── XX/{cid}.md   # Sharded by first 2 chars after prefix
+├── views/                # Derived projections
 │   ├── threads/
-│   ├── accounts/
-│   ├── by-kind/
-│   └── timeline/
-├── adapters/                # Adapter state/cache
+│   └── accounts/
 └── search/
-    └── index.db             # Full-text search
+    └── index.db          # SQLite FTS5
 ```
 
-## Message Kinds
+### Message Kinds (Nostr-inspired)
 
-| Kind | Description |
-|------|-------------|
-| 1-99 | Core message types (text, media, reactions) |
-| 100-199 | Claude Code events (sessions, prompts, responses) |
-| 200-249 | Git events (commits, branches) |
-| 1000+ | Platform-specific (Telegram, WhatsApp, Email, etc.) |
+| Range | Category | Examples |
+|-------|----------|----------|
+| 0-99 | Core | 1=Text, 10=Reaction, 20=Contact |
+| 100-199 | Claude Code | 101=UserPrompt, 102=AssistantResponse, 103=SubagentStop |
+| 200-249 | Git | 201=Commit, 210=PR, 220=Issue |
+| 1000+ | Platform | 1001=Telegram, 1010=WhatsApp, 1100=Email |
 
-## Usage Patterns
+### CLI Quick Start
 
-### Import from Telegram
 ```bash
-bun plugins/messages/src/cli.ts import telegram --file export.json
+# Import Claude Code logs
+bun plugins/messages/src/cli.ts import logs
+
+# Import Telegram export
+bun plugins/messages/src/cli.ts import telegram -f ~/Downloads/result.json
+
+# Search messages
+bun plugins/messages/src/cli.ts search "authentication"
+
+# Show stats
+bun plugins/messages/src/cli.ts stats
 ```
 
-### Search Messages
-```bash
-bun plugins/messages/src/cli.ts search "meeting tomorrow"
+### MCP Tools Available
+
+When MCP server is active, these tools are exposed:
+- `messages_search` - Full-text search with filters
+- `messages_recent` - Get recent messages
+- `messages_thread` - Get thread messages
+- `messages_stats` - Get statistics
+- `messages_import_logs` - Import Claude Code logs
+- `messages_import_telegram` - Import Telegram export
+
+## Architecture Principles
+
+### Content-Addressed Storage (CID)
+
+Every message gets a deterministic ID from its content:
+```
+CID = "msg_" + base58(sha256(canonical({content, kind, created_at, account_id})))
 ```
 
-### View Thread
-```bash
-bun plugins/messages/src/cli.ts thread thread-001
+Benefits:
+- Same content always produces same ID
+- Automatic deduplication
+- Integrity verification possible
+- No central ID authority needed
+
+### Decentralized Identity (DID)
+
+Accounts can have DIDs using the `did:key` method with Ed25519:
+```
+did:key:z6Mk...
 ```
 
-### Launch TUI
-```bash
-bun plugins/messages/src/cli.ts tui
+Benefits:
+- Self-sovereign identity
+- Cryptographic verification
+- Cross-platform identity linking
+
+### Event Sourcing
+
+All changes are append-only events in JSONL:
+```json
+{"ts":"2025-12-17T...","op":"message.created","data":{...}}
 ```
 
-## Design Principles
+Benefits:
+- Complete audit trail
+- Time-travel queries possible
+- Views can be rebuilt from events
 
-1. **Content-Addressed**: Every message has a CID
-2. **Identity-Portable**: DIDs decouple from platforms
-3. **Event-First**: Append-only event log
-4. **Adapter-Based**: Pluggable platform imports
-5. **Markdown-Native**: Human-readable storage
-6. **Standalone-Enhanced**: Works alone, better with ecosystem
+## Related Agents
+
+- **messages:correspondent** - Plugin persona, orchestrates message operations
+- **messages:indexer** - Import specialist, bulk operations
+- **messages:analyst** - Search and insight extraction

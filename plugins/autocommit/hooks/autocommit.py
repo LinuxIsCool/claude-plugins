@@ -594,7 +594,18 @@ def parse_haiku_response(response: str) -> dict:
         "gitignore_suggestions": [],
     }
 
-    lines = response.strip().split("\n")
+    # Strip markdown code block markers that Haiku sometimes adds
+    cleaned = response.strip()
+    if cleaned.startswith("```"):
+        # Remove opening ``` (possibly with language hint like ```markdown)
+        first_newline = cleaned.find("\n")
+        if first_newline != -1:
+            cleaned = cleaned[first_newline + 1:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+    cleaned = cleaned.strip()
+
+    lines = cleaned.split("\n")
     if not lines:
         return result
 

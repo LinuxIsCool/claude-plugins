@@ -29,57 +29,34 @@ EMOJIS = {
 }
 
 
-def get_session_state_path(cwd: str) -> Path:
-    """Get path to session state file."""
-    return Path(cwd) / ".claude/logging/session-state.json"
+def get_agent_session_from_jsonl(jsonl_path: Path, source: str) -> int:
+    """Derive agent session counter directly from JSONL file.
 
+    This is the elegant approach - single source of truth, no state file needed.
+    Counts SessionStart events with source="compact" or source="clear".
 
-def load_session_state(cwd: str) -> dict:
-    """Load session state from JSON file."""
-    state_path = get_session_state_path(cwd)
-    try:
-        if state_path.exists():
-            return json.loads(state_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        pass
-    return {"agent_session": 0}
+    Args:
+        jsonl_path: Path to the session's JSONL file
+        source: Source of current event ("startup", "compact", "clear", "resume")
 
-
-def save_session_state(cwd: str, state: dict) -> None:
-    """Save session state to JSON file."""
-    state_path = get_session_state_path(cwd)
-    state_path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        state_path.write_text(json.dumps(state, indent=2))
-    except OSError:
-        pass
-
-
-def get_agent_session(cwd: str, source: str) -> int:
-    """Get and update agent session counter based on source.
-
-    Behavior:
-    - startup: Reset to 0 (new session)
-    - compact/clear: Increment (context reset within session)
-    - resume: Keep same (just resuming)
+    Returns:
+        Number of context resets (0 for fresh session, 1+ after compactions)
     """
-    state = load_session_state(cwd)
+    count = 0
 
-    if source == "startup":
-        state["agent_session"] = 0
-        save_session_state(cwd, state)
-    elif source in ("compact", "clear"):
-        state["agent_session"] += 1
-        save_session_state(cwd, state)
-    # For "resume" and "unknown", keep current state
+    if jsonl_path.exists():
+        try:
+            content = jsonl_path.read_text()
+            # Count existing compact/clear events
+            count = content.count('"source": "compact"') + content.count('"source": "clear"')
+        except OSError:
+            pass
 
-    return state["agent_session"]
+    # If this event is a compact/clear, add 1 (it hasn't been logged yet)
+    if source in ("compact", "clear"):
+        count += 1
 
-
-def get_current_agent_session(cwd: str) -> int:
-    """Read current agent session without modifying."""
-    state = load_session_state(cwd)
-    return state.get("agent_session", 0)
+    return count
 
 
 def get_paths(cwd, sid, ts):
@@ -449,22 +426,10 @@ def main():
     )
     jsonl, md = get_paths(cwd, sid, ts)
 
-    # Handle agent session counter (tracks compactions within a session)
-    agent_session = None
-    if event == "SessionStart":
-        source = data.get("source", "unknown")
-        agent_session = get_agent_session(cwd, source)
-        # Export for other plugins (e.g., statusline) via CLAUDE_ENV_FILE
-        env_file = os.environ.get("CLAUDE_ENV_FILE")
-        if env_file:
-            try:
-                with open(env_file, "a") as ef:
-                    ef.write(f"AGENT_SESSION_NUMBER={agent_session}\n")
-            except OSError:
-                pass
-    else:
-        # For non-SessionStart events, read current value
-        agent_session = get_current_agent_session(cwd)
+    # Derive agent session counter from JSONL (tracks compactions within session)
+    # This is elegant: single source of truth, no state file needed
+    source = data.get("source", "unknown") if event == "SessionStart" else "unknown"
+    agent_session = get_agent_session_from_jsonl(jsonl, source)
 
     # Append to JSONL (source of truth)
     with open(jsonl, "a") as f:
