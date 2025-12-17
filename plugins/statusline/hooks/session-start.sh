@@ -83,6 +83,22 @@ fi
 CURRENT_NAME="${EXISTING:-$DEFAULT_NAME}"
 SHORT_ID=$(echo "$SESSION_ID" | cut -c1-8)
 
+# Initialize summary and count for new sessions
+INSTANCES_DIR=$(dirname "$REGISTRY")
+SUMMARIES_DIR="$INSTANCES_DIR/summaries"
+COUNTS_DIR="$INSTANCES_DIR/counts"
+mkdir -p "$SUMMARIES_DIR" "$COUNTS_DIR"
+
+SUMMARY_FILE="$SUMMARIES_DIR/${SESSION_ID}.txt"
+if [ ! -f "$SUMMARY_FILE" ]; then
+    echo "Awaiting instructions." > "$SUMMARY_FILE"
+fi
+
+COUNT_FILE="$COUNTS_DIR/${SESSION_ID}.txt"
+if [ ! -f "$COUNT_FILE" ]; then
+    echo "0" > "$COUNT_FILE"
+fi
+
 # Export SESSION_ID via CLAUDE_ENV_FILE (if available)
 # This makes $SESSION_ID available to Claude for the rest of the session
 if [ -n "$CLAUDE_ENV_FILE" ]; then
