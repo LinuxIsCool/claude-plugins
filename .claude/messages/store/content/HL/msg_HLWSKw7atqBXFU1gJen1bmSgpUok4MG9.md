@@ -1,0 +1,14 @@
+---
+id: msg_HLWSKw7atqBXFU1gJen1bmSgpUok4MG9
+kind: 102
+account_id: user
+created_at: 1766000365040
+imported_at: 1766005522762
+author_name: User
+thread_id: cc_fbc37a65
+platform: claude-code
+session_id: fbc37a65-8248-4c99-be63-e9794994752e
+tags: [["event_type","UserPromptSubmit"]]
+---
+
+/feature-dev:feature-dev I want to create a plugin called messages that is a backbone for universal messaging. I want the system to serve as a database that messages can be loaded from any platform. Like from any chat app, telegram, whatsapp, signal, etc, even emails, and forum posts, and even http requests, or url reads, these can all be messages. userinput submit can be a message and basically all the log events in this repo can be a message, the statusline can be a message. Think about architecting this in a convenient way for our purposes. Some of the intentions for this plugin are, to facilitate agent to agent messaging in compatibility with the ecosystem in this repository, but also to serve as a local centralized store of all my messages across all my platforms. I want to be able to pull all my messages from all my platforms into a local database that can simply make sense of all that data and help me stay super organized. We can also load up my claude code historical transcripts or logs if we want, we can add youtube transcripts eventually, we can create messages representing reading urls, this can generalize in an extremely powerful way. I want you to contemplate various paradigms such as messaging architectures, data engineering, and design. Some thoughts I have are that you could think research ATProtocol or Gnoster or thinks like Ethereum Attestations to do some research, along with traditional computer science concepts of messaging or social media concepts of messaging or unix concepts of messaging, things like sockets or websockets or similar concepts. In addition to having the underlying infrastructure it would be really cool to have a terminal interface platform that I can use to locally explore all the messages and exploring user accounts and message content and networks. One implementation where I actually enjoy a similar concept is in ElizaOS, the database construction there uses worlds and accounts and memories etc, please research the schema of the database in elizaos for consideration as well. Please do extensive research and populate a research directory inside the new plugin with all of your findings and considerations. Please also get generally oriented with this repository to consider the development direction and potential areas of compatibility or collaboration. You will probably find the AgentNet plugin. That was a first draft of something similar to this. I think it's good to start over with a more specialized and refined scope and set of objectives to achieve agent to agent communication and social networks from a more foundational approach. ultrathink with awareness

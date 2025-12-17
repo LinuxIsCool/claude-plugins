@@ -1,0 +1,14 @@
+---
+id: msg_EWa6hzEnSqDu67sG4xZW61bo2t9JMC3e
+kind: 102
+account_id: user
+created_at: 1765585800540
+imported_at: 1766005509570
+author_name: User
+thread_id: cc_7b98de99
+platform: claude-code
+session_id: 7b98de99-aecb-4db8-ae1d-062359b91e87
+tags: [["event_type","UserPromptSubmit"]]
+---
+
+What skills do you have access to?
