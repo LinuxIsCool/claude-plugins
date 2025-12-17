@@ -115,7 +115,10 @@ export async function syncGoogleCalendar(
     // Process each calendar
     for (const calendarId of calendarIds) {
       const calendarEvents = eventsByCalendar.get(calendarId) || [];
-      const calendarInfo = cachedCalendars.find((c) => c.id === calendarId);
+      // Handle "primary" alias - look up by id OR by primary flag
+      const calendarInfo = cachedCalendars.find((c) =>
+        c.id === calendarId || (calendarId === "primary" && c.primary)
+      );
       const calendarName = calendarInfo?.summary || calendarId;
 
       const result: SyncResult = {
