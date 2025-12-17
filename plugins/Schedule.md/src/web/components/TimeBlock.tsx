@@ -64,8 +64,8 @@ export function TimeBlock({
     widthStyle = "calc(100% - 8px)";
   }
 
-  // Semi-transparent for calendar events
-  const opacity = isCalendarEvent ? 0.7 : 1;
+  // Semi-transparent for calendar events (subtle distinction from manual blocks)
+  const opacity = isCalendarEvent ? 0.85 : 1;
 
   return (
     <div

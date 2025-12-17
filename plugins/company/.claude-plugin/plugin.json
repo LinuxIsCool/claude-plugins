@@ -1,0 +1,28 @@
+{
+  "name": "company",
+  "version": "0.1.0",
+  "description": "Personal board of advisors for institutional design, business strategy, legal, and finance. Canadian-first (BC-focused) with full CPA/CFA toolkit.",
+  "author": {
+    "name": "linuxiscool"
+  },
+  "keywords": [
+    "institutional-design",
+    "corporate",
+    "legal",
+    "finance",
+    "taxation",
+    "cpa",
+    "cfa",
+    "canadian",
+    "bc",
+    "advisor"
+  ],
+  "skills": ["./skills/"],
+  "agents": [
+    "./agents/board-mentor.md",
+    "./agents/ceo.md",
+    "./agents/cfo.md",
+    "./agents/cto.md",
+    "./agents/chief-of-staff.md"
+  ]
+}

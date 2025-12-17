@@ -355,12 +355,17 @@ async function handleStaticRequest(path: string): Promise<Response> {
     });
   }
 
-  // Serve bundled JS
+  // Serve bundled JS (no-cache for development)
   if (path === "/index.js") {
     try {
       const js = await readFile(join(WEB_DIR, "dist", "index.js"), "utf-8");
       return new Response(js, {
-        headers: { "Content-Type": "application/javascript" },
+        headers: {
+          "Content-Type": "application/javascript",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
+        },
       });
     } catch {
       return new Response("Not found", { status: 404 });
