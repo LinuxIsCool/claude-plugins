@@ -59,7 +59,7 @@ else
     # New registration with default name
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     SHORT_ID=$(echo "$SESSION_ID" | cut -c1-8)
-    DEFAULT_NAME="Claude-$SHORT_ID"
+    DEFAULT_NAME="Claude"
     DIR_NAME=$(basename "$CWD" 2>/dev/null || echo "unknown")
 
     jq --arg sid "$SESSION_ID" \
@@ -121,7 +121,7 @@ EOF
         echo "[statusline] Session $SHORT_ID: \"$EXISTING\""
     fi
 elif [ "$SOURCE" = "resume" ]; then
-    if [[ "$CURRENT_NAME" =~ ^Claude- ]]; then
+    if [[ "$CURRENT_NAME" == "Claude" || "$CURRENT_NAME" =~ ^Claude- ]]; then
         echo "[statusline] Resumed $SHORT_ID (no custom name yet)"
     else
         echo "[statusline] Resumed $SHORT_ID as \"$CURRENT_NAME\""
