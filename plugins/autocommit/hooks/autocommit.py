@@ -595,12 +595,26 @@ def parse_haiku_response(response: str) -> dict:
     }
 
     # Strip markdown code block markers that Haiku sometimes adds
+    # Handles two cases:
+    # 1. "```\nCOMMIT\n..." - backticks on own line
+    # 2. "``` COMMIT\n..." - backticks and COMMIT on same line (common with Haiku)
     cleaned = response.strip()
     if cleaned.startswith("```"):
-        # Remove opening ``` (possibly with language hint like ```markdown)
+        # Check if there's content after ``` on the same line (e.g., "``` COMMIT")
         first_newline = cleaned.find("\n")
-        if first_newline != -1:
-            cleaned = cleaned[first_newline + 1:]
+        first_line = cleaned[:first_newline] if first_newline != -1 else cleaned
+        after_backticks = first_line[3:].strip()
+
+        if after_backticks:
+            # Case 2: "``` COMMIT..." - keep content after backticks, remove only "```"
+            if first_newline != -1:
+                cleaned = after_backticks + "\n" + cleaned[first_newline + 1:]
+            else:
+                cleaned = after_backticks
+        else:
+            # Case 1: "```\nCOMMIT..." - remove entire first line
+            if first_newline != -1:
+                cleaned = cleaned[first_newline + 1:]
     if cleaned.endswith("```"):
         cleaned = cleaned[:-3]
     cleaned = cleaned.strip()
@@ -635,13 +649,13 @@ def parse_haiku_response(response: str) -> dict:
                 result["warnings"].append(line[8:].strip())
 
     else:
-        # Fallback: try to detect COMMIT or SKIP in response
-        if "COMMIT" in response[:50]:
+        # Fallback: try to detect COMMIT or SKIP in cleaned response
+        if "COMMIT" in cleaned[:50]:
             result["decision"] = "COMMIT"
-            result["message"] = response
-        elif "SKIP" in response[:50]:
+            result["message"] = cleaned
+        elif "SKIP" in cleaned[:50]:
             result["decision"] = "SKIP"
-            result["reason"] = response
+            result["reason"] = cleaned
 
     return result
 

@@ -147,7 +147,10 @@ if [ -d "$CURRENT_DIR/.claude/logging" ]; then
     if [ -f "$JSONL_FILE" ]; then
         # Count SessionStart events with source="compact" or source="clear"
         # These indicate context resets within the same session
-        AGENT_SESSION=$(grep -cE '"source":\s*"(compact|clear)"' "$JSONL_FILE" 2>/dev/null || echo "0")
+        # Note: grep -c outputs "0" for no matches but exits with code 1,
+        # so we capture output first, then default if empty
+        AGENT_SESSION=$(grep -cE '"source":\s*"(compact|clear)"' "$JSONL_FILE" 2>/dev/null)
+        [ -z "$AGENT_SESSION" ] && AGENT_SESSION="0"
     fi
 fi
 
