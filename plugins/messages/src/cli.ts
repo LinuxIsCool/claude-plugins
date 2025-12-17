@@ -277,9 +277,8 @@ Event Types:`);
       console.log("Threads:\n");
       let count = 0;
 
-      for await (const thread of store.listThreads()) {
-        if (count++ >= limit) break;
-
+      for await (const thread of store.listThreads(limit)) {
+        count++;
         console.log(`${thread.id}`);
         console.log(`  Title: ${thread.title || "(untitled)"}`);
         console.log(`  Type: ${thread.type} | Platform: ${thread.source.platform}`);
@@ -297,8 +296,8 @@ Event Types:`);
       console.log("Accounts:\n");
       let count = 0;
 
-      for await (const account of store.listAccounts()) {
-        if (count++ >= limit) break;
+      for await (const account of store.listAccounts(limit)) {
+        count++;
 
         const platforms = account.identities.map((i) => i.platform).join(", ");
         console.log(`${account.id}: ${account.name}`);

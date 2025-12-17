@@ -7,8 +7,12 @@
 #
 # Session tracking format: <short_id>:<agent>#<prompt>
 #   ID = Short session ID (5-char UUID prefix)
-#   A  = Agent session (context resets: 0=fresh, increments on compact/clear)
+#   A  = Agent session (context resets: derived from JSONL, counts compact/clear events)
 #   N  = Prompt count (persists across context compaction)
+#
+# Architecture: Agent session is derived directly from the JSONL log file
+# by counting SessionStart events with source="compact" or source="clear".
+# This is the elegant single-source-of-truth approach - no state file needed.
 #
 # Branch color: blue=clean, red=dirty
 #
@@ -131,22 +135,21 @@ if [ -f "$COUNT_FILE" ]; then
     MSG_COUNT=$(cat "$COUNT_FILE" 2>/dev/null)
 fi
 
-# Read agent session (compaction counter) from logging plugin or env
-AGENT_SESSION=""
+# Derive agent session (compaction counter) directly from JSONL
+# This is the elegant approach - single source of truth, no state file needed
+AGENT_SESSION="0"
 
-# First try environment variable (set by logging on SessionStart)
-if [ -n "$AGENT_SESSION_NUMBER" ]; then
-    AGENT_SESSION="$AGENT_SESSION_NUMBER"
-fi
+if [ -d "$CURRENT_DIR/.claude/logging" ]; then
+    # Find this session's JSONL file (uses first 8 chars of session_id)
+    SESSION_PREFIX="${SESSION_ID:0:8}"
+    JSONL_FILE=$(find "$CURRENT_DIR/.claude/logging" -type f -name "*-${SESSION_PREFIX}.jsonl" 2>/dev/null | head -1)
 
-# Fallback: read from logging plugin's session state JSON
-if [ -z "$AGENT_SESSION" ]; then
-    SESSION_STATE_FILE="$CURRENT_DIR/.claude/logging/session-state.json"
-    if [ -f "$SESSION_STATE_FILE" ] && command -v jq &> /dev/null; then
-        AGENT_SESSION=$(jq -r '.agent_session // "0"' "$SESSION_STATE_FILE" 2>/dev/null)
+    if [ -f "$JSONL_FILE" ]; then
+        # Count SessionStart events with source="compact" or source="clear"
+        # These indicate context resets within the same session
+        AGENT_SESSION=$(grep -cE '"source":\s*"(compact|clear)"' "$JSONL_FILE" 2>/dev/null || echo "0")
     fi
 fi
-[ -z "$AGENT_SESSION" ] && AGENT_SESSION="0"
 
 # Calculate session duration (default to 0m for new sessions)
 DURATION="0m"

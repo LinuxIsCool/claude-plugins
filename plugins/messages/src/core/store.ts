@@ -331,8 +331,8 @@ ${message.content}
     };
     this.appendEvent(event);
 
-    // Write account view file
-    this.writeAccountFile(account);
+    // Write account view file (fire and forget - views are derived)
+    void this.writeAccountFile(account);
 
     return account;
   }
@@ -340,7 +340,7 @@ ${message.content}
   /**
    * Write account to views
    */
-  private writeAccountFile(account: Account): void {
+  private async writeAccountFile(account: Account): Promise<void> {
     const path = join(this.basePath, "views/accounts", `${account.id}.md`);
 
     const frontmatter: Record<string, unknown> = {
@@ -368,7 +368,7 @@ ${yamlLines.join("\n")}
 ${account.identities.map((i) => `- ${i.platform}: ${i.handle}`).join("\n")}
 `;
 
-    Bun.write(path, content);
+    await Bun.write(path, content);
   }
 
   /**
@@ -395,8 +395,10 @@ ${account.identities.map((i) => `- ${i.platform}: ${i.handle}`).join("\n")}
   /**
    * List all accounts
    */
-  async *listAccounts(): AsyncGenerator<Account> {
+  async *listAccounts(limit?: number): AsyncGenerator<Account> {
     const seen = new Set<string>();
+    let count = 0;
+    const maxCount = limit ?? Infinity;
 
     for await (const event of this.getAllEvents()) {
       if (event.op === "account.created") {
@@ -404,6 +406,8 @@ ${account.identities.map((i) => `- ${i.platform}: ${i.handle}`).join("\n")}
         if (!seen.has(account.id)) {
           seen.add(account.id);
           yield account;
+          count++;
+          if (count >= maxCount) return;
         }
       }
     }
@@ -431,8 +435,8 @@ ${account.identities.map((i) => `- ${i.platform}: ${i.handle}`).join("\n")}
     };
     this.appendEvent(event);
 
-    // Write thread view file
-    this.writeThreadFile(thread);
+    // Write thread view file (fire and forget - views are derived)
+    void this.writeThreadFile(thread);
 
     return thread;
   }
@@ -440,7 +444,7 @@ ${account.identities.map((i) => `- ${i.platform}: ${i.handle}`).join("\n")}
   /**
    * Write thread to views
    */
-  private writeThreadFile(thread: Thread): void {
+  private async writeThreadFile(thread: Thread): Promise<void> {
     const path = join(this.basePath, "views/threads", `${thread.id}.md`);
 
     const frontmatter: Record<string, unknown> = {
@@ -471,7 +475,7 @@ Platform: ${thread.source.platform}
 Messages: ${thread.message_count}
 `;
 
-    Bun.write(path, content);
+    await Bun.write(path, content);
   }
 
   /**
@@ -498,8 +502,10 @@ Messages: ${thread.message_count}
   /**
    * List all threads
    */
-  async *listThreads(): AsyncGenerator<Thread> {
+  async *listThreads(limit?: number): AsyncGenerator<Thread> {
     const seen = new Set<string>();
+    let count = 0;
+    const maxCount = limit ?? Infinity;
 
     for await (const event of this.getAllEvents()) {
       if (event.op === "thread.created") {
@@ -507,6 +513,8 @@ Messages: ${thread.message_count}
         if (!seen.has(thread.id)) {
           seen.add(thread.id);
           yield thread;
+          count++;
+          if (count >= maxCount) return;
         }
       }
     }
