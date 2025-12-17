@@ -25,14 +25,10 @@ LOGGING_DIR="$(pwd)/.claude/logging"
 # Check if the directory exists
 if [ -d "$LOGGING_DIR" ]; then
     echo "Opening $LOGGING_DIR in Obsidian..."
-    xdg-open "obsidian://open?path=$LOGGING_DIR" 2>/dev/null
-
-    if [ $? -eq 0 ]; then
-        echo "Obsidian should now be opening with your logs."
-    else
-        echo "Failed to open Obsidian. Is it installed?"
-        echo "You can install it from: https://obsidian.md/download"
-    fi
+    # Suppress all output and background to prevent Obsidian's debug logs from consuming context
+    xdg-open "obsidian://open?path=$LOGGING_DIR" >/dev/null 2>&1 &
+    echo "Obsidian should now be opening with your logs."
+    echo "Tip: Press Ctrl+G for graph view"
 else
     echo "Logging directory not found at: $LOGGING_DIR"
     echo "Have you used Claude Code logging in this project?"

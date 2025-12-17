@@ -1,6 +1,6 @@
 ---
 name: search
-description: Master skill for repository search (10 sub-skills). Covers: hybrid-search (BM25+vector), rag-pipelines, vector-embeddings, graph-rag, fuzzy-search, ripgrep-patterns, elasticsearch, search-orchestration, self-improvement, anti-patterns. Invoke for finding code, understanding retrieval, or choosing search methods.
+description: Master skill for repository search (4 active, 6 planned sub-skills). Covers: hybrid-search, rag-pipelines, vector-embeddings, search-orchestration. Future: graph-rag, fuzzy-search, ripgrep-patterns, elasticsearch. Invoke for finding code, understanding retrieval, or choosing search methods.
 allowed-tools: Read, Skill, Task, Glob, Grep, Bash, WebFetch
 ---
 
