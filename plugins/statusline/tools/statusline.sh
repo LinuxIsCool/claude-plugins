@@ -94,11 +94,14 @@ fi
 # ANSI colors (optional, comment out for plain text)
 # Reset
 RST="\033[0m"
+# Styles
+BOLD="\033[1m"
+DIM="\033[2m"
 # Colors
 CYAN="\033[36m"
 YELLOW="\033[33m"
 GREEN="\033[32m"
-DIM="\033[2m"
+WHITE="\033[97m"
 
 # Context color based on usage
 if [ "$PCT" -lt 50 ]; then
@@ -224,8 +227,17 @@ MAGENTA="\033[35m"
 BLUE="\033[34m"
 RED="\033[31m"
 
+# Extract last directory from path for bold emphasis
+CWD_PARENT=$(dirname "$CWD_DISPLAY")
+CWD_LAST=$(basename "$CWD_DISPLAY")
+if [ "$CWD_PARENT" = "." ] || [ "$CWD_PARENT" = "$CWD_DISPLAY" ]; then
+    CWD_FORMATTED="${BOLD}${CWD_LAST}${RST}"
+else
+    CWD_FORMATTED="${DIM}${CWD_PARENT}/${RST}${BOLD}${CWD_LAST}${RST}"
+fi
+
 # Build the first line
-LINE1="${CYAN}[${NAME}:${SHORT_ID}]${RST} ${YELLOW}${MODEL_SHORT}${RST} | ${DIM}${CWD_DISPLAY}${RST} | ${CTX_COLOR}ctx:${PCT}%${RST} | ${GREEN}\$${COST_FMT}${RST}"
+LINE1="${CYAN}[${BOLD}${NAME}${RST}${CYAN}:${SHORT_ID}]${RST} ${YELLOW}${MODEL_SHORT}${RST} | ${CWD_FORMATTED} | ${CTX_COLOR}ctx:${PCT}%${RST} | ${GREEN}\$${COST_FMT}${RST}"
 
 # Add session tracking: ID:A#N format
 # Format: <short_id>:<agent_session>#<prompt_count>
@@ -236,12 +248,12 @@ if [ -n "$DURATION" ]; then
     LINE1="${LINE1} | ${DIM}${DURATION}${RST}"
 fi
 
-# Add git info: branch (blue=clean, red=dirty) and diff stats
+# Add git info: branch (blue=clean, red=dirty, always bold) and diff stats
 if [ -n "$BRANCH" ]; then
     if [ -n "$GIT_DIRTY" ]; then
-        LINE1="${LINE1} | ${RED}${BRANCH}${RST}"
+        LINE1="${LINE1} | ${BOLD}${RED}${BRANCH}${RST}"
     else
-        LINE1="${LINE1} | ${BLUE}${BRANCH}${RST}"
+        LINE1="${LINE1} | ${BOLD}${BLUE}${BRANCH}${RST}"
     fi
     if [ -n "$GIT_STATS" ]; then
         LINE1="${LINE1} ${DIM}${GIT_STATS}${RST}"
@@ -250,7 +262,7 @@ fi
 
 echo -e "$LINE1"
 
-# Second line: summary (if available)
+# Second line: summary (if available) - white and bold for emphasis
 if [ -n "$SUMMARY" ]; then
-    echo -e "${DIM}${SUMMARY}${RST}"
+    echo -e "${BOLD}${WHITE}${SUMMARY}${RST}"
 fi
