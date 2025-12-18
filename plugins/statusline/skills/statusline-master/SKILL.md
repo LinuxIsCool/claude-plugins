@@ -1,6 +1,6 @@
 ---
-name: statusline
-description: Master skill for instance identity management. Enables Claude instances to name themselves, track their identity across sessions, and coordinate with other instances. Use when starting a new session or when identity needs clarification.
+name: statusline-master
+description: Master skill for instance identity management. Sub-skills (3): self-namer, instance-tracker, generation-tuner. Invoke for naming yourself, tracking other instances, or improving name/summary/description generation quality.
 allowed-tools: Read, Bash, Write, Edit
 ---
 
@@ -14,6 +14,7 @@ Instance identity and multi-Claude coordination.
 |-----------|----------|------|
 | **self-namer** | Starting a new session, naming yourself | `subskills/self-namer.md` |
 | **instance-tracker** | Checking other instances, coordination | `subskills/instance-tracker.md` |
+| **generation-tuner** | Improving name/summary/description quality, prompt iteration | `subskills/generation-tuner.md` |
 
 ## Core Concept
 

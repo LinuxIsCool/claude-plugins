@@ -259,11 +259,13 @@ LINE1="${CYAN}[${BOLD}${NAME}${RST}${CYAN}:${SHORT_ID}]${RST} ${YELLOW}${MODEL_S
 # Add session tracking: Cx:A#N format
 # Format: C<process_num>:<agent_session>#<prompt_count>
 # Process number is spawn order (C1, C2, C3...), agent_session is compaction count
+# Continued sessions (SessionStart never fired) show "C?:" to indicate unknown spawn order
 if [ -n "$PROCESS_NUM" ]; then
     SESSION_TRACK="C${PROCESS_NUM}:${AGENT_SESSION}#${MSG_COUNT}"
 else
-    # Fallback to short_id if no process number assigned yet
-    SESSION_TRACK="${SHORT_ID}:${AGENT_SESSION}#${MSG_COUNT}"
+    # No process number - this is a continued session (SessionStart didn't fire)
+    # Show "C?" to indicate unknown spawn order, still show agent session and prompt count
+    SESSION_TRACK="C?:${AGENT_SESSION}#${MSG_COUNT}"
 fi
 
 LINE1="${LINE1} | ${MAGENTA}${SESSION_TRACK}${RST}"

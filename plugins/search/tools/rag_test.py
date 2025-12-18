@@ -27,6 +27,12 @@ Usage:
 
     # 7. Show index statistics
     uv run rag_test.py stats
+
+    # 8. Run ecosystem-specific tests (agents, plugins, processes)
+    uv run rag_test.py ecosystem --configs vector hybrid --output results.json
+
+    # 9. List generated ecosystem queries without running tests
+    uv run rag_test.py ecosystem --list-queries
 """
 import argparse
 import json
@@ -41,7 +47,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from rag import (
     Document, RecursiveTextSplitter, ContextualChunker, OllamaEmbedder,
     OllamaGenerator, VectorRetriever, HybridRetriever, RerankingRetriever,
-    CrossEncoderReranker, FileIndex, Evaluator, format_metrics, save_evaluation
+    CrossEncoderReranker, FileIndex, Evaluator, format_metrics, save_evaluation,
+    EcosystemQueryGenerator, MultiConfigRunner, format_suite_result, save_suite_result
 )
 
 
@@ -453,6 +460,81 @@ def cmd_eval(args):
     return 0
 
 
+def cmd_ecosystem(args):
+    """Run ecosystem-specific retrieval tests."""
+    index = FileIndex(args.index_dir)
+
+    if not index.exists():
+        print(f"Error: Index not found at {args.index_dir}. Run 'index' first.")
+        return 1
+
+    # Generate test queries from ecosystem
+    print(f"Generating test queries from {args.path}...")
+    root_path = Path(args.path).resolve()
+    generator = EcosystemQueryGenerator(root_path)
+    suite = generator.generate()
+
+    print(f"Generated {len(suite.queries)} test queries:")
+    for category, queries in suite.by_category().items():
+        print(f"  {category}: {len(queries)} queries")
+
+    if args.list_queries:
+        print("\nQueries by category:")
+        for category, queries in suite.by_category().items():
+            print(f"\n  [{category.upper()}]")
+            for q in queries[:5]:  # Show first 5 per category
+                print(f"    - {q.text[:60]}...")
+        return 0
+
+    # Load index
+    documents, embeddings = index.load()
+    embedder = OllamaEmbedder(model=args.model)
+
+    # Build retrievers based on selected configs
+    retrievers = {}
+
+    if 'vector' in args.configs:
+        r = VectorRetriever(embedder)
+        r.set_index(documents, embeddings)
+        retrievers['vector'] = r
+
+    if 'hybrid' in args.configs:
+        r = HybridRetriever(embedder, alpha=args.alpha)
+        r.set_index(documents, embeddings)
+        retrievers['hybrid'] = r
+
+    if 'hybrid+rerank' in args.configs:
+        base = HybridRetriever(embedder, alpha=args.alpha)
+        base.set_index(documents, embeddings)
+        print("Loading cross-encoder reranker...")
+        reranker = CrossEncoderReranker(model_name=args.rerank_model)
+        retrievers['hybrid+rerank'] = RerankingRetriever(
+            base, reranker, retrieve_k=args.retrieve_k
+        )
+
+    if not retrievers:
+        print("Error: No valid configurations selected.")
+        return 1
+
+    # Run evaluation
+    runner = MultiConfigRunner()
+    result = runner.run(
+        suite,
+        retrievers,
+        k=args.k,
+        generate_ground_truth=not args.no_judge
+    )
+
+    # Display results
+    print(format_suite_result(result))
+
+    # Save results
+    if args.output:
+        save_suite_result(result, args.output)
+
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="RAG Test Harness - Test retrieval quality",
@@ -543,6 +625,30 @@ def main():
     # stats command
     subparsers.add_parser('stats', help='Show index statistics')
 
+    # ecosystem command
+    eco_parser = subparsers.add_parser('ecosystem',
+                                        help='Run ecosystem-specific retrieval tests')
+    eco_parser.add_argument('--path', default='.',
+                            help='Repository path to scan for ecosystem content')
+    eco_parser.add_argument('--configs', nargs='+',
+                            default=['vector', 'hybrid', 'hybrid+rerank'],
+                            choices=['vector', 'hybrid', 'hybrid+rerank'],
+                            help='Retriever configurations to test')
+    eco_parser.add_argument('-k', type=int, default=10,
+                            help='Results per query')
+    eco_parser.add_argument('--alpha', type=float, default=0.5,
+                            help='Hybrid alpha weight')
+    eco_parser.add_argument('--rerank-model', default='cross-encoder/ms-marco-MiniLM-L-6-v2',
+                            help='Cross-encoder model for reranking')
+    eco_parser.add_argument('--retrieve-k', type=int, default=50,
+                            help='Candidates to retrieve before reranking')
+    eco_parser.add_argument('--no-judge', action='store_true',
+                            help='Skip LLM-assisted ground truth generation')
+    eco_parser.add_argument('--list-queries', action='store_true',
+                            help='List generated queries and exit')
+    eco_parser.add_argument('--output', type=str, default=None,
+                            help='Save results to JSON file')
+
     args = parser.parse_args()
 
     commands = {
@@ -550,7 +656,8 @@ def main():
         'query': cmd_query,
         'sample': cmd_sample,
         'eval': cmd_eval,
-        'stats': cmd_stats
+        'stats': cmd_stats,
+        'ecosystem': cmd_ecosystem
     }
 
     return commands[args.command](args)

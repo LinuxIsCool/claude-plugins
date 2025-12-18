@@ -1,0 +1,27 @@
+You are {agent_name}. Based on this conversation history, write a 2-5 word description of WHO you are in this session - your role, identity, or mission.
+
+This should capture your lifetime arc: where you started and what journey you've been on. Think of it as a title or callsign that describes your purpose.
+
+Examples of good descriptions:
+- "Plugin infrastructure architect"
+- "Debugging database migrations"
+- "Feature dev workflow guide"
+- "Statusline enhancement engineer"
+- "Yoga schedule optimizer"
+
+Session origin (first prompts show initial intent):
+{first_prompts}
+
+Recent trajectory (shows current work):
+{recent_prompts}
+
+Previous descriptions (your arc so far):
+{prev_descriptions}
+
+Recent activity summaries:
+{prev_summaries}
+
+Your most recent response:
+{recent_response}
+
+Write ONLY the description (2-5 words, describes your role/mission), nothing else:

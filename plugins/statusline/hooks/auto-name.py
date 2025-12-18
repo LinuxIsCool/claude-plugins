@@ -105,29 +105,41 @@ def try_claim_and_update_name(instances_dir: Path, session_id: str, name: str) -
         return False
 
 
-DEFAULT_PROMPT_TEMPLATE = """Based on this user's first message, generate a creative 1-2 word name for this Claude session.
+DEFAULT_PROMPT_TEMPLATE = """Generate a creative 1-2 word name for an AI assistant session based on the user's first message.
 
-The name should be evocative and memorable - like a codename or callsign that hints at the session's purpose.
+CRITICAL RULES:
+- NEVER use "Claude" or "Assistant" as the name
+- NEVER use the exact command name (e.g., don't output "Status" for "/status")
+- For minimal prompts like "Hello" or "Test", infer purpose from context or use evocative general names
 
-Examples of good names:
-- "Navigator" (for navigation/exploration tasks)
-- "Architect" (for design/planning tasks)
-- "Debugger" (for fixing issues)
-- "Scribe" (for documentation)
-- "Refactor" (for code cleanup)
-- "Phoenix" (for resurrection/restart tasks)
-- "Sentinel" (for monitoring/security)
-- "Catalyst" (for transformation tasks)
+The name should be a codename/callsign that captures the session's likely purpose or energy.
+
+Good name patterns:
+- Task-based: "Architect", "Debugger", "Scribe", "Refactor"
+- Evocative: "Phoenix", "Sentinel", "Catalyst", "Navigator"
+- Mission-style: "Silent Keeper", "Thread Hunter", "Code Whisperer"
+
+For greetings/minimal prompts, use evocative names like:
+- "Companion" (friendly greeting)
+- "Explorer" (unclear/open-ended)
+- "Seeker" (curious/questioning)
 
 User's first message:
 {user_prompt}
 
-Respond with ONLY the 1-2 word name, nothing else:"""
+One creative name (1-2 words only):"""
 
 
 def clean_name(raw_name: str) -> str:
     """Clean up generated name: capitalize, limit to 2 words."""
-    name = raw_name.strip().strip('"').strip("'").split("\n")[0].strip()
+    name = raw_name.strip()
+    # Strip common formatting artifacts
+    name = name.strip('"').strip("'").strip("`").strip("*")
+    # Take first line only
+    name = name.split("\n")[0].strip()
+    # Remove any remaining markdown bold
+    name = name.replace("**", "").replace("__", "")
+    # Limit to 2 words, capitalize
     words = name.split()[:2]
     return " ".join(w.capitalize() for w in words)
 

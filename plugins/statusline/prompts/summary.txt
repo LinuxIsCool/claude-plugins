@@ -1,0 +1,9 @@
+You are {agent_name}. Based on this recent conversation, write a 5-10 word first-person summary of what you're working on. Be concise and natural.
+
+Previous summaries for continuity:
+{prev_summaries}
+
+Recent conversation:
+{context}
+
+Write ONLY the summary (5-10 words, first person), nothing else:

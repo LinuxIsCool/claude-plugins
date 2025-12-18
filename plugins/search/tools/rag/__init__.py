@@ -10,6 +10,11 @@ from .index import FileIndex
 from .judge import RelevanceJudge, RelevanceJudgment, GroundTruthBuilder
 from .metrics import MetricsCalculator, EvaluationMetrics, AggregateMetrics, format_metrics, format_comparison
 from .evaluation import Evaluator, EvaluationResult, save_evaluation, load_ground_truth
+from .ecosystem_test import (
+    TestQuery, TestSuite, EcosystemQueryGenerator,
+    ConfigResult, SuiteResult, MultiConfigRunner,
+    format_suite_result, save_suite_result
+)
 
 __all__ = [
     # Protocols
@@ -29,5 +34,9 @@ __all__ = [
     'RelevanceJudge', 'RelevanceJudgment', 'GroundTruthBuilder',
     'MetricsCalculator', 'EvaluationMetrics', 'AggregateMetrics',
     'format_metrics', 'format_comparison',
-    'Evaluator', 'EvaluationResult', 'save_evaluation', 'load_ground_truth'
+    'Evaluator', 'EvaluationResult', 'save_evaluation', 'load_ground_truth',
+    # Ecosystem Testing
+    'TestQuery', 'TestSuite', 'EcosystemQueryGenerator',
+    'ConfigResult', 'SuiteResult', 'MultiConfigRunner',
+    'format_suite_result', 'save_suite_result'
 ]
