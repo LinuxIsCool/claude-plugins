@@ -21,65 +21,28 @@ Default: "headless" (free with Max subscription)
 
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 
-DEBUG = os.environ.get("DEBUG_NAME", "").lower() in ("1", "true", "yes")
+# Add lib to path for shared infrastructure
+sys.path.insert(0, str(Path(__file__).parent.parent / "lib"))
+
+from claude_backend import (
+    debug,
+    get_config,
+    get_api_key,
+    get_instances_dir,
+    generate_with_backend,
+    load_prompt_template,
+    parse_hook_input,
+)
+
+DEBUG_PREFIX = "name"
 
 
-def debug(msg: str):
-    """Print debug message if DEBUG is enabled."""
-    if DEBUG:
-        print(f"[auto-name] {msg}", file=sys.stderr)
-
-
-def get_config(cwd: str) -> dict:
-    """Load configuration from files or environment."""
-    config = {"backend": "headless"}  # Default to free option
-
-    for loc in [Path(cwd) / ".claude/statusline.conf", Path.home() / ".claude/statusline.conf"]:
-        if loc.exists():
-            try:
-                for line in loc.read_text().strip().split("\n"):
-                    line = line.strip()
-                    if line and not line.startswith("#") and "=" in line:
-                        key, value = line.split("=", 1)
-                        key = key.strip().upper()
-                        value = value.strip().strip('"').strip("'")
-                        if key == "BACKEND":
-                            config["backend"] = value.lower()
-                debug(f"Config loaded from {loc}")
-                break
-            except Exception as e:
-                debug(f"Failed to load config from {loc}: {e}")
-
-    if os.environ.get("SUMMARY_BACKEND"):
-        config["backend"] = os.environ["SUMMARY_BACKEND"].lower()
-
-    return config
-
-
-def get_api_key(cwd: str) -> str:
-    """Find API key from multiple sources."""
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if key:
-        return key
-
-    for loc in [Path(cwd) / ".claude" / "anthropic_api_key", Path.home() / ".claude" / "anthropic_api_key"]:
-        if loc.exists():
-            key = loc.read_text().strip()
-            if key:
-                return key
-    return ""
-
-
-def get_instances_dir(cwd: str) -> Path:
-    """Find instances directory."""
-    for loc in [Path(cwd) / ".claude/instances", Path.home() / ".claude/instances"]:
-        if loc.exists():
-            return loc
-    return Path.home() / ".claude/instances"
+def log(msg: str):
+    """Debug helper using our prefix."""
+    debug(msg, DEBUG_PREFIX)
 
 
 def get_prompt_count(instances_dir: Path, session_id: str) -> int:
@@ -94,47 +57,41 @@ def get_prompt_count(instances_dir: Path, session_id: str) -> int:
 
 
 def update_registry_name(instances_dir: Path, session_id: str, name: str) -> bool:
-    """Update the session name in registry.json."""
+    """Update the session name in registry.json with file locking to prevent race conditions."""
+    import fcntl
+
     registry = instances_dir / "registry.json"
     if not registry.exists():
-        debug("Registry not found")
+        log("Registry not found")
         return False
 
     try:
-        data = json.loads(registry.read_text())
-        if session_id in data:
-            data[session_id]["name"] = name
-            registry.write_text(json.dumps(data, indent=2))
-            debug(f"Updated registry: {session_id} -> {name}")
-            return True
-        else:
-            debug(f"Session {session_id} not in registry")
-            return False
+        # Use file locking to prevent race conditions from concurrent hooks
+        with open(registry, "r+") as f:
+            # Acquire exclusive lock (blocks until available)
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            try:
+                data = json.load(f)
+                if session_id in data:
+                    data[session_id]["name"] = name
+                    # Rewind and truncate before writing
+                    f.seek(0)
+                    f.truncate()
+                    json.dump(data, f, indent=2)
+                    log(f"Updated registry: {session_id} -> {name}")
+                    return True
+                else:
+                    log(f"Session {session_id} not in registry")
+                    return False
+            finally:
+                # Lock is released when file is closed, but explicit unlock is cleaner
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
     except Exception as e:
-        debug(f"Registry update failed: {e}")
+        log(f"Registry update failed: {e}")
         return False
 
 
-def load_prompt_template() -> str:
-    """Load name generation prompt template."""
-    script_dir = Path(__file__).parent
-    locations = [
-        script_dir / "name-prompt.txt",
-        Path.home() / ".claude" / "name-prompt.txt",
-    ]
-
-    for loc in locations:
-        if loc.exists():
-            try:
-                template = loc.read_text().strip()
-                if template:
-                    debug(f"Loaded prompt template from {loc}")
-                    return template
-            except:
-                pass
-
-    # Default prompt
-    return """Based on this user's first message, generate a creative 1-2 word name for this Claude session.
+DEFAULT_PROMPT_TEMPLATE = """Based on this user's first message, generate a creative 1-2 word name for this Claude session.
 
 The name should be evocative and memorable - like a codename or callsign that hints at the session's purpose.
 
@@ -154,168 +111,87 @@ User's first message:
 Respond with ONLY the 1-2 word name, nothing else:"""
 
 
-def build_prompt(user_prompt: str) -> str:
-    """Build the name generation prompt."""
-    template = load_prompt_template()
-    return template.format(user_prompt=user_prompt[:500])  # Limit context
-
-
-def generate_name_api(prompt: str, api_key: str) -> str:
-    """Generate name using Anthropic API directly."""
-    debug("Using API backend")
-    try:
-        import anthropic
-
-        client = anthropic.Anthropic(api_key=api_key)
-
-        msg = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=20,
-            temperature=0.7,  # Slightly higher for creativity
-            messages=[{"role": "user", "content": prompt}],
-        )
-
-        name = msg.content[0].text.strip()
-        # Clean up: remove quotes, take first word(s), capitalize
-        name = name.strip('"').strip("'").split("\n")[0].strip()
-        # Limit to 2 words max
-        words = name.split()[:2]
-        name = " ".join(w.capitalize() for w in words)
-        debug(f"API response: {name}")
-        return name
-    except Exception as e:
-        debug(f"API error: {e}")
-        return ""
-
-
-def generate_name_headless(prompt: str) -> str:
-    """Generate name using headless Claude CLI."""
-    debug("Using headless backend")
-    try:
-        env = os.environ.copy()
-        env.pop("ANTHROPIC_API_KEY", None)  # Force Max subscription
-
-        result = subprocess.run(
-            [
-                "claude",
-                "-p",
-                prompt,
-                "--model",
-                "haiku",
-                "--no-session-persistence",
-                "--tools",
-                "",
-                "--setting-sources",
-                "",  # Disable all settings = no hooks, no plugins
-            ],
-            input="",
-            capture_output=True,
-            text=True,
-            timeout=30,
-            env=env,
-        )
-
-        if result.returncode != 0:
-            debug(f"Headless error: {result.stderr}")
-            return ""
-
-        name = result.stdout.strip()
-        name = name.strip('"').strip("'").split("\n")[0].strip()
-        words = name.split()[:2]
-        name = " ".join(w.capitalize() for w in words)
-        debug(f"Headless response: {name}")
-        return name
-    except subprocess.TimeoutExpired:
-        debug("Headless timeout (30s)")
-        return ""
-    except Exception as e:
-        debug(f"Headless error: {e}")
-        return ""
-
-
-def generate_name(user_prompt: str, config: dict, api_key: str) -> str:
-    """Generate name using configured backend."""
-    if not user_prompt:
-        debug("No user prompt - skipping name generation")
-        return ""
-
-    prompt = build_prompt(user_prompt)
-    backend = config.get("backend", "headless")
-
-    if backend == "api":
-        if not api_key:
-            debug("API backend selected but no API key - falling back to headless")
-            return generate_name_headless(prompt)
-        return generate_name_api(prompt, api_key)
-    else:
-        return generate_name_headless(prompt)
+def clean_name(raw_name: str) -> str:
+    """Clean up generated name: capitalize, limit to 2 words."""
+    name = raw_name.strip().strip('"').strip("'").split("\n")[0].strip()
+    words = name.split()[:2]
+    return " ".join(w.capitalize() for w in words)
 
 
 def main():
-    debug("Starting auto-name hook")
+    log("Starting auto-name hook")
 
-    # Read hook input
-    raw_input = ""
-    try:
-        if not sys.stdin.isatty():
-            raw_input = sys.stdin.read()
-        if not raw_input:
-            raw_input = os.environ.get("HOOK_INPUT", "")
-        data = json.loads(raw_input or "{}")
-    except Exception as e:
-        debug(f"Failed to parse input: {e}")
-        data = {}
-
+    # Parse hook input
+    data = parse_hook_input(DEBUG_PREFIX)
     if not data:
-        debug("No input data")
+        log("No input data")
         return
 
     session_id = data.get("session_id", "")
     cwd = data.get("cwd", ".")
     user_prompt = data.get("prompt", "")
 
-    debug(f"Session: {session_id[:8] if session_id else 'none'}")
+    log(f"Session: {session_id[:8] if session_id else 'none'}")
 
     if not session_id:
-        debug("No session_id")
+        log("No session_id")
         return
 
     instances_dir = get_instances_dir(cwd)
 
     # Check if this is the first prompt
     count = get_prompt_count(instances_dir, session_id)
-    debug(f"Prompt count: {count}")
+    log(f"Prompt count: {count}")
 
     # Only trigger on first prompt (count should be 1 after increment)
     if count != 1:
-        debug(f"Not first prompt (count={count}), skipping")
+        log(f"Not first prompt (count={count}), skipping")
         return
 
     if not user_prompt:
-        debug("No user prompt in hook data")
+        log("No user prompt in hook data")
         return
 
     # Load configuration
-    config = get_config(cwd)
-    api_key = get_api_key(cwd)
+    config = get_config(cwd, DEBUG_PREFIX)
+    api_key = get_api_key(cwd, DEBUG_PREFIX)
 
-    # Generate name
-    name = generate_name(user_prompt, config, api_key)
+    # Load and build prompt
+    script_dir = Path(__file__).parent
+    template = load_prompt_template(script_dir, "name-prompt.txt", DEFAULT_PROMPT_TEMPLATE)
 
-    if name:
-        debug(f"Generated name: {name}")
+    prompt = template.format(user_prompt=user_prompt[:500])
+
+    # Generate name with higher temperature for creativity
+    raw_name = generate_with_backend(
+        prompt=prompt,
+        config=config,
+        api_key=api_key,
+        max_tokens=20,
+        temperature=0.7,  # Higher for creativity
+        prefix=DEBUG_PREFIX,
+    )
+
+    if raw_name:
+        name = clean_name(raw_name)
+        log(f"Generated name: {name}")
         if update_registry_name(instances_dir, session_id, name):
-            debug("Name saved to registry")
+            log("Name saved to registry")
         else:
-            debug("Failed to save name")
+            log("Failed to save name")
     else:
-        debug("No name generated")
+        log("No name generated")
 
 
 if __name__ == "__main__":
+    # Enable debug with DEBUG_NAME=1
+    os.environ.setdefault("DEBUG_NAME", os.environ.get("DEBUG_NAME", ""))
+
     try:
         main()
     except Exception as e:
-        if DEBUG:
-            print(f"[auto-name] Fatal error: {e}", file=sys.stderr)
+        if os.environ.get("DEBUG_NAME", "").lower() in ("1", "true", "yes"):
+            print(f"[name] Fatal error: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
         pass

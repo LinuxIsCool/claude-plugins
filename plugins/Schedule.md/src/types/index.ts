@@ -223,7 +223,7 @@ export interface FreeSlot {
 /**
  * WebSocket event types
  */
-export type WSEventType = "blocks-updated" | "config-updated" | "connected";
+export type WSEventType = "blocks-updated" | "config-updated" | "connected" | "reload";
 
 export interface WSEvent {
   type: WSEventType;

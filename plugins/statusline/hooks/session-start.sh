@@ -62,11 +62,22 @@ else
     DEFAULT_NAME="Claude"
     DIR_NAME=$(basename "$CWD" 2>/dev/null || echo "unknown")
 
+    # Assign process number (monotonic counter for spawn order)
+    COUNTER_FILE="$(dirname "$REGISTRY")/process_counter.txt"
+    if [ -f "$COUNTER_FILE" ]; then
+        PROCESS_NUM=$(cat "$COUNTER_FILE" 2>/dev/null)
+        PROCESS_NUM=$((PROCESS_NUM + 1))
+    else
+        PROCESS_NUM=1
+    fi
+    echo "$PROCESS_NUM" > "$COUNTER_FILE"
+
     jq --arg sid "$SESSION_ID" \
        --arg name "$DEFAULT_NAME" \
        --arg cwd "$CWD" \
        --arg ts "$TIMESTAMP" \
        --arg dir "$DIR_NAME" \
+       --argjson pnum "$PROCESS_NUM" \
        '.[$sid] = {
          "name": $name,
          "task": ("Working in " + $dir),
@@ -74,7 +85,8 @@ else
          "cwd": $cwd,
          "created": $ts,
          "last_seen": $ts,
-         "status": "active"
+         "status": "active",
+         "process_number": $pnum
        }' \
        "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
 fi
@@ -83,15 +95,21 @@ fi
 CURRENT_NAME="${EXISTING:-$DEFAULT_NAME}"
 SHORT_ID=$(echo "$SESSION_ID" | cut -c1-8)
 
-# Initialize summary and count for new sessions
+# Initialize summary, description, and count for new sessions
 INSTANCES_DIR=$(dirname "$REGISTRY")
 SUMMARIES_DIR="$INSTANCES_DIR/summaries"
+DESCRIPTIONS_DIR="$INSTANCES_DIR/descriptions"
 COUNTS_DIR="$INSTANCES_DIR/counts"
-mkdir -p "$SUMMARIES_DIR" "$COUNTS_DIR"
+mkdir -p "$SUMMARIES_DIR" "$DESCRIPTIONS_DIR" "$COUNTS_DIR"
 
 SUMMARY_FILE="$SUMMARIES_DIR/${SESSION_ID}.txt"
 if [ ! -f "$SUMMARY_FILE" ]; then
     echo "Awaiting instructions." > "$SUMMARY_FILE"
+fi
+
+DESCRIPTION_FILE="$DESCRIPTIONS_DIR/${SESSION_ID}.txt"
+if [ ! -f "$DESCRIPTION_FILE" ]; then
+    echo "Awaiting instructions." > "$DESCRIPTION_FILE"
 fi
 
 COUNT_FILE="$COUNTS_DIR/${SESSION_ID}.txt"

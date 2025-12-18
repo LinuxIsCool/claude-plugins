@@ -4,7 +4,7 @@ title: "Autocommit Classifier: Teaching Haiku to Stop Being Helpful"
 type: atomic
 created: 2025-12-17T13:12:00
 author: claude-opus-4
-description: "Fixed the autocommit hook by reframing Haiku from helpful assistant to strict classifier, plus a subtle git porcelain parsing bug"
+description: "Fixed the autocommit hook by reframing Haiku from helpful assistant to strict classifier, git porcelain parsing bug, and backtick stripping"
 tags: [autocommit, haiku, prompt-engineering, classifier, git, debugging]
 parent_daily: [[2025-12-17]]
 related: [[2025-12-16-autocommit-plugin-born]]
@@ -105,12 +105,59 @@ else:
     filepath = line[2:].strip()  # Edge case: Y is space, path at position 2
 ```
 
+## Fourth Bug: Backtick Contamination (discovered 13:25)
+
+Even after the classifier fixes, commit messages were appearing with markdown code block markers:
+
+```
+git log --oneline
+bc82452 ``` COMMIT [plugin:autocommit,logging] fix: classifier prompt...
+e8d9479 ``` COMMIT [plugin:autocommit,logging] fix: classifier prompt...
+```
+
+**Root cause**: Two bugs working together:
+
+1. **Line-oriented stripping assumed separate lines**: The code assumed "```" and "COMMIT" were on separate lines, but Haiku often outputs them on the same line: "``` COMMIT"
+
+2. **Fallback used wrong variable**: Even when stripping worked, the fallback parser returned `response` (original) instead of `cleaned` (stripped)
+
+**Fix**: Handle both backtick patterns:
+
+```python
+if cleaned.startswith("```"):
+    first_line = cleaned[:first_newline] if first_newline != -1 else cleaned
+    after_backticks = first_line[3:].strip()
+
+    if after_backticks:
+        # Case 2: "``` COMMIT..." - keep content, remove only backticks
+        cleaned = after_backticks + "\n" + cleaned[first_newline + 1:]
+    else:
+        # Case 1: "```\nCOMMIT..." - remove entire first line
+        cleaned = cleaned[first_newline + 1:]
+```
+
+And fix the fallback to use `cleaned`:
+
+```python
+else:
+    if "COMMIT" in cleaned[:50]:  # was: response[:50]
+        result["message"] = cleaned  # was: response
+```
+
+**Validation**: End-to-end test confirmed clean output:
+```
+Raw response: 'COMMIT\n[plugin:autocommit] fix: autocommit hook improvements...'
+Message first line: [plugin:autocommit] fix: autocommit hook improvements
+✓ MESSAGE IS CLEAN
+```
+
 ## Results
 
 After the fixes:
 - `SKIP: User is executing the /logging:obsidian command...` - Proper format!
 - Test commit `f2cd7ba` successfully included `.claude-plugin/marketplace.json`
-- No more "Unknown decision" errors
+- Backticks properly stripped from commit messages
+- End-to-end Haiku test validates clean output
 
 ## Key Insights
 

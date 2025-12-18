@@ -5,14 +5,15 @@
 # Displays: [Name:id] Model X.X | dir | ctx:N% | $X.XX | ID:A#N Tm | branch +X/-Y
 #           comprehensive summary (on second line)
 #
-# Session tracking format: <short_id>:<agent>#<prompt>
-#   ID = Short session ID (5-char UUID prefix)
+# Session tracking format: Cx:A#N
+#   Cx = Claude process number (spawn order: C1, C2, C3...)
 #   A  = Agent session (context resets: derived from JSONL, counts compact/clear events)
 #   N  = Prompt count (persists across context compaction)
 #
-# Architecture: Agent session is derived directly from the JSONL log file
-# by counting SessionStart events with source="compact" or source="clear".
-# This is the elegant single-source-of-truth approach - no state file needed.
+# Architecture:
+# - Process number: Assigned on first registration, stored in registry, monotonic counter
+# - Agent session: Derived directly from JSONL by counting compact/clear events
+# - Both are elegant single-source-of-truth approaches
 #
 # Branch color: blue=clean, red=dirty
 #
@@ -31,6 +32,12 @@
 #     "command": "~/.claude/statusline.sh"
 #   }
 # }
+
+# Verify jq is available (required for JSON parsing)
+if ! command -v jq &> /dev/null; then
+    echo "Claude | jq required but not installed"
+    exit 0
+fi
 
 # Read JSON input
 input=$(cat)
@@ -72,10 +79,12 @@ for loc in ".claude/instances/registry.json" "$HOME/.claude/instances/registry.j
     fi
 done
 
-# Get instance name from registry
+# Get instance name and process number from registry
 REGISTERED_NAME=""
+PROCESS_NUM=""
 if [ -n "$REGISTRY" ] && command -v jq &> /dev/null; then
     REGISTERED_NAME=$(jq -r --arg sid "$SESSION_ID" '.[$sid].name // empty' "$REGISTRY" 2>/dev/null)
+    PROCESS_NUM=$(jq -r --arg sid "$SESSION_ID" '.[$sid].process_number // empty' "$REGISTRY" 2>/dev/null)
 fi
 
 # Determine display name
@@ -220,6 +229,14 @@ if [ -f "$SUMMARY_FILE" ]; then
     SUMMARY=$(cat "$SUMMARY_FILE" 2>/dev/null)
 fi
 
+# Read agent description if available
+DESCRIPTION=""
+DESCRIPTION_DIR=$(dirname "$REGISTRY")/descriptions
+DESCRIPTION_FILE="$DESCRIPTION_DIR/${SESSION_ID}.txt"
+if [ -f "$DESCRIPTION_FILE" ]; then
+    DESCRIPTION=$(cat "$DESCRIPTION_FILE" 2>/dev/null)
+fi
+
 # Output the statusline
 # Format: [Name:id] Model | dir | ctx:N% | $X.XX | #N Tm | branch +X/-Y
 #         summary on next line
@@ -239,9 +256,15 @@ fi
 # Build the first line
 LINE1="${CYAN}[${BOLD}${NAME}${RST}${CYAN}:${SHORT_ID}]${RST} ${YELLOW}${MODEL_SHORT}${RST} | ${CWD_FORMATTED} | ${CTX_COLOR}ctx:${PCT}%${RST} | ${GREEN}\$${COST_FMT}${RST}"
 
-# Add session tracking: ID:A#N format
-# Format: <short_id>:<agent_session>#<prompt_count>
-SESSION_TRACK="${SHORT_ID}:${AGENT_SESSION}#${MSG_COUNT}"
+# Add session tracking: Cx:A#N format
+# Format: C<process_num>:<agent_session>#<prompt_count>
+# Process number is spawn order (C1, C2, C3...), agent_session is compaction count
+if [ -n "$PROCESS_NUM" ]; then
+    SESSION_TRACK="C${PROCESS_NUM}:${AGENT_SESSION}#${MSG_COUNT}"
+else
+    # Fallback to short_id if no process number assigned yet
+    SESSION_TRACK="${SHORT_ID}:${AGENT_SESSION}#${MSG_COUNT}"
+fi
 
 LINE1="${LINE1} | ${MAGENTA}${SESSION_TRACK}${RST}"
 if [ -n "$DURATION" ]; then
@@ -262,7 +285,29 @@ fi
 
 echo -e "$LINE1"
 
-# Second line: summary (if available) - white and bold for emphasis
-if [ -n "$SUMMARY" ]; then
-    echo -e "${BOLD}${WHITE}${SUMMARY}${RST}"
+# Second line: "Description: Summary" format
+# Shows agent arc + current focus on a single line
+if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ]; then
+    LINE2=""
+
+    # Check if both are placeholders (fresh instance)
+    if [ "$DESCRIPTION" = "Awaiting instructions." ] && [ "$SUMMARY" = "Awaiting instructions." ]; then
+        LINE2="Awaiting instructions."
+    else
+        # Build content line, filtering individual placeholders
+        if [ -n "$DESCRIPTION" ] && [ "$DESCRIPTION" != "Awaiting instructions." ]; then
+            LINE2="${DESCRIPTION}"
+        fi
+        if [ -n "$SUMMARY" ] && [ "$SUMMARY" != "Awaiting instructions." ]; then
+            if [ -n "$LINE2" ]; then
+                LINE2="${LINE2}: ${SUMMARY}"
+            else
+                LINE2="${SUMMARY}"
+            fi
+        fi
+    fi
+
+    if [ -n "$LINE2" ]; then
+        echo -e "${BOLD}${WHITE}${LINE2}${RST}"
+    fi
 fi

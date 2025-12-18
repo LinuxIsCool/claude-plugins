@@ -87,9 +87,14 @@ export function App() {
       loadData();
     });
 
+    const unsubReload = ws.on("reload", () => {
+      window.location.reload();
+    });
+
     return () => {
       unsubBlocks();
       unsubConfig();
+      unsubReload();
       ws.disconnect();
     };
   }, [loadData]);

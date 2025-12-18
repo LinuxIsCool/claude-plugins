@@ -215,6 +215,10 @@ resources/
 .claude/instances/
 .claude/statusline.conf
 
+# Claude Code messages plugin (conversation transcripts)
+.claude/messages/store/content/
+.claude/messages/views/
+
 # Node.js / JavaScript / TypeScript
 node_modules/
 .npm

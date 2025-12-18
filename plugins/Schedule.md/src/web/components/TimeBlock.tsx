@@ -64,8 +64,8 @@ export function TimeBlock({
     widthStyle = "calc(100% - 8px)";
   }
 
-  // Semi-transparent for calendar events (subtle distinction from manual blocks)
-  const opacity = isCalendarEvent ? 0.85 : 1;
+  // Calendar events distinguished by dashed border, no opacity difference needed
+  const opacity = 1;
 
   return (
     <div

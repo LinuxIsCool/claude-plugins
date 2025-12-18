@@ -23,6 +23,20 @@ import { createStore } from "./core/store";
 import { createSearchIndex } from "./search";
 import { importTelegramExport, countTelegramExport } from "./adapters/telegram";
 import { importLogging, countLoggingEvents, getDefaultLogsDir } from "./adapters/logging";
+import {
+  importClaudeWeb,
+  countClaudeWebExport,
+  extractConversationsFromZip,
+} from "./adapters/claude-web";
+import {
+  importTelegramApi,
+  countTelegramApi,
+  isTelegramApiAvailable,
+} from "./adapters/telegram-api";
+import {
+  TelegramApiClient,
+  hasSession,
+} from "./integrations/telegram/client";
 import { kindName } from "./types";
 
 // Parse command line arguments
@@ -32,9 +46,11 @@ const { positionals, values } = parseArgs({
     file: { type: "string", short: "f" },
     limit: { type: "string", short: "l" },
     platform: { type: "string", short: "p" },
+    since: { type: "string", short: "s" },
     "dry-run": { type: "boolean" },
     "include-tools": { type: "boolean" },
     "include-system": { type: "boolean" },
+    "include-thinking": { type: "boolean" },
     help: { type: "boolean", short: "h" },
   },
   allowPositionals: true,
@@ -55,8 +71,11 @@ Usage:
   bun plugins/messages/src/cli.ts <command> [options]
 
 Commands:
+  telegram-auth               Authenticate with Telegram (one-time setup)
   import telegram -f <file>   Import Telegram JSON export
+  import telegram-api         Import from Telegram API (requires auth)
   import logs                 Import Claude Code logs
+  import claude-web -f <zip>  Import Claude Web data export
   search <query>              Search messages
   recent [-l N]               Show recent messages
   thread <id>                 Show thread messages
@@ -68,17 +87,28 @@ Options:
   -f, --file <path>           File path for import
   -l, --limit <n>             Limit results (default: 20)
   -p, --platform <name>       Filter by platform
+  -s, --since <days|date>     Filter to messages since N days ago or date
   --dry-run                   Preview import without saving
-  --include-tools             Include tool use events (logs import)
+  --include-tools             Include tool use events (logs/claude-web)
   --include-system            Include system events (logs import)
+  --include-thinking          Include thinking blocks (claude-web, default: true)
   -h, --help                  Show this help
 
 Examples:
-  # Import Telegram export
+  # Authenticate with Telegram (one-time)
+  bun plugins/messages/src/cli.ts telegram-auth
+
+  # Import from Telegram API (last 30 days)
+  bun plugins/messages/src/cli.ts import telegram-api
+
+  # Import Telegram JSON export
   bun plugins/messages/src/cli.ts import telegram -f ~/Downloads/result.json
 
   # Import Claude Code logs
   bun plugins/messages/src/cli.ts import logs
+
+  # Import Claude Web data (last 30 days)
+  bun plugins/messages/src/cli.ts import claude-web -f ~/Downloads/data-*.zip -s 30
 
   # Search messages
   bun plugins/messages/src/cli.ts search "authentication"
@@ -109,6 +139,54 @@ async function main(): Promise<void> {
   const limit = values.limit ? parseInt(values.limit, 10) : 20;
 
   switch (command) {
+    case "telegram-auth": {
+      console.log("Telegram Authentication");
+      console.log("=======================\n");
+
+      // Check for credentials
+      if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH || !process.env.TELEGRAM_PHONE) {
+        console.error("Error: Missing Telegram credentials in .env");
+        console.error("Required: TELEGRAM_API_ID, TELEGRAM_API_HASH, TELEGRAM_PHONE");
+        process.exit(1);
+      }
+
+      if (hasSession()) {
+        console.log("You already have a saved session.");
+        console.log("To re-authenticate, delete .claude/messages/telegram-session.txt first.");
+        return;
+      }
+
+      console.log(`Phone: ${process.env.TELEGRAM_PHONE}`);
+      console.log("\nConnecting to Telegram...");
+      console.log("A verification code will be sent to your Telegram app.\n");
+
+      const client = new TelegramApiClient();
+
+      // Dynamic import for input module
+      const input = await import("input");
+
+      try {
+        await client.authenticate({
+          onCodeRequest: async () => {
+            return await input.text("Enter the code from Telegram: ");
+          },
+          onPasswordRequest: async () => {
+            return await input.text("Enter your 2FA password (if enabled): ");
+          },
+          onError: (err) => {
+            console.error("Authentication error:", err.message);
+          },
+        });
+
+        console.log("\n✓ Successfully authenticated!");
+        console.log("Session saved. You can now run: import telegram-api");
+      } catch (error) {
+        console.error("\nAuthentication failed:", error);
+        process.exit(1);
+      }
+      break;
+    }
+
     case "import": {
       const [source] = args;
 
@@ -183,9 +261,140 @@ Event Types:`);
 
         console.log(`\nDone! Imported ${imported} messages.`);
 
+      } else if (source === "claude-web") {
+        if (!values.file) {
+          console.error("Error: --file/-f required for Claude Web import");
+          console.error("Provide the path to the data-*.zip file downloaded from claude.ai");
+          process.exit(1);
+        }
+
+        // Parse since option (days or date)
+        let sinceDate: Date | undefined;
+        if (values.since) {
+          const daysAgo = parseInt(values.since, 10);
+          if (!isNaN(daysAgo)) {
+            // Treat as number of days ago
+            sinceDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+          } else {
+            // Try to parse as date
+            sinceDate = new Date(values.since);
+            if (isNaN(sinceDate.getTime())) {
+              console.error(`Error: Invalid date or days value: ${values.since}`);
+              process.exit(1);
+            }
+          }
+        }
+
+        // Extract conversations.json from ZIP
+        console.log("Extracting conversations.json from ZIP...");
+        let conversationsPath: string;
+        try {
+          conversationsPath = await extractConversationsFromZip(values.file);
+        } catch (error) {
+          console.error("Error extracting ZIP:", error);
+          process.exit(1);
+        }
+
+        const importOptions = {
+          since: sinceDate,
+          includeThinking: values["include-thinking"] !== false, // default true
+          includeTools: values["include-tools"] || false,
+        };
+
+        if (values["dry-run"]) {
+          console.log("Counting Claude Web messages...");
+          const counts = await countClaudeWebExport(conversationsPath, importOptions);
+          console.log(`
+Claude Web Export Summary:
+  Conversations: ${counts.conversations}
+  Total Messages: ${counts.messages}
+    Human: ${counts.humanMessages}
+    Assistant: ${counts.assistantMessages}
+  Date Range: ${counts.dateRange.earliest?.toISOString().slice(0, 10) || "N/A"} to ${counts.dateRange.latest?.toISOString().slice(0, 10) || "N/A"}
+${sinceDate ? `\n  (Filtered to messages since ${sinceDate.toISOString().slice(0, 10)})` : ""}
+`);
+          return;
+        }
+
+        console.log(`Importing from Claude Web export...`);
+        if (sinceDate) {
+          console.log(`  Filtering to messages since ${sinceDate.toISOString().slice(0, 10)}`);
+        }
+
+        let imported = 0;
+        const generator = importClaudeWeb(conversationsPath, store, importOptions);
+
+        for await (const message of generator) {
+          search.index(message);
+          imported++;
+          if (imported % 100 === 0) {
+            process.stdout.write(`\rImported ${imported} messages...`);
+          }
+        }
+
+        console.log(`\nDone! Imported ${imported} messages.`);
+
+      } else if (source === "telegram-api") {
+        // Check for session
+        if (!isTelegramApiAvailable()) {
+          console.error("Error: No Telegram session found.");
+          console.error("Run 'telegram-auth' first to authenticate.");
+          process.exit(1);
+        }
+
+        // Parse since option (days)
+        const daysBack = values.since ? parseInt(values.since, 10) : 30;
+        if (isNaN(daysBack)) {
+          console.error(`Error: Invalid days value: ${values.since}`);
+          process.exit(1);
+        }
+
+        if (values["dry-run"]) {
+          console.log("Counting Telegram chats...");
+          try {
+            const counts = await countTelegramApi({ daysBack });
+            console.log(`
+Telegram API Summary:
+  Chats available: ${counts.dialogs}
+  Estimated messages: ${counts.estimatedMessages}
+
+Chats:`);
+            for (const d of counts.dialogList.slice(0, 20)) {
+              console.log(`  [${d.type}] ${d.title}`);
+            }
+            if (counts.dialogList.length > 20) {
+              console.log(`  ... and ${counts.dialogList.length - 20} more`);
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            process.exit(1);
+          }
+          return;
+        }
+
+        console.log(`Importing from Telegram API (last ${daysBack} days)...`);
+
+        let imported = 0;
+        try {
+          const generator = importTelegramApi(store, { daysBack });
+
+          for await (const message of generator) {
+            search.index(message);
+            imported++;
+            if (imported % 50 === 0) {
+              process.stdout.write(`\rImported ${imported} messages...`);
+            }
+          }
+
+          console.log(`\nDone! Imported ${imported} messages.`);
+        } catch (error) {
+          console.error("\nError during import:", error);
+          process.exit(1);
+        }
+
       } else {
         console.error(`Unknown import source: ${source}`);
-        console.error("Available: telegram, logs");
+        console.error("Available: telegram, telegram-api, logs, claude-web");
         process.exit(1);
       }
       break;

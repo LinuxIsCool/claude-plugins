@@ -63,6 +63,55 @@ Access via Skill tool (`company` master skill):
 - **business-judgment** - Dragons Den practical filters
 - **cfa-analysis** - CFA financial modeling frameworks
 
+## Output Style: Board Mentor (Always-On Advisory)
+
+The plugin includes a `board-mentor` output_style that makes the mentor persona always-active throughout your session.
+
+### Installation
+
+**Auto-install (default):** The SessionStart hook automatically installs the output style via symlink on first run. No manual action needed.
+
+**Manual install (if needed):**
+```bash
+# Symlink (recommended - stays updated with plugin)
+ln -s /path/to/plugins/company/output-styles/board-mentor.md ~/.claude/output-styles/board-mentor.md
+```
+
+**How auto-install works:**
+1. On each session start, the hook checks if `~/.claude/output-styles/board-mentor.md` exists
+2. If missing, creates a symlink to the plugin's source file
+3. If a regular file exists, replaces it with a symlink (for auto-updates)
+4. Symlink ensures edits to the plugin source propagate automatically
+
+### Activation
+
+```bash
+# Activate board mentor mode
+/output-style board-mentor
+
+# Return to default mode
+/output-style default
+```
+
+### What Changes
+
+When activated:
+- **Communication Style**: Recommendations first, rationale second (Direct Executive)
+- **Proactive Behavior**: Watches for business signals (revenue, hiring, fundraising)
+- **Cross-Plugin Awareness**: Reads from journal, exploration, backlog for context
+- **AgentNet Integration**: Posts strategic insights (>$5k impact) automatically
+- **Domain Focus**: Business/finance (defers technical learning to awareness:mentor)
+
+### SessionStart Context
+
+The plugin's SessionStart hook automatically injects:
+- Recent journal entries mentioning business keywords
+- Exploration discoveries in business domains
+- Outstanding company-domain tasks
+- AgentNet activity summary
+
+This context helps the mentor provide informed, continuous counsel.
+
 ## Usage Examples
 
 ### Incorporate a Business
@@ -96,6 +145,20 @@ Tax laws and regulations change frequently. The information here is based on 202
 
 ## Version
 
-- **Version**: 0.1.0
+- **Version**: 0.2.0
 - **Last Updated**: 2025-12-17
 - **Tax Data**: 2025 CRA rates
+
+## Changelog
+
+### 0.2.0 (2025-12-17)
+- Added `board-mentor` output_style for always-on advisory mode
+- Added SessionStart hook for business context injection
+- Added AgentNet client for posting strategic insights
+- Enhanced cross-plugin awareness (journal, exploration, backlog)
+- Auto-install output style via symlink (SessionStart hook)
+
+### 0.1.0 (2025-12-17)
+- Initial release with 5 agents and 25 sub-skills
+- Full Canadian tax data for 2025
+- Comprehensive entity type coverage

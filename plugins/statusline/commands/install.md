@@ -52,7 +52,6 @@ SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 echo "Installing statusline plugin..."
 
 # 1. Create directories
-mkdir -p "$CLAUDE_DIR/hooks"
 mkdir -p "$CLAUDE_DIR/instances"
 echo "✓ Created directories"
 
@@ -62,13 +61,7 @@ ln -sf "$PLUGIN_DIR/tools/statusline.sh" "$CLAUDE_DIR/statusline.sh"
 chmod +x "$CLAUDE_DIR/statusline.sh"
 echo "✓ Symlinked statusline.sh"
 
-# 3. Symlink session-start hook
-[ -e "$CLAUDE_DIR/hooks/session-start.sh" ] && rm "$CLAUDE_DIR/hooks/session-start.sh"
-ln -sf "$PLUGIN_DIR/hooks/session-start.sh" "$CLAUDE_DIR/hooks/session-start.sh"
-chmod +x "$CLAUDE_DIR/hooks/session-start.sh"
-echo "✓ Symlinked session-start.sh hook"
-
-# 4. Update settings.json
+# 3. Update settings.json
 if [ -f "$SETTINGS_FILE" ]; then
     cp "$SETTINGS_FILE" "$SETTINGS_FILE.bak"
 
@@ -77,15 +70,6 @@ if [ -f "$SETTINGS_FILE" ]; then
           "statusLine": {
             "type": "command",
             "command": "~/.claude/statusline.sh"
-          },
-          "hooks": {
-            "SessionStart": [{
-              "hooks": [{
-                "type": "command",
-                "command": "~/.claude/hooks/session-start.sh",
-                "timeout": 10
-              }]
-            }]
           }
         }' "$SETTINGS_FILE.bak" > "$SETTINGS_FILE"
         echo "✓ Updated settings.json"
@@ -94,10 +78,7 @@ if [ -f "$SETTINGS_FILE" ]; then
     fi
 else
     echo '{
-      "statusLine": {"type": "command", "command": "~/.claude/statusline.sh"},
-      "hooks": {
-        "SessionStart": [{"hooks": [{"type": "command", "command": "~/.claude/hooks/session-start.sh", "timeout": 10}]}]
-      }
+      "statusLine": {"type": "command", "command": "~/.claude/statusline.sh"}
     }' | jq . > "$SETTINGS_FILE"
     echo "✓ Created settings.json"
 fi

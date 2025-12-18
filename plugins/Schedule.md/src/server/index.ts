@@ -69,6 +69,50 @@ export async function startServer(options: ServerOptions) {
     // Config might not exist yet
   }
 
+  // Hot reload: watch web source files and rebuild on changes
+  let rebuildTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const triggerRebuild = async () => {
+    try {
+      console.log("[hot-reload] Rebuilding web bundle...");
+      const result = await Bun.build({
+        entrypoints: [join(WEB_DIR, "index.tsx")],
+        outdir: join(WEB_DIR, "dist"),
+        minify: false,
+        sourcemap: "inline",
+        external: [],
+      });
+
+      if (!result.success) {
+        console.error("[hot-reload] Build failed:", result.logs);
+        return;
+      }
+
+      console.log("[hot-reload] Build successful, reloading clients...");
+      broadcast({ type: "reload" });
+    } catch (error) {
+      console.error("[hot-reload] Build error:", error);
+    }
+  };
+
+  const debouncedRebuild = () => {
+    if (rebuildTimeout) clearTimeout(rebuildTimeout);
+    rebuildTimeout = setTimeout(triggerRebuild, 300);
+  };
+
+  try {
+    watch(WEB_DIR, { recursive: true }, (eventType, filename) => {
+      // Only rebuild for source files, not dist output
+      if (filename?.match(/\.(tsx?|css|html)$/) && !filename.includes("dist")) {
+        console.log(`[hot-reload] File changed: ${filename}`);
+        debouncedRebuild();
+      }
+    });
+    console.log(`[hot-reload] Watching ${WEB_DIR} for changes`);
+  } catch {
+    console.warn("[hot-reload] Could not enable hot reload for web sources");
+  }
+
   // Build the web bundle
   const webBundle = await Bun.build({
     entrypoints: [join(WEB_DIR, "index.tsx")],

@@ -69,6 +69,7 @@ export const Kind = {
   Slack: 1021,
   ForumPost: 1030,
   ForumComment: 1031,
+  ClaudeWeb: 1040,
 } as const;
 
 export type KindValue = (typeof Kind)[keyof typeof Kind];
