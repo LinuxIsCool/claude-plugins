@@ -63,6 +63,27 @@ Show transcript statistics.
 /transcripts stats
 ```
 
+### probe
+Check system resources before transcription (Concrete Computing).
+
+```
+/transcripts probe
+```
+
+This probes RAM, swap, GPU and recommends safe model choices. **Always run before first transcription** to understand system capacity.
+
+### experiment [level]
+Run safe progressive tests to learn what works.
+
+```
+/transcripts experiment           # Start at tiny
+/transcripts experiment tiny      # Test whisper-tiny
+/transcripts experiment base      # Test whisper-base (needs 2GB+ RAM)
+/transcripts experiment report    # Show experiment history
+```
+
+Uses timeout protection and records results for learning.
+
 ### emit <id>
 Emit transcript to messages plugin.
 
@@ -90,6 +111,33 @@ When the user runs `/transcripts`, invoke the transcript-master skill and use th
 ### For messages integration:
 1. Read messages-integration sub-skill
 2. Use `transcripts_emit_to_messages` MCP tool
+
+### For probe (Concrete Computing):
+Execute resource probe directly using Bash:
+```bash
+# Get memory state
+free -h
+
+# Get swap state
+swapon --show
+
+# Get GPU state
+nvidia-smi --query-gpu=name,memory.total,memory.used,memory.free --format=csv 2>/dev/null
+```
+
+Then assess:
+- Swap > 90%? → **STOP** - System will freeze on model load
+- RAM < 1GB? → Only Vosk (CPU-only) is safe
+- RAM < 2GB? → Only tiny models safe
+- Otherwise → Can try progressive testing
+
+Report findings with clear recommendations.
+
+### For experiment:
+1. Read experimental-research sub-skill: `plugins/transcripts/skills/transcript-master/subskills/experimental-research.md`
+2. **OR** Spawn `transcripts:researcher` agent for autonomous testing
+3. Use 30s timeout on any model load
+4. Record results to `.claude/transcripts/experiments/log.jsonl`
 
 ## Examples
 
