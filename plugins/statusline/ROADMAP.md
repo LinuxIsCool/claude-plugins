@@ -4,22 +4,21 @@ This document outlines the strategic roadmap for evolving the statusline plugin 
 
 ## Current State Assessment
 
-### Code Inventory (3,191 lines total)
+### Code Inventory (Updated 2025-12-18)
 
 | Component | Lines | Purpose | Health |
 |-----------|-------|---------|--------|
-| `lib/claude_backend.py` | 706 | Shared library for Python hooks | Bloated, needs review |
-| `tools/statusline.sh` | 404 | Main statusline renderer | Growing, self-healing added |
+| `lib/claude_backend.py` | ~700 | Shared library for Python hooks | Functional, multiline support added |
+| `tools/statusline.sh` | ~450 | Main statusline renderer | Self-healing, auto-register fixed |
+| `hooks/auto-identity.py` | ~400 | **Unified** name/description/summary generation | **NEW** - 3x faster |
 | `tools/registry.py` | 286 | Registry management CLI | Functional |
-| `tools/test-prompts.py` | 277 | Prompt testing utility | Needs update |
-| `hooks/auto-name.py` | 217 | Name generation | Working |
+| `tools/test-prompts.py` | 277 | Prompt testing utility | Needs update for versioned prompts |
 | `hooks/user-prompt-submit.sh` | 197 | Prompt counter, session ensure | Working |
-| `hooks/auto-description.py` | 190 | Description generation | Working |
-| `hooks/auto-summary.py` | 173 | Summary generation | Working |
-| `tools/history.sh` | 172 | History viewer (NEW) | Clean |
+| `tools/history.sh` | 172 | History viewer | Clean |
 | `hooks/session-start.sh` | 168 | Session registration | Working |
-| Prompt files | 158 | name.txt, description.txt, summary.txt | Needs redesign |
-| Wrappers + misc | ~243 | Various small files | Functional |
+| Versioned prompts | ~220 | prompts/{name,description,summary}/*.md | **NEW** - version controlled |
+
+**Note**: Old hooks (`auto-name.py`, `auto-description.py`, `auto-summary.py`) were consolidated into `auto-identity.py` on 2025-12-18.
 
 ### What's Working Well
 
@@ -28,13 +27,13 @@ This document outlines the strategic roadmap for evolving the statusline plugin 
 3. **History viewer** - Can replay and analyze past statuslines
 4. **Semantic triplet** - Name/Description/Summary structure is sound
 
-### What's Fragile
+### What's Fragile (Status Updated 2025-12-18)
 
-1. **Race conditions** - Multiple scripts write to registry.json (potential conflicts)
-2. **Duplicated logic** - `log_statusline()` function defined in 3 shell scripts
-3. **Large files** - `claude_backend.py` (706 lines) does too much
+1. ~~**Race conditions**~~ - **FIXED**: Unified hook eliminates concurrent subprocess contention
+2. ~~**Duplicated logic**~~ - **FIXED**: Shared `lib/statusline-utils.sh`
+3. **Large files** - `claude_backend.py` could still be modularized
 4. **Hardcoded paths** - Assumes `~/.claude/instances/` everywhere
-5. **Prompt coupling** - Prompts may reference specific project context
+5. ~~**Prompt coupling**~~ - **FIXED**: Versioned prompts with explicit "don't infer from directory" rules
 6. **No configuration** - No way to customize behavior without editing code
 
 ---
@@ -43,20 +42,21 @@ This document outlines the strategic roadmap for evolving the statusline plugin 
 
 **Goal**: Systematic understanding before refactoring
 
-### 2.1 Code Review Checklist
+### 2.1 Code Review Checklist (Updated 2025-12-18)
 
 | File | Review Focus | Status |
 |------|--------------|--------|
 | `claude_backend.py` | What can be extracted? Dead code? | [ ] |
-| `statusline.sh` | Modular components? Error handling? | [ ] |
+| `statusline.sh` | Modular components? Error handling? | [x] Auto-register fixed |
 | `session-start.sh` | Overlap with statusline.sh auto-register? | [ ] |
 | `user-prompt-submit.sh` | Overlap with session-start.sh? | [ ] |
-| `auto-name.py` | Prompt loading, generation quality | [ ] |
-| `auto-description.py` | Same as above | [ ] |
-| `auto-summary.py` | Same as above | [ ] |
+| `auto-identity.py` | Unified hook, prompt loading, JSON parsing | [x] NEW - working |
 | `registry.py` | CLI interface quality | [ ] |
+| Versioned prompts | Template variables, quality | [x] NEW - implemented |
 
-### 2.2 Data Flow Documentation
+**Note**: `auto-name.py`, `auto-description.py`, `auto-summary.py` consolidated into `auto-identity.py`.
+
+### 2.2 Data Flow Documentation (Updated 2025-12-18)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -68,27 +68,29 @@ This document outlines the strategic roadmap for evolving the statusline plugin 
          │                    │                    │
          ▼                    ▼                    ▼
 ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│ session-start.sh│  │ user-prompt-    │  │ auto-summary    │
+│ session-start.sh│  │ user-prompt-    │  │ auto-identity   │
 │                 │  │ submit.sh       │  │ -wrapper.sh     │
 │ • Register      │  │ • Increment cnt │  │                 │
-│ • Assign C#     │  │ • Ensure session│  │ • Generate      │
-│ • Init files    │  │ • Log prompt    │  │   summary       │
+│ • Assign C#     │  │ • Ensure session│  │ (also on        │
+│ • Init files    │  │ • Log prompt    │  │  UserPromptSub) │
 └────────┬────────┘  └────────┬────────┘  └────────┬────────┘
          │                    │                    │
-         │           ┌────────┴────────┐           │
-         │           │                 │           │
-         │           ▼                 ▼           │
-         │    ┌─────────────┐  ┌─────────────┐    │
-         │    │ auto-name   │  │ auto-desc   │    │
-         │    │ -wrapper.sh │  │ -wrapper.sh │    │
-         │    └──────┬──────┘  └──────┬──────┘    │
-         │           │                 │           │
-         │           ▼                 ▼           │
-         │    ┌─────────────┐  ┌─────────────┐    │
-         │    │ auto-name.py│  │ auto-desc.py│    │
-         │    └──────┬──────┘  └──────┬──────┘    │
-         │           │                 │           │
-         ▼           ▼                 ▼           ▼
+         │                    ▼                    │
+         │           ┌─────────────────┐           │
+         │           │ auto-identity   │◄──────────┘
+         │           │ -wrapper.sh     │
+         │           └────────┬────────┘
+         │                    │
+         │                    ▼
+         │           ┌─────────────────┐     ┌─────────────────┐
+         │           │ auto-identity.py│────▶│ Versioned       │
+         │           │                 │     │ Prompts         │
+         │           │ • 1 API call    │     │ prompts/        │
+         │           │ • JSON output   │     │ config.yaml     │
+         │           │ • name+desc+sum │     └─────────────────┘
+         │           └────────┬────────┘
+         │                    │
+         ▼                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    ~/.claude/instances/                              │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐ │
@@ -105,11 +107,15 @@ This document outlines the strategic roadmap for evolving the statusline plugin 
 │                      statusline.sh                                  │
 │  • Receives JSON from Claude Code                                   │
 │  • Reads registry, counts, summaries, descriptions                  │
-│  • Auto-registers if missing (self-healing)                         │
+│  • Auto-registers if missing (self-healing, preserves existing)     │
 │  • Renders formatted output                                         │
 │  • Logs claude_input + statusline_render                            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+**Key Change (2025-12-18)**: Unified `auto-identity.py` replaces 3 separate hooks.
+- **Before**: 3 hooks × 3 subprocesses = race conditions, 15s freezes
+- **After**: 1 hook × 1 subprocess = no contention, 3x faster
 
 ### 2.3 Identified Fragility Points
 

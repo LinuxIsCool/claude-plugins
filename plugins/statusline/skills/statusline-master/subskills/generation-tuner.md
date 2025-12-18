@@ -2,17 +2,30 @@
 
 Iterate on and improve the AI-generated names, summaries, and descriptions that appear in the statusline.
 
-## Architecture Overview
+## Architecture Overview (Updated 2025-12-18)
 
-The statusline plugin runs three AI generation hooks on every user prompt:
+The statusline plugin uses a **unified** generation hook that produces all three identity elements in a single API call:
 
-| Generator | Purpose | Hook | Prompt Template |
-|-----------|---------|------|-----------------|
-| **Name** | Creative 1-2 word session identity | `auto-name.py` | `prompts/name.txt` |
-| **Summary** | 5-10 word first-person activity | `auto-summary.py` | `prompts/summary.txt` |
-| **Description** | 2-5 word session arc/role | `auto-description.py` | `prompts/description.txt` |
+| Generator | Purpose | Prompt Template |
+|-----------|---------|-----------------|
+| **Name** | Creative 1-2 word session identity | `prompts/name/{version}.md` |
+| **Summary** | 5-10 word first-person activity | `prompts/summary/{version}.md` |
+| **Description** | 2-word `[Plugin] [Role]` format | `prompts/description/{version}.md` |
 
-All three use shared infrastructure in `lib/claude_backend.py`.
+**Unified Hook**: `hooks/auto-identity.py` makes ONE API call returning JSON:
+```json
+{"name":"Meridian","description":"Statusline Craftsman","summary":"Improving prompt engineering"}
+```
+
+Active versions are configured in `prompts/config.yaml`:
+```yaml
+active:
+  name: 1_ecosystem_aware
+  description: 1_plugin_role
+  summary: 1_feature_level
+```
+
+All generation uses shared infrastructure in `lib/claude_backend.py`.
 
 ## Prompt Templates
 
@@ -51,12 +64,16 @@ All three use shared infrastructure in `lib/claude_backend.py`.
 
 ### Step 1: Identify Quality Issue
 
-Read current prompts to understand what's being asked:
+Read current versioned prompts to understand what's being asked:
 
 ```bash
-cat plugins/statusline/prompts/name.txt
-cat plugins/statusline/prompts/summary.txt
-cat plugins/statusline/prompts/description.txt
+# Check which versions are active
+cat plugins/statusline/prompts/config.yaml
+
+# Read the active prompts
+cat plugins/statusline/prompts/name/1_ecosystem_aware.md
+cat plugins/statusline/prompts/summary/1_feature_level.md
+cat plugins/statusline/prompts/description/1_plugin_role.md
 ```
 
 ### Step 2: Preview Filled Prompt
@@ -228,21 +245,30 @@ cat /tmp/naming_dataset.json
 python3 -c "import json; d=json.load(open('/tmp/naming_dataset.json')); print(f'Total: {len(d)}, Creative: {sum(1 for x in d if x[\"is_creative\"])}')"
 ```
 
-## Files Reference
+## Files Reference (Updated 2025-12-18)
 
 ```
 plugins/statusline/
 ├── prompts/
-│   ├── name.txt          # Name generation prompt template
-│   ├── summary.txt       # Summary generation prompt template
-│   ├── description.txt   # Description generation prompt template
-│   └── README.md         # Variable documentation
+│   ├── config.yaml           # Active version configuration
+│   ├── name/
+│   │   └── 1_ecosystem_aware.md    # Name prompt (versioned)
+│   ├── description/
+│   │   └── 1_plugin_role.md        # Description prompt (versioned)
+│   ├── summary/
+│   │   └── 1_feature_level.md      # Summary prompt (versioned)
+│   └── README.md             # Variable documentation
 ├── hooks/
-│   ├── auto-name.py      # Name generation hook
-│   ├── auto-summary.py   # Summary generation hook
-│   └── auto-description.py # Description generation hook
+│   ├── auto-identity.py      # UNIFIED generation hook (name+desc+summary)
+│   └── auto-identity-wrapper.sh
 ├── lib/
-│   └── claude_backend.py # Shared generation infrastructure
+│   └── claude_backend.py     # Shared generation infrastructure
 └── tools/
-    └── test-prompts.py   # Prompt testing harness
+    └── test-prompts.py       # Prompt testing harness
 ```
+
+**Creating New Prompt Versions:**
+1. Create new file: `prompts/name/2_improved.md`
+2. Include YAML frontmatter with version, rationale, test_results
+3. Update `prompts/config.yaml` to point to new version
+4. No code changes needed - `load_prompt_template()` handles loading
