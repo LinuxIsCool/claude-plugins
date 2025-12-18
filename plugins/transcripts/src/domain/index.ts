@@ -5,13 +5,13 @@
  */
 
 // Entities
-export * from "./entities/transcript";
-export * from "./entities/utterance";
-export * from "./entities/speaker";
-export * from "./entities/entity";
+export * from "./entities/transcript.js";
+export * from "./entities/utterance.js";
+export * from "./entities/speaker.js";
+export * from "./entities/entity.js";
 
 // Value Objects
-export * from "./values/media-source";
+export * from "./values/media-source.js";
 
 // Events
-export * from "./events";
+export * from "./events/index.js";

@@ -21,9 +21,9 @@ import type {
   TranscriptionResult,
   TranscriptionProgressCallback,
   StreamingEvent,
-} from "../../ports/transcription";
-import type { AudioInput } from "../../domain/values/media-source";
-import type { Utterance } from "../../domain/entities/utterance";
+} from "../../ports/transcription.js";
+import type { AudioInput } from "../../domain/values/media-source.js";
+import type { Utterance } from "../../domain/entities/utterance.js";
 
 /**
  * Faster-Whisper model sizes
@@ -64,6 +64,16 @@ const DEFAULT_CONFIG: FasterWhisperConfig = {
   computeType: "int8",
   pythonPath: join(homedir(), ".venvs/ml/bin/python"),
 };
+
+/**
+ * Get cuDNN library path for GPU support.
+ * nvidia-cudnn-cu12 installs libs here but ctranslate2 needs them in LD_LIBRARY_PATH.
+ */
+function getCudnnLibPath(): string {
+  // Extract venv path from python path and construct cudnn lib path
+  const venvPath = join(homedir(), ".venvs/ml");
+  return join(venvPath, "lib/python3.11/site-packages/nvidia/cudnn/lib");
+}
 
 /**
  * Faster-Whisper Adapter
@@ -118,8 +128,15 @@ export class FasterWhisperAdapter implements TranscriptionPort {
       return false;
     }
 
+    // Set LD_LIBRARY_PATH for cuDNN libs
+    const cudnnPath = getCudnnLibPath();
+    const env = {
+      ...process.env,
+      LD_LIBRARY_PATH: cudnnPath + (process.env.LD_LIBRARY_PATH ? `:${process.env.LD_LIBRARY_PATH}` : ""),
+    };
+
     return new Promise((resolve) => {
-      const proc = spawn(pythonPath, ["-c", "from faster_whisper import WhisperModel; print('ok')"]);
+      const proc = spawn(pythonPath, ["-c", "from faster_whisper import WhisperModel; print('ok')"], { env });
       proc.on("error", () => resolve(false));
       proc.on("close", (code) => resolve(code === 0));
     });
@@ -237,7 +254,14 @@ print(json.dumps(result))
     onProgress?: TranscriptionProgressCallback
   ): Promise<string> {
     return new Promise((resolve, reject) => {
-      const proc = spawn(pythonPath, ["-c", script]);
+      // Set LD_LIBRARY_PATH to include cuDNN libs for GPU support
+      const cudnnPath = getCudnnLibPath();
+      const env = {
+        ...process.env,
+        LD_LIBRARY_PATH: cudnnPath + (process.env.LD_LIBRARY_PATH ? `:${process.env.LD_LIBRARY_PATH}` : ""),
+      };
+
+      const proc = spawn(pythonPath, ["-c", script], { env });
 
       let stdout = "";
       let stderr = "";

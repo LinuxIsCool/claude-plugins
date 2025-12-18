@@ -5,7 +5,7 @@
  * Adapters implement these interfaces.
  */
 
-export * from "./transcription";
-export * from "./fingerprinting";
-export * from "./diarization";
-export * from "./extraction";
+export * from "./transcription.js";
+export * from "./fingerprinting.js";
+export * from "./diarization.js";
+export * from "./extraction.js";

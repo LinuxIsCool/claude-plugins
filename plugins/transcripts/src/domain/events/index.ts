@@ -5,10 +5,10 @@
  * All state changes are represented as immutable events.
  */
 
-import type { Transcript, TranscriptStatus, TID } from "../entities/transcript";
-import type { Speaker, SpeakerID, VoiceFingerprint, SpeakerFact } from "../entities/speaker";
-import type { Entity, EntityID, EntityMention, EntityRelationship } from "../entities/entity";
-import type { Utterance } from "../entities/utterance";
+import type { Transcript, TranscriptStatus, TID } from "../entities/transcript.js";
+import type { Speaker, SpeakerID, VoiceFingerprint, SpeakerFact } from "../entities/speaker.js";
+import type { Entity, EntityID, EntityMention, EntityRelationship } from "../entities/entity.js";
+import type { Utterance } from "../entities/utterance.js";
 
 /**
  * Base event structure

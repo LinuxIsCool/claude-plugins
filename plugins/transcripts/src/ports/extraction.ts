@@ -5,7 +5,7 @@
  * from transcript text.
  */
 
-import type { Entity, EntityType, EntityRelationship, Topic } from "../domain/entities/entity";
+import type { Entity, EntityType, EntityRelationship, Topic } from "../domain/entities/entity.js";
 
 /**
  * Extraction capabilities

@@ -5,12 +5,12 @@
 # ///
 """Auto-generate creative session name using Claude on first user prompt.
 
-Triggers only once per session using atomic file locking to prevent race conditions.
+Triggers only once per session using the registry's `auto_named` flag with file locking.
 Uses the user's initial prompt as context to generate a meaningful 1-2 word name.
 
-NOTE: Since Claude Code runs all hooks in parallel, we cannot rely on a separate
-counter hook to determine "first prompt". Instead, we use atomic file creation
-(O_CREAT | O_EXCL) to ensure exactly one naming attempt per session.
+NOTE: Since Claude Code runs all hooks in parallel, we use fcntl file locking on
+registry.json to atomically check-and-set the `auto_named` flag. This ensures
+exactly one naming attempt per session without needing separate lock files.
 
 Supports two backends (same as auto-summary.py):
 1. "api" - Direct Anthropic API (fast, costs API credits)
@@ -23,6 +23,7 @@ Configure via:
 Default: "headless" (free with Max subscription)
 """
 
+import fcntl
 import json
 import os
 import sys
@@ -49,66 +50,58 @@ def log(msg: str):
     debug(msg, DEBUG_PREFIX)
 
 
-def try_acquire_naming_lock(instances_dir: Path, session_id: str) -> bool:
-    """Atomically acquire naming lock for this session.
+def try_claim_and_update_name(instances_dir: Path, session_id: str, name: str) -> bool:
+    """Atomically claim naming rights and update name in one transaction.
 
-    Uses O_CREAT | O_EXCL to ensure only one process can create the lock file.
-    This prevents race conditions when multiple hooks run in parallel.
+    Uses fcntl file locking on registry.json to ensure only one process can
+    claim naming rights per session. This replaces the separate lock file approach
+    with a single source of truth.
+
+    The function:
+    1. Acquires exclusive lock on registry
+    2. Checks if session exists and hasn't been auto-named yet
+    3. If claimable, sets both `auto_named=True` and the new name atomically
+    4. Releases lock
 
     Returns:
-        True if we acquired the lock (should proceed with naming)
-        False if lock already exists (another hook is handling it)
+        True if we claimed naming rights and updated the name
+        False if already claimed, session missing, or error occurred
     """
-    lock_dir = instances_dir / "naming_locks"
-    lock_dir.mkdir(parents=True, exist_ok=True)
-    lock_file = lock_dir / f"{session_id}.lock"
-
-    try:
-        # O_CREAT | O_EXCL is atomic - only succeeds if file doesn't exist
-        fd = os.open(str(lock_file), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        os.close(fd)
-        log("Acquired naming lock")
-        return True
-    except FileExistsError:
-        log("Lock already exists, skipping")
-        return False
-    except OSError as e:
-        log(f"Lock acquisition failed: {e}")
-        return False
-
-
-def update_registry_name(instances_dir: Path, session_id: str, name: str) -> bool:
-    """Update the session name in registry.json with file locking to prevent race conditions."""
-    import fcntl
-
     registry = instances_dir / "registry.json"
     if not registry.exists():
         log("Registry not found")
         return False
 
     try:
-        # Use file locking to prevent race conditions from concurrent hooks
         with open(registry, "r+") as f:
             # Acquire exclusive lock (blocks until available)
             fcntl.flock(f.fileno(), fcntl.LOCK_EX)
             try:
                 data = json.load(f)
-                if session_id in data:
-                    data[session_id]["name"] = name
-                    # Rewind and truncate before writing
-                    f.seek(0)
-                    f.truncate()
-                    json.dump(data, f, indent=2)
-                    log(f"Updated registry: {session_id} -> {name}")
-                    return True
-                else:
+
+                if session_id not in data:
                     log(f"Session {session_id} not in registry")
                     return False
+
+                # Check if already auto-named (atomic check)
+                if data[session_id].get("auto_named", False):
+                    log("Already auto-named, skipping")
+                    return False
+
+                # Claim naming rights and update name atomically
+                data[session_id]["auto_named"] = True
+                data[session_id]["name"] = name
+
+                # Rewind and truncate before writing
+                f.seek(0)
+                f.truncate()
+                json.dump(data, f, indent=2)
+                log(f"Claimed and named: {session_id} -> {name}")
+                return True
             finally:
-                # Lock is released when file is closed, but explicit unlock is cleaner
                 fcntl.flock(f.fileno(), fcntl.LOCK_UN)
     except Exception as e:
-        log(f"Registry update failed: {e}")
+        log(f"Registry operation failed: {e}")
         return False
 
 
@@ -158,15 +151,11 @@ def main():
         log("No session_id")
         return
 
-    instances_dir = get_instances_dir(cwd)
-
-    # Try to acquire atomic naming lock - only one hook instance can succeed
-    if not try_acquire_naming_lock(instances_dir, session_id):
-        return  # Another hook instance is handling naming
-
     if not user_prompt:
         log("No user prompt in hook data")
         return
+
+    instances_dir = get_instances_dir(cwd)
 
     # Load configuration
     config = get_config(cwd, DEBUG_PREFIX)
@@ -191,10 +180,10 @@ def main():
     if raw_name:
         name = clean_name(raw_name)
         log(f"Generated name: {name}")
-        if update_registry_name(instances_dir, session_id, name):
+        # Atomically claim naming rights and update - only first caller wins
+        if try_claim_and_update_name(instances_dir, session_id, name):
             log("Name saved to registry")
-        else:
-            log("Failed to save name")
+        # If claim failed, another hook instance already named this session
     else:
         log("No name generated")
 

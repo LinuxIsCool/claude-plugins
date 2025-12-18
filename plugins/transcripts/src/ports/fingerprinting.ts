@@ -5,8 +5,8 @@
  * Enables cross-transcript speaker recognition.
  */
 
-import type { AudioSegment } from "../domain/values/media-source";
-import type { VoiceEmbedding, SpeakerMatchResult, SpeakerID } from "../domain/entities/speaker";
+import type { AudioSegment } from "../domain/values/media-source.js";
+import type { VoiceEmbedding, SpeakerMatchResult, SpeakerID } from "../domain/entities/speaker.js";
 
 /**
  * Fingerprinting capabilities

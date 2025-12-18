@@ -5,7 +5,7 @@
  * into segments by speaker ("who spoke when").
  */
 
-import type { AudioInput } from "../domain/values/media-source";
+import type { AudioInput } from "../domain/values/media-source.js";
 
 /**
  * Diarization capabilities

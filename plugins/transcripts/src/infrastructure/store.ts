@@ -23,32 +23,32 @@
 
 import { join } from "path";
 import { existsSync, mkdirSync, appendFileSync, readFileSync, readdirSync, statSync, writeFileSync } from "fs";
-import { generateTID, generateSpeakerID, generateEntityID, generateUtteranceID } from "./tid";
+import { generateTID, generateSpeakerID, generateEntityID, generateUtteranceID } from "./tid.js";
 import type {
   Transcript,
   TranscriptInput,
   TranscriptSummary,
   TID,
-} from "../domain/entities/transcript";
+} from "../domain/entities/transcript.js";
 import type {
   Speaker,
   SpeakerInput,
   SpeakerID,
   SpeakerSummary,
   VoiceFingerprint,
-} from "../domain/entities/speaker";
+} from "../domain/entities/speaker.js";
 import type {
   Entity,
   EntityInput,
   EntityID,
   EntityMention,
-} from "../domain/entities/entity";
+} from "../domain/entities/entity.js";
 import type {
   Event,
   TranscriptCreatedEvent,
   SpeakerCreatedEvent,
   EntityCreatedEvent,
-} from "../domain/events";
+} from "../domain/events/index.js";
 
 const DEFAULT_BASE_PATH = ".claude/transcripts";
 

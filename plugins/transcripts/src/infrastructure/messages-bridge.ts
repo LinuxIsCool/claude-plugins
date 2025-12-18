@@ -9,9 +9,9 @@
 
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
 import { join } from "path";
-import type { Speaker, SpeakerIdentity, SpeakerID } from "../domain/entities/speaker";
-import type { Transcript, TID } from "../domain/entities/transcript";
-import type { Utterance } from "../domain/entities/utterance";
+import type { Speaker, SpeakerIdentity, SpeakerID } from "../domain/entities/speaker.js";
+import type { Transcript, TID } from "../domain/entities/transcript.js";
+import type { Utterance } from "../domain/entities/utterance.js";
 
 /**
  * Messages plugin paths

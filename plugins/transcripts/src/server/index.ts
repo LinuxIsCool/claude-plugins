@@ -5,15 +5,15 @@
  * Provides programmatic access to transcription, speaker management, and search.
  */
 
-import { createStore, TranscriptStore } from "../infrastructure/store";
-import { transcriptionFactory } from "../adapters/transcription";
+import { createStore, TranscriptStore } from "../infrastructure/store.js";
+import { transcriptionFactory } from "../adapters/transcription/index.js";
 import {
   isMessagesPluginAvailable,
   emitTranscriptToMessages,
   getMessagesAccounts,
-} from "../infrastructure/messages-bridge";
-import type { TranscriptInput } from "../domain/entities/transcript";
-import type { SpeakerInput } from "../domain/entities/speaker";
+} from "../infrastructure/messages-bridge.js";
+import type { TranscriptInput } from "../domain/entities/transcript.js";
+import type { SpeakerInput } from "../domain/entities/speaker.js";
 
 // MCP protocol types
 interface MCPRequest {

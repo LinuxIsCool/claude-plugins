@@ -5,8 +5,8 @@
  * (Whisper, AssemblyAI, AWS Transcribe, etc.) implements this port.
  */
 
-import type { AudioInput } from "../domain/values/media-source";
-import type { Utterance, UtteranceInput } from "../domain/entities/utterance";
+import type { AudioInput } from "../domain/values/media-source.js";
+import type { Utterance, UtteranceInput } from "../domain/entities/utterance.js";
 
 /**
  * Backend capabilities

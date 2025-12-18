@@ -7,8 +7,8 @@
  * Design: Event-sourced entity with content-addressed ID (TID).
  */
 
-import type { Utterance } from "./utterance";
-import type { MediaSource } from "../values/media-source";
+import type { Utterance } from "./utterance.js";
+import type { MediaSource } from "../values/media-source.js";
 
 /**
  * Transcript Identifier

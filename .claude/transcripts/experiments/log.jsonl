@@ -1,1 +1,4 @@
 {"model":"whisper-tiny","device":"cpu","load_ms":400,"inference_ms":400,"success":true,"note":"sine wave test audio","timestamp":"2025-12-17T20:23:44-08:00"}
+{"model":"faster-whisper-tiny","device":"cuda","load_ms":490,"inference_ms":320,"success":true,"note":"GPU working after setting LD_LIBRARY_PATH for nvidia-cudnn-cu12","timestamp":"2025-12-18T09:06:13-08:00"}
+{"model":"faster-whisper-tiny","device":"cuda","load_ms":500,"inference_ms":310,"success":true,"note":"Multi-model test - tiny","timestamp":"2025-12-18T09:09:17-08:00"}
+{"model":"faster-whisper-base","device":"cuda","load_ms":350,"inference_ms":120,"success":true,"note":"Multi-model test - base (even faster)","timestamp":"2025-12-18T09:09:17-08:00"}

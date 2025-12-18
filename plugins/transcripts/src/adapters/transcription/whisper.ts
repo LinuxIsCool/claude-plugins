@@ -14,10 +14,10 @@ import type {
   TranscriptionResult,
   TranscriptionProgressCallback,
   StreamingEvent,
-} from "../../ports/transcription";
-import type { AudioInput } from "../../domain/values/media-source";
-import type { Utterance } from "../../domain/entities/utterance";
-import { generateUtteranceID } from "../../infrastructure/tid";
+} from "../../ports/transcription.js";
+import type { AudioInput } from "../../domain/values/media-source.js";
+import type { Utterance } from "../../domain/entities/utterance.js";
+import { generateUtteranceID } from "../../infrastructure/tid.js";
 
 /**
  * Whisper model sizes

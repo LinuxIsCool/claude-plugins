@@ -4,12 +4,12 @@
  * Backend implementations for TranscriptionPort.
  */
 
-export * from "./whisper";
-export * from "./faster-whisper";
+export * from "./whisper.js";
+export * from "./faster-whisper.js";
 
-import type { TranscriptionPort, TranscriptionBackendFactory } from "../../ports/transcription";
-import { WhisperAdapter, type WhisperConfig } from "./whisper";
-import { FasterWhisperAdapter, type FasterWhisperConfig } from "./faster-whisper";
+import type { TranscriptionPort, TranscriptionBackendFactory } from "../../ports/transcription.js";
+import { WhisperAdapter, type WhisperConfig } from "./whisper.js";
+import { FasterWhisperAdapter, type FasterWhisperConfig } from "./faster-whisper.js";
 
 /**
  * Available transcription backends
@@ -19,7 +19,7 @@ const BACKENDS: Record<string, (config?: Record<string, unknown>) => Transcripti
   "faster-whisper": (config) => new FasterWhisperAdapter(config as FasterWhisperConfig),
 
   // Original whisper.cpp
-  whisper: (config) => new WhisperAdapter(config as WhisperConfig),
+  whisper: (config) => new WhisperAdapter({ mode: "local", ...config } as WhisperConfig),
   "whisper-local": (config) => new WhisperAdapter({ ...config, mode: "local" } as WhisperConfig),
   "whisper-api": (config) => new WhisperAdapter({ ...config, mode: "api" } as WhisperConfig),
 };

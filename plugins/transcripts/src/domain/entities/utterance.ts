@@ -5,7 +5,7 @@
  * with precise temporal boundaries.
  */
 
-import type { SpeakerRef } from "./speaker";
+import type { SpeakerRef } from "./speaker.js";
 
 /**
  * Utterance identifier
