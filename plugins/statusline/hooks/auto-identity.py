@@ -152,6 +152,7 @@ def save_summary(instances_dir: Path, session_id: str, summary: str, cwd: str):
 
 
 def build_combined_prompt(
+    script_dir: Path,
     needs_name: bool,
     user_prompt: str,
     agent_name: str,
@@ -161,59 +162,54 @@ def build_combined_prompt(
     first_prompts: str,
     recent_prompts: str,
 ) -> str:
-    """Build a combined prompt for all three generations."""
+    """Build a combined prompt by loading from versioned prompt files.
 
+    Loads prompts from prompts/{name,description,summary}/*.md based on config.yaml.
+    Template variables are filled in before composing into the final prompt.
+    """
     sections = []
 
     sections.append(f"""You are {agent_name}, a Claude Code assistant.
 
-Generate identity information based on the USER'S ACTUAL MESSAGE, not assumptions about the directory or environment.""")
+Generate identity information based on the USER'S ACTUAL MESSAGE, not assumptions about the directory or environment.
 
-    # Conditional name section
+CRITICAL RULES:
+- Do NOT infer from directory path or environment
+- For greetings (Hello/Hi/Hey): name="Spark", description="General Assistant", summary="Awaiting task direction"
+- For tests (Testing/Test): name="Echo", description="General Assistant", summary="Testing the system"
+- For specific tasks: derive from the ACTUAL USER WORDS only""")
+
+    # Load and add NAME section if needed
     if needs_name:
-        sections.append("""
-=== NAME ===
-Generate a 1-2 word symbolic name (callsign) for this session.
-- Base it on the user's stated intent, NOT the directory path
-- Be evocative and memorable
-- For greetings/tests: use neutral names like "Spark", "Echo", "Nexus"
-- For specific work: capture that domain""")
+        name_default = "Generate a 1-2 word symbolic name for this session."
+        name_prompt = load_prompt_template(script_dir, "name-prompt.txt", name_default)
+        # Fill in template variables
+        name_prompt = name_prompt.format(user_prompt=user_prompt[:500] if user_prompt else "(none)")
+        sections.append(f"\n=== NAME ===\n{name_prompt}")
 
-    sections.append("""
-=== DESCRIPTION ===
-Generate a 2-word description.
-- "Hello" → "General Assistant"
-- "Testing" → "General Assistant"
-- "Fix the statusline hooks" → "Statusline Engineer"
-- Base it ONLY on user's explicit words, NOT directory path""")
+    # Load and add DESCRIPTION section
+    desc_default = "Generate a 2-word description in format [Plugin] [Role]."
+    desc_prompt = load_prompt_template(script_dir, "description-prompt.txt", desc_default)
+    # Fill in template variables
+    desc_prompt = desc_prompt.format(
+        agent_name=agent_name,
+        first_prompts=first_prompts,
+        recent_prompts=recent_prompts,
+        prev_descriptions=prev_descriptions,
+        prev_summaries=prev_summaries,
+    )
+    sections.append(f"\n=== DESCRIPTION ===\n{desc_prompt}")
 
-    sections.append("""
-=== SUMMARY ===
-Generate a 5-10 word first-person summary.
-- "Hello/Hi/Hey" → "Awaiting task direction"
-- "Testing" or "Test" → "Running a test" or "Testing the system"
-- Specific task → Describe that task literally
-- NEVER infer from directory path - use ONLY what user explicitly stated""")
-
-    # Context section
-    sections.append(f"""
-=== CONTEXT ===
-User's prompt: {user_prompt[:500] if user_prompt else '(none)'}
-
-Previous summaries (for continuity):
-{prev_summaries}
-
-Previous descriptions (maintain stability):
-{prev_descriptions}
-
-Session origin (first prompts):
-{first_prompts}
-
-Recent trajectory:
-{recent_prompts}
-
-Recent conversation:
-{context}""")
+    # Load and add SUMMARY section
+    summary_default = "Write a 5-10 word first-person summary of current work."
+    summary_prompt = load_prompt_template(script_dir, "summary-prompt.txt", summary_default)
+    # Fill in template variables
+    summary_prompt = summary_prompt.format(
+        agent_name=agent_name,
+        prev_summaries=prev_summaries,
+        context=context,
+    )
+    sections.append(f"\n=== SUMMARY ===\n{summary_prompt}")
 
     # Output format - JSON on single line for headless compatibility
     # CRITICAL: headless backend only captures first line, so NO code blocks
@@ -328,8 +324,10 @@ def main():
     first_prompts = "\n".join([m.get("content", "")[:200] for m in messages[:2]]) if messages else ""
     recent_prompts = "\n".join([m.get("content", "")[:200] for m in messages[-3:]]) if messages else ""
 
-    # Build combined prompt
+    # Build combined prompt (load from versioned prompt files)
+    script_dir = Path(__file__).parent
     prompt = build_combined_prompt(
+        script_dir=script_dir,
         needs_name=needs_name,
         user_prompt=user_prompt,
         agent_name=agent_name,
