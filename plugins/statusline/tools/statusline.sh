@@ -3,7 +3,7 @@
 # Claude Code Statusline - Instance Identity Display
 #
 # Displays: [Name:id] Model X.X | dir | ctx:N% | $X.XX | ID:A#N Tm | branch +X/-Y
-#           comprehensive summary (on second line)
+#           Description: Summary | ✳ Pane Title (Claude's internal task summary)
 #
 # Session tracking format: Cx:A#N
 #   Cx = Claude process number (spawn order: C1, C2, C3...)
@@ -304,6 +304,13 @@ if [ -z "$DESCRIPTION" ]; then
     echo "$DESCRIPTION" > "$DESCRIPTION_FILE"
 fi
 
+# Read pane title from tmux (Claude Code's internal task summary with ✳ prefix)
+# This is set internally by Claude Code and provides a complementary view of current work
+PANE_TITLE=""
+if command -v tmux &> /dev/null && [ -n "$TMUX" ]; then
+    PANE_TITLE=$(tmux display-message -p '#{pane_title}' 2>/dev/null)
+fi
+
 # Output the statusline
 # Format: [Name:id] Model | dir | ctx:N% | $X.XX | #N Tm | branch +X/-Y
 #         summary on next line
@@ -354,13 +361,13 @@ fi
 
 echo -e "$LINE1"
 
-# Second line: "Description: Summary" format
-# Shows agent arc + current focus on a single line
-if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ]; then
+# Second line: "Description: Summary | ✳ Pane Title" format
+# Shows agent arc + current focus + Claude's internal task summary
+if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ] || [ -n "$PANE_TITLE" ]; then
     LINE2=""
 
-    # Check if both are placeholders (fresh instance)
-    if [ "$DESCRIPTION" = "Awaiting instructions." ] && [ "$SUMMARY" = "Awaiting instructions." ]; then
+    # Check if both are placeholders (fresh instance) and no pane title
+    if [ "$DESCRIPTION" = "Awaiting instructions." ] && [ "$SUMMARY" = "Awaiting instructions." ] && [ -z "$PANE_TITLE" ]; then
         echo -e "${WHITE}Awaiting instructions.${RST}"
     else
         # Build content line with description bold, summary not bold
@@ -373,6 +380,15 @@ if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ]; then
                 LINE2="${LINE2}${WHITE}: ${SUMMARY}${RST}"
             else
                 LINE2="${WHITE}${SUMMARY}${RST}"
+            fi
+        fi
+        # Append pane title (Claude's internal task summary) if available
+        # The ✳ emoji is included as-is from the pane title
+        if [ -n "$PANE_TITLE" ] && [ "$PANE_TITLE" != "bash" ] && [ "$PANE_TITLE" != "fish" ]; then
+            if [ -n "$LINE2" ]; then
+                LINE2="${LINE2} ${DIM}|${RST} ${CYAN}${PANE_TITLE}${RST}"
+            else
+                LINE2="${CYAN}${PANE_TITLE}${RST}"
             fi
         fi
         [ -n "$LINE2" ] && echo -e "$LINE2"
@@ -394,9 +410,10 @@ log_statusline_state() {
     local branch_escaped=$(echo "$BRANCH" | sed 's/"/\\"/g')
     local summary_escaped=$(echo "$SUMMARY" | sed 's/"/\\"/g' | tr '\n' ' ')
     local desc_escaped=$(echo "$DESCRIPTION" | sed 's/"/\\"/g' | tr '\n' ' ')
+    local pane_title_escaped=$(echo "$PANE_TITLE" | sed 's/"/\\"/g' | tr '\n' ' ')
 
     cat >> "$STATUSLINE_LOG" << JSONEOF
-{"ts":"$ts","session":"$short_session","type":"statusline_render","value":{"name":"$name_escaped","short_id":"$SHORT_ID","model":"$model_escaped","cwd":"$cwd_escaped","context_pct":$PCT,"cost":"$COST_FMT","process_num":"${PROCESS_NUM:-?}","agent_session":"$AGENT_SESSION","prompt_count":"$MSG_COUNT","duration":"$DURATION","branch":"$branch_escaped","git_stats":"$GIT_STATS","git_dirty":"${GIT_DIRTY:-no}","description":"$desc_escaped","summary":"$summary_escaped"},"ok":true}
+{"ts":"$ts","session":"$short_session","type":"statusline_render","value":{"name":"$name_escaped","short_id":"$SHORT_ID","model":"$model_escaped","cwd":"$cwd_escaped","context_pct":$PCT,"cost":"$COST_FMT","process_num":"${PROCESS_NUM:-?}","agent_session":"$AGENT_SESSION","prompt_count":"$MSG_COUNT","duration":"$DURATION","branch":"$branch_escaped","git_stats":"$GIT_STATS","git_dirty":"${GIT_DIRTY:-no}","description":"$desc_escaped","summary":"$summary_escaped","pane_title":"$pane_title_escaped"},"ok":true}
 JSONEOF
 }
 
