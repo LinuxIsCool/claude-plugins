@@ -73,16 +73,18 @@
 
 ## Action Plan
 
-### Phase 1: Implement Statusline Logging (FIRST PRIORITY)
+### Phase 1: Implement Statusline Logging (COMPLETE)
 **Goal**: Enable historical analysis before making changes
 
 Tasks:
-- [ ] Add JSONL logging to each hook (name, description, summary)
-- [ ] Log on UserPromptSubmit and Stop events
-- [ ] Include: timestamp, session_id, type, value, success/failure
-- [ ] Single file: `~/.claude/instances/statusline.jsonl`
+- [x] Add JSONL logging to each hook (name, description, summary)
+- [x] Log on UserPromptSubmit and Stop events
+- [x] Include: timestamp, session_id, type, value, success/failure
+- [x] Single file: `~/.claude/instances/statusline.jsonl`
 
-**Implementation**: Use `/feature-dev` command
+**Implementation**: Added `log_statusline_event()` to claude_backend.py, integrated into all 3 hooks.
+
+**Note**: Also fixed critical issue where `lib/` directory was not tracked by git due to .gitignore rule. Added exception `!plugins/*/lib/`.
 
 ### Phase 2: Code Review
 **Goal**: Understand what we have before changing it
