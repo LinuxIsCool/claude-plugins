@@ -95,14 +95,18 @@ class EcosystemQueryGenerator:
         if not agents_file.exists():
             return queries
 
-        content = agents_file.read_text()
+        try:
+            content = agents_file.read_text(encoding='utf-8')
+        except (UnicodeDecodeError, PermissionError, OSError) as e:
+            print(f"Warning: Could not read {agents_file}: {e}")
+            return queries
 
         # Extract agent names and generate queries
         # Pattern matches: **name** followed by description
-        agent_pattern = r'\*\*([a-z-]+)\*\*\s*[-–:]\s*(.+?)(?=\n|$)'
+        agent_pattern = r'\*\*([a-z0-9_-]+)\*\*\s*[-–:]\s*(.+?)(?=\n|$)'
         matches = re.findall(agent_pattern, content, re.IGNORECASE)
 
-        for name, description in matches[:10]:  # Limit to 10
+        for name, description in matches:
             # Discovery query
             queries.append(TestQuery(
                 text=f"What is the {name} agent and what does it do?",
@@ -140,13 +144,17 @@ class EcosystemQueryGenerator:
         if not processes_file.exists():
             return queries
 
-        content = processes_file.read_text()
+        try:
+            content = processes_file.read_text(encoding='utf-8')
+        except (UnicodeDecodeError, PermissionError, OSError) as e:
+            print(f"Warning: Could not read {processes_file}: {e}")
+            return queries
 
         # Extract process names
         process_pattern = r'##\s*\d*\.?\s*([A-Z][^#\n]+)'
         matches = re.findall(process_pattern, content)
 
-        for process_name in matches[:8]:
+        for process_name in matches:
             process_name = process_name.strip()
             queries.append(TestQuery(
                 text=f"How does {process_name} work?",
@@ -340,7 +348,8 @@ class MultiConfigRunner:
         suite: TestSuite,
         retrievers: dict[str, Retriever],
         k: int = 10,
-        generate_ground_truth: bool = True
+        generate_ground_truth: bool = True,
+        relevance_threshold: int = 1
     ) -> SuiteResult:
         """
         Run test suite across all configured retrievers.
@@ -350,6 +359,7 @@ class MultiConfigRunner:
             retrievers: Dict of config_name -> retriever
             k: Results per query
             generate_ground_truth: Whether to use LLM for ground truth
+            relevance_threshold: Minimum score (0-2) to consider relevant
 
         Returns:
             Complete suite result with per-config metrics
@@ -359,6 +369,7 @@ class MultiConfigRunner:
         configs = []
         ground_truth = None
         queries = [q.text for q in suite.queries]
+        threshold = relevance_threshold
 
         for config_name, retriever in retrievers.items():
             print(f"\nEvaluating: {config_name}")
@@ -384,7 +395,7 @@ class MultiConfigRunner:
                 ground_truth = {}
                 for j in result.judgments:
                     ground_truth.setdefault(j.query, set())
-                    if j.score >= 1:
+                    if j.score >= threshold:
                         ground_truth[j.query].add(j.document_id)
 
         # Compute category breakdown

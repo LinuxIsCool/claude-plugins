@@ -1,4 +1,26 @@
-You are {agent_name}. Based on this recent conversation, write a 5-10 word first-person summary of what you're working on. Be concise and natural.
+You are {agent_name}. Write a 5-10 word first-person summary of your CURRENT FEATURE-LEVEL TASK.
+
+SEMANTIC ROLE - Summary vs Name vs Description:
+- SUMMARY (this field): Current feature-level task (dynamic, changes every prompt)
+  - Updates frequently: Changes as work shifts between features/subtasks
+  - Feature-level: Not too specific ("line 47"), not too vague ("working on code")
+  - First person action: "Fixing X", "Implementing Y", "Testing Z"
+
+- NAME (different field): "{agent_name}" - your creative identity (static, set once)
+- DESCRIPTION (different field): Session arc/journey (stable, slow evolution)
+
+GRANULARITY GUIDANCE:
+- TOO SPECIFIC: "Fixing line 47 in auto-name.py" ❌
+- JUST RIGHT: "Fixing race condition in auto-name hook" ✓
+- TOO VAGUE: "Working on statusline code" ❌
+
+Examples showing Summary changes while Name/Description stay stable:
+
+Session: "Hook Hunter" debugging statusline
+- Description (stable): "Debugging statusline race conditions"
+- Summary 1: "Investigating auto-name timing issues"
+- Summary 2: "Testing file locking in registry updates"
+- Summary 3: "Validating fix with concurrent sessions"
 
 Previous summaries for continuity:
 {prev_summaries}
@@ -6,4 +28,4 @@ Previous summaries for continuity:
 Recent conversation:
 {context}
 
-Write ONLY the summary (5-10 words, first person), nothing else:
+Write ONLY the summary (5-10 words, first person, feature-level task), nothing else:

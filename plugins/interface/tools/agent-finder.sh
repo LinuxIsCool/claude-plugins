@@ -103,16 +103,16 @@ FZF_OPTS=(
 
 # Add preview if requested
 if [[ "$PREVIEW_MODE" == "true" ]]; then
-    # Preview shows captured pane content
-    # Use awk for safer extraction to avoid command injection
+    # Preview shows captured pane content with colors
+    # Extract pane ref using cut (faster than awk), preserve ANSI with -e
     FZF_OPTS+=(
-        --preview='pane_ref=$(echo {} | awk -F"[][]" "{print \$2}"); tmux capture-pane -t "$pane_ref" -p -S -10 2>/dev/null | head -20'
-        --preview-window=right:40%:wrap
+        --preview="tmux capture-pane -e -t \$(echo {} | cut -d']' -f1 | cut -d'[' -f2) -p -S -20 2>/dev/null | head -30"
+        --preview-window=right:50%:wrap
     )
 fi
 
-# Run fzf for selection
-SELECTED=$(echo "$AGENTS" | fzf "${FZF_OPTS[@]}") || true
+# Run fzf for selection (force bash for preview commands)
+SELECTED=$(echo "$AGENTS" | SHELL=/bin/bash fzf "${FZF_OPTS[@]}") || true
 
 # If nothing selected (ESC pressed), exit gracefully
 if [[ -z "$SELECTED" ]]; then

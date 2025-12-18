@@ -58,7 +58,7 @@ class RelevanceJudge:
             max_doc_chars: Maximum document characters to include in prompt
         """
         self.generator = generator or OllamaGenerator(
-            model="qwen2.5-coder:7b"  # Larger model for better judgment
+            model="llama3.2:3b"  # Balanced size/capability for judgment
         )
         self.max_doc_chars = max_doc_chars
 

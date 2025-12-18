@@ -1,13 +1,54 @@
-You are {agent_name}. Based on this conversation history, write a 2-5 word description of WHO you are in this session - your role, identity, or mission.
+You are {agent_name}. Write a 2-5 word description of your SESSION ARC - the journey or mission you're on, NOT your current task.
 
-This should capture your lifetime arc: where you started and what journey you've been on. Think of it as a title or callsign that describes your purpose.
+SEMANTIC ROLE - Description vs Name vs Summary:
+- DESCRIPTION (this field): Session arc/journey (STABLE, evolves slowly)
+  - Stability: Mostly stays the same, updates only for major session shifts
+  - Arc-level: Captures the overall journey, not individual tasks
+  - Think: "What's the chapter title of this work session?"
 
-Examples of good descriptions:
-- "Plugin infrastructure architect"
-- "Debugging database migrations"
-- "Feature dev workflow guide"
-- "Statusline enhancement engineer"
-- "Yoga schedule optimizer"
+- NAME (different field): "{agent_name}" - creative identity (static, set once)
+- SUMMARY (different field): Current feature-level task (dynamic, updates often)
+
+STABILITY GUIDANCE - Only update if:
+- Session pivots to fundamentally different work area
+- Multi-hour session moves through distinct phases
+- Work expands from single feature to broader scope
+
+If previous descriptions exist and work is still related, KEEP THE SAME DESCRIPTION.
+
+Examples showing Description stability across multiple Summary changes:
+
+Example 1 - Debugging session:
+- Name: "Hook Hunter" (never changes)
+- Description: "Debugging statusline race conditions" (stable for hours)
+  - Summary 1: "Investigating auto-name timing issues"
+  - Summary 2: "Testing file locking in registry updates"
+  - Summary 3: "Validating fix with concurrent sessions"
+  - Description still: "Debugging statusline race conditions" ✓
+
+Example 2 - Feature development:
+- Name: "Prompt Crafter" (never changes)
+- Description: "Iterating on AI generation quality" (stable across session)
+  - Summary 1: "Analyzing naming dataset for failure patterns"
+  - Summary 2: "Rewriting name.txt prompt template"
+  - Summary 3: "Testing prompts against real session data"
+  - Description still: "Iterating on AI generation quality" ✓
+
+Example 3 - Rare evolution (3+ hours, scope expanded):
+- Name: "Schema Architect" (never changes)
+- Description starts: "Database migration planning"
+- After scope expansion → "Full-stack authentication redesign"
+  (Only changed because work fundamentally shifted)
+
+Good descriptions (arc-level, stable):
+- "Statusline plugin enhancement"
+- "Plugin prompt engineering"
+- "Multi-agent coordination design"
+
+Bad descriptions:
+- "Fixing auto-name.py line 47" ❌ (too specific - belongs in Summary)
+- "Testing prompts" ❌ (too narrow - belongs in Summary)
+- "Interactive CLI assistant" ❌ (role, not work arc)
 
 Session origin (first prompts show initial intent):
 {first_prompts}
@@ -15,7 +56,7 @@ Session origin (first prompts show initial intent):
 Recent trajectory (shows current work):
 {recent_prompts}
 
-Previous descriptions (your arc so far):
+Previous descriptions (maintain stability):
 {prev_descriptions}
 
 Recent activity summaries:
@@ -24,4 +65,4 @@ Recent activity summaries:
 Your most recent response:
 {recent_response}
 
-Write ONLY the description (2-5 words, describes your role/mission), nothing else:
+Write ONLY the description (2-5 words, session arc, mostly STABLE), nothing else:
