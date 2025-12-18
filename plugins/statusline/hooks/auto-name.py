@@ -5,8 +5,12 @@
 # ///
 """Auto-generate creative session name using Claude on first user prompt.
 
-Triggers only once per session - on the first user prompt (count == 1).
+Triggers only once per session using atomic file locking to prevent race conditions.
 Uses the user's initial prompt as context to generate a meaningful 1-2 word name.
+
+NOTE: Since Claude Code runs all hooks in parallel, we cannot rely on a separate
+counter hook to determine "first prompt". Instead, we use atomic file creation
+(O_CREAT | O_EXCL) to ensure exactly one naming attempt per session.
 
 Supports two backends (same as auto-summary.py):
 1. "api" - Direct Anthropic API (fast, costs API credits)
@@ -45,15 +49,32 @@ def log(msg: str):
     debug(msg, DEBUG_PREFIX)
 
 
-def get_prompt_count(instances_dir: Path, session_id: str) -> int:
-    """Get current prompt count for session."""
-    count_file = instances_dir / "counts" / f"{session_id}.txt"
-    if count_file.exists():
-        try:
-            return int(count_file.read_text().strip())
-        except:
-            pass
-    return 0
+def try_acquire_naming_lock(instances_dir: Path, session_id: str) -> bool:
+    """Atomically acquire naming lock for this session.
+
+    Uses O_CREAT | O_EXCL to ensure only one process can create the lock file.
+    This prevents race conditions when multiple hooks run in parallel.
+
+    Returns:
+        True if we acquired the lock (should proceed with naming)
+        False if lock already exists (another hook is handling it)
+    """
+    lock_dir = instances_dir / "naming_locks"
+    lock_dir.mkdir(parents=True, exist_ok=True)
+    lock_file = lock_dir / f"{session_id}.lock"
+
+    try:
+        # O_CREAT | O_EXCL is atomic - only succeeds if file doesn't exist
+        fd = os.open(str(lock_file), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        os.close(fd)
+        log("Acquired naming lock")
+        return True
+    except FileExistsError:
+        log("Lock already exists, skipping")
+        return False
+    except OSError as e:
+        log(f"Lock acquisition failed: {e}")
+        return False
 
 
 def update_registry_name(instances_dir: Path, session_id: str, name: str) -> bool:
@@ -139,14 +160,9 @@ def main():
 
     instances_dir = get_instances_dir(cwd)
 
-    # Check if this is the first prompt
-    count = get_prompt_count(instances_dir, session_id)
-    log(f"Prompt count: {count}")
-
-    # Only trigger on first prompt (count should be 1 after increment)
-    if count != 1:
-        log(f"Not first prompt (count={count}), skipping")
-        return
+    # Try to acquire atomic naming lock - only one hook instance can succeed
+    if not try_acquire_naming_lock(instances_dir, session_id):
+        return  # Another hook instance is handling naming
 
     if not user_prompt:
         log("No user prompt in hook data")
