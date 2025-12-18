@@ -279,20 +279,30 @@ if command -v git &> /dev/null && git rev-parse --git-dir &> /dev/null; then
     fi
 fi
 
-# Read conversation summary if available
+# Read conversation summary if available (create with default if missing)
 SUMMARY=""
 SUMMARY_DIR=$(dirname "$REGISTRY")/summaries
 SUMMARY_FILE="$SUMMARY_DIR/${SESSION_ID}.txt"
 if [ -f "$SUMMARY_FILE" ]; then
     SUMMARY=$(cat "$SUMMARY_FILE" 2>/dev/null)
 fi
+if [ -z "$SUMMARY" ]; then
+    SUMMARY="Awaiting instructions."
+    mkdir -p "$SUMMARY_DIR"
+    echo "$SUMMARY" > "$SUMMARY_FILE"
+fi
 
-# Read agent description if available
+# Read agent description if available (create with default if missing)
 DESCRIPTION=""
 DESCRIPTION_DIR=$(dirname "$REGISTRY")/descriptions
 DESCRIPTION_FILE="$DESCRIPTION_DIR/${SESSION_ID}.txt"
 if [ -f "$DESCRIPTION_FILE" ]; then
     DESCRIPTION=$(cat "$DESCRIPTION_FILE" 2>/dev/null)
+fi
+if [ -z "$DESCRIPTION" ]; then
+    DESCRIPTION="Awaiting instructions."
+    mkdir -p "$DESCRIPTION_DIR"
+    echo "$DESCRIPTION" > "$DESCRIPTION_FILE"
 fi
 
 # Output the statusline
