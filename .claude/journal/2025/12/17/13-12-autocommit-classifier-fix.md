@@ -192,4 +192,4 @@ Sometimes you need to go all the way down to bytes to understand what's happenin
 
 ---
 
-*Parent: [[2025-12-17]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-17]]*

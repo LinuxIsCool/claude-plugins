@@ -279,4 +279,4 @@ The ecosystem isn't a collection of tools anymore. It's a company of personas, e
 
 ---
 
-*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-15]]*

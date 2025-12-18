@@ -114,4 +114,4 @@ Given clear definitions and triggers, dormant agents immediately produced valuab
 
 ---
 
-*Parent: [[2025-12-16]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-16]]*

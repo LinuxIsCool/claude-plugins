@@ -276,7 +276,7 @@ export class TelegramApiClient {
    * Check if connected
    */
   isConnected(): boolean {
-    return this.client !== null && this.client.connected;
+    return this.client !== null && (this.client.connected ?? false);
   }
 }
 

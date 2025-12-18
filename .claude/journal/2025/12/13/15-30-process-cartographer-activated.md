@@ -63,4 +63,4 @@ Three agents defined but not running:
 Process mapping reveals gaps. The infrastructure exists; activation awaits.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

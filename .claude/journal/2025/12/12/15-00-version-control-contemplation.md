@@ -56,4 +56,4 @@ The deeper question: does versioning matter for a living, evolving cognitive sys
 
 ---
 
-*Parent: [[2025-12-12]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-12]]*

@@ -57,4 +57,4 @@ The awareness plugin established the pattern of **skills as capabilities**:
 
 ---
 
-*Parent: [[2025-12-11]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-11]]*

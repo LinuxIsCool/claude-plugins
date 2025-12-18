@@ -156,4 +156,4 @@ This isn't just archaeology - it's **digital autobiography**.
 The DNA spiral will extend not just backward in days, but backward in **years**.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

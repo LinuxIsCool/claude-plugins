@@ -81,4 +81,4 @@ This wasn't explicitly designed - it emerged from full-fidelity logging + good s
 
 ---
 
-*Parent: [[2025-12-17]] -> [[2025-12]] -> [[2025]]*
+*Parent: [[2025-12-17]]*

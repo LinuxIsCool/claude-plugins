@@ -139,4 +139,4 @@ The ecosystem now has a git discipline that matches its ambition for self-awaren
 
 ---
 
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

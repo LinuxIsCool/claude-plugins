@@ -100,3 +100,35 @@ class Retriever(Protocol):
     def search(self, query: str, k: int = 10) -> list[SearchResult]:
         """Search for relevant documents."""
         ...
+
+
+@runtime_checkable
+class Reranker(Protocol):
+    """Protocol for reranking search results.
+
+    Rerankers take initial retrieval results and re-score them
+    using more expensive but accurate methods (cross-encoders, LLMs).
+    """
+
+    @property
+    def name(self) -> str:
+        """Unique identifier for this reranker."""
+        ...
+
+    def rerank(
+        self,
+        query: str,
+        results: list[SearchResult],
+        top_k: int | None = None
+    ) -> list[SearchResult]:
+        """Rerank search results based on query-document relevance.
+
+        Args:
+            query: Search query
+            results: Initial search results to rerank
+            top_k: Number of results to return (default: all)
+
+        Returns:
+            Reranked results with updated scores
+        """
+        ...

@@ -58,4 +58,4 @@ The awareness plugin embodies meta-cognition - the ecosystem learning about itse
 
 ---
 
-*Parent: [[2025-12-11]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-11]]*

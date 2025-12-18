@@ -64,6 +64,7 @@ export class GoogleCalendarClient {
       description: item.description || undefined,
       backgroundColor: item.backgroundColor || undefined,
       primary: item.primary || false,
+      selected: item.selected ?? true, // Default to true if not specified
       accessRole: (item.accessRole as CalendarInfo["accessRole"]) || "reader",
     }));
   }

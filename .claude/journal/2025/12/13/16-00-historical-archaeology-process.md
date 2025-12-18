@@ -92,4 +92,4 @@ Process 9: Historical Archaeology added to `.claude/registry/processes.md`
 5. Observe DNA spiral grow in Obsidian graph
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

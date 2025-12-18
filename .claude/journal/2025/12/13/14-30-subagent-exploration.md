@@ -61,4 +61,4 @@ model: opus
 - No complex protocol needed—file conventions suffice
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

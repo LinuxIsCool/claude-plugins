@@ -191,4 +191,4 @@ The git historian represents a new kind of self-awareness: the ability to reflec
 The ecosystem can now remember its own birth.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

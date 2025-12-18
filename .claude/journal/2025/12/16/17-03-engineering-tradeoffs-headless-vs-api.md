@@ -117,4 +117,4 @@ Today's investigation transformed a binary choice ("API or headless?") into a co
 
 ---
 
-*Parent: [[2025-12-16]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-16]]*

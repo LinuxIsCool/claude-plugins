@@ -1,7 +1,7 @@
 """Vector similarity retriever."""
 import numpy as np
 from numpy.typing import NDArray
-from .protocols import Document, SearchResult, Retriever, Embedder
+from .protocols import Document, SearchResult, Retriever, Embedder, Reranker
 
 
 class VectorRetriever:
@@ -183,9 +183,10 @@ class HybridRetriever:
             for token in set(doc_tokens):
                 df[token] += 1
 
-        # Average document length (guard against all-empty tokenizations)
-        total_len = sum(len(t) for t in self.tokenized_corpus)
-        avg_len = total_len / n if total_len > 0 else 1
+        # Average document length from non-empty docs (guards against skewed scoring)
+        doc_lengths = [len(t) for t in self.tokenized_corpus]
+        non_empty_lengths = [length for length in doc_lengths if length > 0]
+        avg_len = sum(non_empty_lengths) / len(non_empty_lengths) if non_empty_lengths else 1
 
         # IDF scores
         idf = {}
@@ -218,3 +219,69 @@ class HybridRetriever:
         self.embeddings = embeddings
         self.tokenized_corpus = [self._tokenize(doc.content) for doc in documents]
         self._indexed = True
+
+
+class RerankingRetriever:
+    """
+    Retriever wrapper that applies reranking to search results.
+
+    This implements a two-stage retrieval pipeline:
+    1. Initial retrieval: Fast retrieval (vector/hybrid) to get candidates
+    2. Reranking: Slower but more accurate reranking of candidates
+
+    The retrieve_k parameter controls how many candidates to fetch before
+    reranking. Higher values improve recall but increase reranking cost.
+    """
+
+    def __init__(
+        self,
+        base_retriever: Retriever,
+        reranker: Reranker,
+        retrieve_k: int = 50
+    ):
+        """
+        Initialize reranking retriever.
+
+        Args:
+            base_retriever: Underlying retriever for initial candidate fetch
+            reranker: Reranker to apply to candidates
+            retrieve_k: Number of candidates to fetch before reranking
+        """
+        self.base_retriever = base_retriever
+        self.reranker = reranker
+        self.retrieve_k = retrieve_k
+        # Cache name at init to avoid lazy property issues
+        self._name = f"{base_retriever.name}+{reranker.name}"
+
+    @property
+    def name(self) -> str:
+        """Unique identifier combining base retriever and reranker."""
+        return self._name
+
+    def index(self, documents: list[Document]) -> None:
+        """Build index via base retriever."""
+        self.base_retriever.index(documents)
+
+    def search(self, query: str, k: int = 10) -> list[SearchResult]:
+        """
+        Two-stage search: retrieve candidates then rerank.
+
+        Args:
+            query: Search query
+            k: Number of final results to return
+
+        Returns:
+            Top-k reranked results
+        """
+        # Stage 1: Get candidates from base retriever
+        candidates = self.base_retriever.search(query, k=self.retrieve_k)
+
+        # Stage 2: Rerank candidates
+        reranked = self.reranker.rerank(query, candidates, top_k=k)
+
+        return reranked
+
+    def set_index(self, documents: list[Document], embeddings: NDArray[np.float32]) -> None:
+        """Set pre-computed index via base retriever."""
+        if hasattr(self.base_retriever, 'set_index'):
+            self.base_retriever.set_index(documents, embeddings)

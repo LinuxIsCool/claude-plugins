@@ -61,4 +61,4 @@ Strategy pivoted from "build" to "activate".
 
 ---
 
-*Parent: [[2025-12-12]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-12]]*

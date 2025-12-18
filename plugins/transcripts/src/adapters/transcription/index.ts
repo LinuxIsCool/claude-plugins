@@ -5,14 +5,20 @@
  */
 
 export * from "./whisper";
+export * from "./faster-whisper";
 
 import type { TranscriptionPort, TranscriptionBackendFactory } from "../../ports/transcription";
 import { WhisperAdapter, type WhisperConfig } from "./whisper";
+import { FasterWhisperAdapter, type FasterWhisperConfig } from "./faster-whisper";
 
 /**
  * Available transcription backends
  */
 const BACKENDS: Record<string, (config?: Record<string, unknown>) => TranscriptionPort> = {
+  // Faster-whisper (GPU-accelerated, recommended)
+  "faster-whisper": (config) => new FasterWhisperAdapter(config as FasterWhisperConfig),
+
+  // Original whisper.cpp
   whisper: (config) => new WhisperAdapter(config as WhisperConfig),
   "whisper-local": (config) => new WhisperAdapter({ ...config, mode: "local" } as WhisperConfig),
   "whisper-api": (config) => new WhisperAdapter({ ...config, mode: "api" } as WhisperConfig),
@@ -35,6 +41,7 @@ export const transcriptionFactory: TranscriptionBackendFactory = {
   },
 
   default(): TranscriptionPort {
-    return new WhisperAdapter();
+    // Default to faster-whisper (GPU-accelerated)
+    return new FasterWhisperAdapter();
   },
 };

@@ -176,7 +176,7 @@ export class SearchIndex {
 
     // Build WHERE clause for metadata filters
     const conditions: string[] = [];
-    const params: unknown[] = [query];
+    const params: (string | number | null)[] = [query];
 
     if (options.kinds?.length) {
       conditions.push(`m.kind IN (${options.kinds.map(() => "?").join(",")})`);

@@ -130,7 +130,7 @@ interface D3Config {
 The ecosystem has data. Now it will have eyes.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*
 
 **Sources:**
 - [Quartz GitHub](https://github.com/jackyzha0/quartz)

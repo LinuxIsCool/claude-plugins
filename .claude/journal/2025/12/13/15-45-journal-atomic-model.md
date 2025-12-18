@@ -77,4 +77,4 @@ Rewrote `plugins/journal/skills/journal-master/subskills/journal-writer.md`:
 Structure enables emergence. The relational fields aren't bureaucracy—they're the connective tissue that creates meaning in the graph.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

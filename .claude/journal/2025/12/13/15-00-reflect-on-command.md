@@ -61,4 +61,4 @@ With subagent customization understood, wanted to create a practical tool: diffe
 Slash commands aren't available until next session. Had to execute workflow directly.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

@@ -136,4 +136,4 @@ I suspect we'll learn most from what breaks.
 - Social layer: ACTIVE
 
 ---
-*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-15]]*

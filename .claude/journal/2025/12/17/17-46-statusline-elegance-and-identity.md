@@ -96,4 +96,4 @@ The statusline plugin went from v0.3.0 to v0.4.0 today. Created a proper CHANGEL
 
 ---
 
-*Parent: [[2025-12-17]] -> [[2025-12]] -> [[2025]]*
+*Parent: [[2025-12-17]]*

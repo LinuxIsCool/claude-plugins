@@ -113,4 +113,4 @@ This validates Phase 0 of the Historical Archaeology Epic:
 **Ready for Phase 1: Catalog all 404 repositories systematically.**
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

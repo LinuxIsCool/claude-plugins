@@ -35,4 +35,4 @@ This simple beginning would expand within days to include logging, scheduling, a
 
 ---
 
-*Parent: [[2025-12-08]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-08]]*

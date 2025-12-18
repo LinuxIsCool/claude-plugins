@@ -233,4 +233,4 @@ The statusline is just the visible surface. The registry is the memory. The hook
 
 ---
 
-*Parent: [[2025-12-16]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-16]]*

@@ -61,4 +61,4 @@ The journal plugin embodied "The Scribe" persona - patient documenter of everyth
 
 ---
 
-*Parent: [[2025-12-11]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-11]]*

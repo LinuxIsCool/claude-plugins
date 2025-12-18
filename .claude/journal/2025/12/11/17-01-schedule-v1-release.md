@@ -61,4 +61,4 @@ This release established the foundation for persona memory prototyping.
 
 ---
 
-*Parent: [[2025-12-11]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-11]]*

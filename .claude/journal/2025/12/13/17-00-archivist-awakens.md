@@ -122,4 +122,4 @@ Per the archivist's gap analysis:
 
 ---
 
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

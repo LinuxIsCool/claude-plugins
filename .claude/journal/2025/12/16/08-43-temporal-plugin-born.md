@@ -263,4 +263,4 @@ The Chronologist began as a moment-marker. It will become a keeper of all time.
 
 ---
 
-*Parent: [[2025-12-16]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-16]]*

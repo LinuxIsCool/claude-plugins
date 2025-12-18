@@ -141,4 +141,4 @@ When scheduling conflicts arise:
 
 ---
 
-*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-15]]*

@@ -92,4 +92,4 @@ This explicit listing gives plugin authors control over which agents to expose.
 
 ---
 
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

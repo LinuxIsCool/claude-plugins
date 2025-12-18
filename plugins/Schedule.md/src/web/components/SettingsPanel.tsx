@@ -11,6 +11,7 @@ interface CalendarInfo {
   description?: string;
   backgroundColor?: string;
   primary: boolean;
+  selected: boolean;
 }
 
 interface SettingsPanelProps {
@@ -38,12 +39,12 @@ export function SettingsPanel({
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
 
-  // Fetch calendars when panel opens
+  // Fetch calendars when panel opens (always, not just when enabled)
   useEffect(() => {
-    if (isOpen && enabledCalendars.length > 0) {
+    if (isOpen) {
       loadCalendars();
     }
-  }, [isOpen, enabledCalendars.length]);
+  }, [isOpen]);
 
   const loadCalendars = async () => {
     setLoading(true);
@@ -64,11 +65,16 @@ export function SettingsPanel({
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
+    setError(null);
     try {
       await api.syncGoogleCalendar();
       const status = await api.getGoogleCalendarStatus();
       setLastSync(status.lastSync);
+      // Reload calendars to show any changes
+      await loadCalendars();
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Sync failed";
+      setError(errorMsg);
       console.error("Sync failed:", err);
     } finally {
       setSyncing(false);
@@ -89,6 +95,25 @@ export function SettingsPanel({
     [selectedCalendars, onSelectedCalendarsChange]
   );
 
+  // Auto-setup handler - fetches all calendars from Google and enables selected ones
+  const handleAutoSetup = useCallback(async () => {
+    setSyncing(true);
+    setError(null);
+    try {
+      const result = await api.autoSetupGoogleCalendar();
+      if (result.success) {
+        // Reload the page to pick up new config
+        window.location.reload();
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Auto-setup failed";
+      setError(errorMsg);
+      console.error("Auto-setup failed:", err);
+    } finally {
+      setSyncing(false);
+    }
+  }, []);
+
   // Format relative time
   const formatLastSync = (isoString: string | null): string => {
     if (!isoString) return "Never";
@@ -104,10 +129,8 @@ export function SettingsPanel({
     return date.toLocaleDateString();
   };
 
-  // Filter to only show enabled calendars
-  const displayCalendars = calendars.filter((cal) =>
-    enabledCalendars.includes(cal.id)
-  );
+  // Show all calendars from Google, indicate which are enabled
+  const displayCalendars = calendars;
 
   return (
     <>
@@ -187,8 +210,7 @@ export function SettingsPanel({
           }}
         >
           {/* Google Calendar Section */}
-          {enabledCalendars.length > 0 && (
-            <section>
+          <section>
               <h3
                 style={{
                   fontSize: "12px",
@@ -245,9 +267,30 @@ export function SettingsPanel({
                     </div>
                   )}
 
-                  {!loading && !error && displayCalendars.length === 0 && (
-                    <div style={{ fontSize: "13px", color: "#6b7280" }}>
-                      No calendars configured
+                  {!loading && !error && enabledCalendars.length === 0 && (
+                    <div style={{ textAlign: "center", padding: "12px 0" }}>
+                      <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "12px" }}>
+                        No calendars configured yet
+                      </div>
+                      <button
+                        onClick={handleAutoSetup}
+                        disabled={syncing}
+                        style={{
+                          padding: "10px 20px",
+                          fontSize: "13px",
+                          backgroundColor: syncing ? "#e5e7eb" : "#10b981",
+                          color: syncing ? "#6b7280" : "#fff",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor: syncing ? "not-allowed" : "pointer",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {syncing ? "Setting up..." : "Import from Google Calendar"}
+                      </button>
+                      <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px" }}>
+                        Imports all selected calendars from your Google account
+                      </div>
                     </div>
                   )}
 
@@ -363,27 +406,6 @@ export function SettingsPanel({
                 </div>
               )}
             </section>
-          )}
-
-          {/* No integrations message */}
-          {enabledCalendars.length === 0 && (
-            <div
-              style={{
-                padding: "20px",
-                textAlign: "center",
-                color: "#6b7280",
-                fontSize: "14px",
-              }}
-            >
-              <div style={{ marginBottom: "8px" }}>
-                No integrations configured
-              </div>
-              <div style={{ fontSize: "12px" }}>
-                Add Google Calendar settings to your config.json to enable
-                calendar integration.
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </>

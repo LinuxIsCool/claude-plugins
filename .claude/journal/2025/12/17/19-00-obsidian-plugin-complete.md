@@ -45,7 +45,7 @@ PostToolUse hook injects parent wikilinks when Write/Edit touches:
 - `.claude/planning/**/*.md`
 - `.claude/logging/**/*.md`
 
-Injects footer: `*Parent: [[2025-12-17]] → [[2025-12]] → [[2025]]*`
+Injects footer: `*Parent: [[2025-12-17]]*`
 
 **Four Specialized Agents**
 | Agent | Model | Purpose |
@@ -90,4 +90,4 @@ Task(subagent_type="obsidian:vault-health", ...)
 
 ---
 
-*Parent: [[2025-12-17]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-17]]*

@@ -206,6 +206,6 @@ Now we learn to garden.
 
 ---
 
-*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-15]]*
 
 *This entry marks a milestone. Revisit monthly to assess trajectory.*

@@ -138,4 +138,4 @@ The temporal-kg-memory skill is **already at Expert level** with proven results:
 4. First archaeology expedition: marketplace/claude git history
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

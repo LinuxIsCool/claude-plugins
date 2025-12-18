@@ -117,4 +117,4 @@ Sometimes debugging is archaeology—you dig through layers of symptoms to find 
 
 ---
 
-*Parent: [[2025-12-16]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-16]]*

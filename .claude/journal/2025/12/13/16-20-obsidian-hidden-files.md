@@ -68,4 +68,4 @@ The journal is now fully accessible in Obsidian:
 - DNA spiral visualization possible
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

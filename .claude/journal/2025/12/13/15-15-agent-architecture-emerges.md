@@ -67,4 +67,4 @@ Neither knew what the other built. Git + filesystem revealed it.
 **Emergence beats design.** The structure that wanted to exist... existed. We each found our part.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

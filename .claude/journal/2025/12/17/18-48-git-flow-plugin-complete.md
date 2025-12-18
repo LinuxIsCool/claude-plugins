@@ -123,4 +123,4 @@ A combined workflow command that:
 
 ---
 
-*Parent: [[2025-12-17]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-17]]*

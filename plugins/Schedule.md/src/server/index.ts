@@ -292,6 +292,66 @@ async function handleApiRequest(
       }
     }
 
+    // POST /api/google-calendar/auto-setup
+    // Fetches all calendars from Google and enables those that are selected
+    if (path === "google-calendar/auto-setup" && method === "POST") {
+      try {
+        const calendars = await listCalendars();
+
+        // Filter to calendars that are selected in Google Calendar
+        const selectedCalendars = calendars.filter((cal) => cal.selected);
+
+        if (selectedCalendars.length === 0) {
+          return json({ error: "No calendars are selected in your Google Calendar" }, 400);
+        }
+
+        // Create config objects with Google Calendar colors and names
+        const calendarConfigs = selectedCalendars.map((cal) => ({
+          id: cal.id,
+          name: cal.summary,
+          enabled: true,
+          color: cal.backgroundColor,
+        }));
+
+        // Update config with all selected calendars
+        const config = schedule.getConfig();
+        const updatedConfig = await schedule.updateConfig({
+          integrations: {
+            ...config.integrations,
+            googleCalendar: {
+              ...config.integrations.googleCalendar,
+              enabled: true,
+              calendars: calendarConfigs,
+            },
+          },
+        });
+
+        // Start sync with new calendars
+        const calendarIds = selectedCalendars.map((cal) => cal.id);
+        startPeriodicSync(schedule.getScheduleDir(), calendarIds, 30);
+
+        // Trigger immediate sync
+        const results = await syncGoogleCalendar(
+          schedule.getScheduleDir(),
+          calendarIds,
+          30
+        );
+
+        await schedule.reload();
+
+        return json({
+          success: true,
+          calendars: calendarConfigs,
+          syncResults: results,
+        });
+      } catch (error) {
+        return json(
+          { error: error instanceof Error ? error.message : "Auto-setup failed" },
+          500
+        );
+      }
+    }
+
     // POST /api/google-calendar/sync
     if (path === "google-calendar/sync" && method === "POST") {
       try {

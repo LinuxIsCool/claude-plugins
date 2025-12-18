@@ -54,4 +54,4 @@ The logging plugin becomes the ecosystem's memory cortex - capturing not just wh
 
 ---
 
-*Parent: [[2025-12-08]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-08]]*

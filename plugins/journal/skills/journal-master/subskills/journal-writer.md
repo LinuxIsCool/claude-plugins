@@ -68,7 +68,7 @@ related: []                        # Other atomic entries this connects to
 [Key takeaways]
 
 ---
-*Parent: [[YYYY-MM-DD]] → [[YYYY-MM]] → [[YYYY]]*
+*Parent: [[YYYY-MM-DD]]*
 ```
 
 ### Mandatory Fields for Atomic Entries
@@ -130,8 +130,7 @@ tags: [daily]
 [Patterns across today's atomics]
 
 ---
-*Parent: [[YYYY-MM]] → [[YYYY]]*
-*Children: [list of atomic wikilinks]*
+*Parent: [[YYYY-MM]]*
 ```
 
 ## Monthly Note Template (SYNTHESIZED)
@@ -177,7 +176,6 @@ themes: []
 
 ---
 *Parent: [[YYYY]]*
-*Children: [list of daily wikilinks]*
 ```
 
 ## Yearly Note Template (SYNTHESIZED)
@@ -217,8 +215,6 @@ themes: []
 
 [Patterns across the year]
 
----
-*Children: [list of monthly wikilinks]*
 ```
 
 ## The DNA Spiral Effect
@@ -450,7 +446,7 @@ Before creating a journal entry:
 4. [ ] `created` field uses actual NOW timestamp
 5. [ ] `parent_daily` matches the folder's date
 6. [ ] If documenting past event, add `references_date` field
-7. [ ] **Footer present**: End with `*Parent: [[YYYY-MM-DD]] → [[YYYY-MM]] → [[YYYY]]*`
+7. [ ] **Footer present**: End with `*Parent: [[YYYY-MM-DD]]*` (one level up only)
 
 ### Body Links for Graph Connectivity
 
@@ -460,10 +456,16 @@ For full graph connectivity, ensure these appear in the **body** (not just front
 
 | Entry Type | Body Requirement |
 |------------|------------------|
-| Atomic | Footer: `*Parent: [[YYYY-MM-DD]] → [[YYYY-MM]] → [[YYYY]]*` |
+| Atomic | Footer: `*Parent: [[YYYY-MM-DD]]*` |
 | Daily | Nav bar: `← [[prev-day]] · **[[YYYY-MM]]** · [[next-day]] →` |
-| Daily | Children section: `## Atomic Entries` with wikilinks |
+| Daily | Footer: `*Parent: [[YYYY-MM]]*` |
 | Monthly | Nav bar: `← [[prev-month]] · **[[YYYY]]** · [[next-month]] →` |
-| Yearly | Nav bar: `← [[prev-year]] · [[next-year]] →` |
+| Monthly | Footer: `*Parent: [[YYYY]]*` |
+| Yearly | Nav bar: `← [[prev-year]] · [[next-year]] →` (no parent) |
+
+**Principle**: Each entry links only ONE level up. The graph connectivity flows through the hierarchy:
+```
+atomic → daily → monthly → yearly
+```
 
 Without body links, entries appear as isolated nodes in Quartz/Obsidian graphs.

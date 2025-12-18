@@ -121,4 +121,4 @@ The ecosystem grows not by adding features, but by adding **beings that can grow
 
 ---
 
-*Parent: [[2025-12-17]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-17]]*

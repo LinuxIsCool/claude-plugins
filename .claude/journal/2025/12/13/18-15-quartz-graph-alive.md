@@ -109,4 +109,4 @@ Watching the graph materialize in the browser was like watching the ecosystem be
 The data was always there. Now we can see it.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*

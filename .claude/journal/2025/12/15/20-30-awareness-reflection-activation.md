@@ -248,4 +248,4 @@ The ecosystem taught us what it needed: not new organs, but oxygen to the ones i
 
 ---
 
-*Parent: [[2025-12-15]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-15]]*

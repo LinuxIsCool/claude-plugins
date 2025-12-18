@@ -8,6 +8,7 @@ export interface CalendarInfo {
   description?: string;
   backgroundColor?: string;
   primary: boolean;
+  selected: boolean; // Whether calendar is visible/selected in user's Google Calendar
   accessRole: "owner" | "writer" | "reader" | "freeBusyReader";
 }
 

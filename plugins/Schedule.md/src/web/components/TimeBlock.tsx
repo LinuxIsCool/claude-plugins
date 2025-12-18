@@ -38,15 +38,15 @@ export function TimeBlock({
   const top = ((startMinutes - dayStartMinutes) / 60) * hourHeight;
   const height = ((endMinutes - startMinutes) / 60) * hourHeight;
 
-  // Get color from category or block override
+  // Is this a Google Calendar event?
+  const isCalendarEvent = block.source === "google-calendar";
+
+  // Get color from category or block override (use original Google Calendar colors)
   const category = config.categories[block.category];
   const color = block.color || category?.color || "#6b7280";
 
   // Duration for tooltip
   const duration = getDurationMinutes(block.startTime, block.endTime);
-
-  // Is this a Google Calendar event?
-  const isCalendarEvent = block.source === "google-calendar";
 
   // Calculate horizontal position based on layout (for overlapping blocks)
   let leftStyle: string;
@@ -64,7 +64,7 @@ export function TimeBlock({
     widthStyle = "calc(100% - 8px)";
   }
 
-  // Calendar events distinguished by dashed border, no opacity difference needed
+  // Full opacity for all blocks - calendar events distinguished by dashed border
   const opacity = 1;
 
   return (

@@ -10,13 +10,22 @@ Usage:
     # 1. Build index from repository
     uv run rag_test.py index --path . --glob "**/*.py,**/*.md"
 
-    # 2. Query the index
+    # 2. Build contextual index (slower but better retrieval)
+    uv run rag_test.py index --path . --glob "**/*.py" --contextual
+
+    # 3. Query the index
     uv run rag_test.py query "how does authentication work"
 
-    # 3. Test with sampled user prompts from logs
+    # 4. Query with reranking (more accurate)
+    uv run rag_test.py query "error handling" --hybrid --rerank
+
+    # 5. Test with sampled user prompts from logs
     uv run rag_test.py sample --count 5
 
-    # 4. Show index statistics
+    # 6. Evaluate retrieval quality with LLM-assisted ground truth
+    uv run rag_test.py eval --prompts 10 --baseline vector --candidate hybrid
+
+    # 7. Show index statistics
     uv run rag_test.py stats
 """
 import argparse
@@ -30,10 +39,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from rag import (
-    Document, RecursiveTextSplitter, OllamaEmbedder,
-    VectorRetriever, FileIndex
+    Document, RecursiveTextSplitter, ContextualChunker, OllamaEmbedder,
+    OllamaGenerator, VectorRetriever, HybridRetriever, RerankingRetriever,
+    CrossEncoderReranker, FileIndex, Evaluator, format_metrics, save_evaluation
 )
-from rag.retriever import HybridRetriever
 
 
 def scan_repository(
@@ -136,15 +145,25 @@ def cmd_index(args):
         print("Error: No documents found. Check your path and glob patterns.")
         return 1
 
-    # Initialize components
-    chunker = RecursiveTextSplitter(chunk_size=args.chunk_size, chunk_overlap=args.overlap)
+    # Initialize chunker
+    base_chunker = RecursiveTextSplitter(chunk_size=args.chunk_size, chunk_overlap=args.overlap)
+
+    if args.contextual:
+        print(f"  Using contextual chunking (LLM-generated descriptions)...")
+        generator = OllamaGenerator(model=args.context_model)
+        chunker = ContextualChunker(base_chunker, generator)
+    else:
+        chunker = base_chunker
+
     embedder = OllamaEmbedder(model=args.model)
     index = FileIndex(args.index_dir)
 
     # Chunk documents
     print(f"  Chunking with size={args.chunk_size}, overlap={args.overlap}...")
     all_chunks = []
-    for doc in documents:
+    for i, doc in enumerate(documents):
+        if args.contextual and i % 10 == 0:
+            print(f"    Processing document {i+1}/{len(documents)}")
         chunks = chunker.chunk(doc)
         all_chunks.extend([c.to_document() for c in chunks])
     print(f"  Created {len(all_chunks)} chunks")
@@ -162,6 +181,8 @@ def cmd_index(args):
         'chunk_size': args.chunk_size,
         'overlap': args.overlap,
         'model': args.model,
+        'contextual': args.contextual,
+        'context_model': args.context_model if args.contextual else None,
         'source_path': str(root_path),
         'patterns': patterns,
         'indexed_at': datetime.now().isoformat()
@@ -183,13 +204,21 @@ def cmd_query(args):
     documents, embeddings = index.load()
     embedder = OllamaEmbedder(model=args.model)
 
-    # Choose retriever
+    # Choose base retriever
     if args.hybrid:
-        retriever = HybridRetriever(embedder, alpha=args.alpha)
+        base_retriever = HybridRetriever(embedder, alpha=args.alpha)
     else:
-        retriever = VectorRetriever(embedder)
+        base_retriever = VectorRetriever(embedder)
 
-    retriever.set_index(documents, embeddings)
+    base_retriever.set_index(documents, embeddings)
+
+    # Wrap with reranker if requested
+    if args.rerank:
+        print("Loading cross-encoder reranker...")
+        reranker = CrossEncoderReranker(model_name=args.rerank_model)
+        retriever = RerankingRetriever(base_retriever, reranker, retrieve_k=args.retrieve_k)
+    else:
+        retriever = base_retriever
 
     # Search
     print(f"\nQuery: {args.query}\n")
@@ -206,8 +235,15 @@ def cmd_query(args):
         print(f"\n[{i}] Score: {result.score:.4f}")
         print(f"    File: {result.document.metadata.get('relative_path', result.document.id)}")
 
+        # Show reranking info if available
+        if 'original_score' in result.metadata:
+            print(f"    Original score: {result.metadata['original_score']:.4f}")
+
         # Show snippet
         content = result.document.content
+        # Strip context prefix if present (from contextual chunking)
+        if '\n\n' in content and result.document.metadata.get('context'):
+            content = content.split('\n\n', 1)[1]
         if len(content) > 300:
             content = content[:300] + "..."
         print(f"    ---")
@@ -247,11 +283,21 @@ def cmd_sample(args):
     embedder = OllamaEmbedder(model=args.model)
 
     if args.hybrid:
-        retriever = HybridRetriever(embedder, alpha=args.alpha)
+        base_retriever = HybridRetriever(embedder, alpha=args.alpha)
     else:
-        retriever = VectorRetriever(embedder)
+        base_retriever = VectorRetriever(embedder)
 
-    retriever.set_index(documents, embeddings)
+    base_retriever.set_index(documents, embeddings)
+
+    # Wrap with reranker if requested
+    if args.rerank:
+        print("Loading cross-encoder reranker...")
+        reranker = CrossEncoderReranker(model_name=args.rerank_model)
+        retriever = RerankingRetriever(base_retriever, reranker, retrieve_k=args.retrieve_k)
+    else:
+        retriever = base_retriever
+
+    print(f"Using: {retriever.name} retriever")
 
     # Process each prompt
     for i, prompt_data in enumerate(sample, 1):
@@ -279,6 +325,10 @@ def cmd_sample(args):
         for j, result in enumerate(results, 1):
             print(f"\n  [{j}] Score: {result.score:.4f}")
             print(f"      File: {result.document.metadata.get('relative_path', 'unknown')}")
+
+            # Show reranking info if available
+            if 'original_score' in result.metadata:
+                print(f"      Original: {result.metadata['original_score']:.4f}")
 
             # Show snippet
             content = result.document.content
@@ -320,7 +370,85 @@ def cmd_stats(args):
         print(f"  Patterns: {config.get('patterns', [])}")
         print(f"  Chunk size: {config.get('chunk_size', 'unknown')}")
         print(f"  Model: {config.get('model', 'unknown')}")
+        print(f"  Contextual: {config.get('contextual', False)}")
         print(f"  Indexed at: {config.get('indexed_at', 'unknown')}")
+
+    return 0
+
+
+def cmd_eval(args):
+    """Evaluate retrieval quality with LLM-assisted ground truth."""
+    index = FileIndex(args.index_dir)
+
+    if not index.exists():
+        print(f"Error: Index not found at {args.index_dir}. Run 'index' first.")
+        return 1
+
+    # Load prompts for evaluation
+    logs_dir = Path(args.logs_dir)
+    all_prompts = load_user_prompts(logs_dir)
+
+    if not all_prompts:
+        print(f"No user prompts found in {logs_dir}")
+        return 1
+
+    # Sample prompts for evaluation
+    if args.random:
+        eval_prompts = random.sample(all_prompts, min(args.prompts, len(all_prompts)))
+    else:
+        eval_prompts = all_prompts[:args.prompts]
+
+    queries = [p['prompt'] for p in eval_prompts]
+    print(f"Evaluating on {len(queries)} queries...")
+
+    # Load index
+    documents, embeddings = index.load()
+    embedder = OllamaEmbedder(model=args.model)
+
+    # Build retrievers
+    def make_retriever(strategy: str):
+        if strategy == 'vector':
+            r = VectorRetriever(embedder)
+        elif strategy == 'hybrid':
+            r = HybridRetriever(embedder, alpha=args.alpha)
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+        r.set_index(documents, embeddings)
+        return r
+
+    baseline = make_retriever(args.baseline)
+    candidate = make_retriever(args.candidate) if args.candidate else None
+
+    # Run evaluation
+    evaluator = Evaluator()
+
+    if candidate:
+        print(f"\nComparing {args.baseline} vs {args.candidate}...")
+        baseline_result, candidate_result, comparison = evaluator.compare(
+            baseline, candidate, queries,
+            k=args.k,
+            generate_ground_truth=True
+        )
+
+        print(comparison)
+
+        # Save results
+        if args.output:
+            output_path = Path(args.output)
+            save_evaluation(baseline_result, output_path.with_suffix('.baseline.json'))
+            save_evaluation(candidate_result, output_path.with_suffix('.candidate.json'))
+    else:
+        print(f"\nEvaluating {args.baseline}...")
+        result = evaluator.evaluate(
+            baseline, queries,
+            k=args.k,
+            generate_ground_truth=True
+        )
+
+        print(format_metrics(result.metrics, name=args.baseline))
+
+        if args.output:
+            save_evaluation(result, args.output)
 
     return 0
 
@@ -348,6 +476,10 @@ def main():
                               help='Chunk size in characters')
     index_parser.add_argument('--overlap', type=int, default=50,
                               help='Chunk overlap in characters')
+    index_parser.add_argument('--contextual', action='store_true',
+                              help='Use contextual chunking (LLM-generated descriptions)')
+    index_parser.add_argument('--context-model', default='qwen2.5-coder:1.5b',
+                              help='Ollama model for generating context')
 
     # query command
     query_parser = subparsers.add_parser('query', help='Query the index')
@@ -357,6 +489,12 @@ def main():
                               help='Use hybrid (BM25 + vector) retrieval')
     query_parser.add_argument('--alpha', type=float, default=0.5,
                               help='Hybrid alpha: keyword vs semantic weight')
+    query_parser.add_argument('--rerank', action='store_true',
+                              help='Apply cross-encoder reranking')
+    query_parser.add_argument('--rerank-model', default='cross-encoder/ms-marco-MiniLM-L-6-v2',
+                              help='Cross-encoder model for reranking')
+    query_parser.add_argument('--retrieve-k', type=int, default=50,
+                              help='Candidates to retrieve before reranking')
 
     # sample command
     sample_parser = subparsers.add_parser('sample',
@@ -373,6 +511,34 @@ def main():
                                help='Use hybrid retrieval')
     sample_parser.add_argument('--alpha', type=float, default=0.5,
                                help='Hybrid alpha weight')
+    sample_parser.add_argument('--rerank', action='store_true',
+                               help='Apply cross-encoder reranking')
+    sample_parser.add_argument('--rerank-model', default='cross-encoder/ms-marco-MiniLM-L-6-v2',
+                               help='Cross-encoder model for reranking')
+    sample_parser.add_argument('--retrieve-k', type=int, default=50,
+                               help='Candidates to retrieve before reranking')
+
+    # eval command
+    eval_parser = subparsers.add_parser('eval',
+                                        help='Evaluate retrieval quality')
+    eval_parser.add_argument('--logs-dir', default='.claude/logging',
+                             help='Logging directory for prompts')
+    eval_parser.add_argument('--prompts', type=int, default=10,
+                             help='Number of prompts for evaluation')
+    eval_parser.add_argument('-k', type=int, default=10,
+                             help='Results to retrieve per query')
+    eval_parser.add_argument('--baseline', default='vector',
+                             choices=['vector', 'hybrid'],
+                             help='Baseline retrieval strategy')
+    eval_parser.add_argument('--candidate', default=None,
+                             choices=['vector', 'hybrid'],
+                             help='Candidate strategy to compare (optional)')
+    eval_parser.add_argument('--alpha', type=float, default=0.5,
+                             help='Hybrid alpha weight')
+    eval_parser.add_argument('--random', action='store_true',
+                             help='Random sample (default: most recent)')
+    eval_parser.add_argument('--output', type=str, default=None,
+                             help='Save evaluation results to JSON')
 
     # stats command
     subparsers.add_parser('stats', help='Show index statistics')
@@ -383,6 +549,7 @@ def main():
         'index': cmd_index,
         'query': cmd_query,
         'sample': cmd_sample,
+        'eval': cmd_eval,
         'stats': cmd_stats
     }
 

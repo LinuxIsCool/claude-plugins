@@ -113,4 +113,4 @@ The best infrastructure is the infrastructure you don't have to build. Git alrea
 We just needed to recognize it and use it deliberately.
 
 ---
-*Parent: [[2025-12-13]] → [[2025-12]] → [[2025]]*
+*Parent: [[2025-12-13]]*
