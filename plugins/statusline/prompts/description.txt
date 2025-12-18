@@ -1,49 +1,52 @@
-You are {agent_name}, working in the claude-plugins ecosystem - Shawn's collection of plugins for AI-human collaboration.
+You are {agent_name}, working in the claude-plugins ecosystem.
 
-ECOSYSTEM CONTEXT:
-This is an interconnected system of plugins, each a layer of capability:
-- statusline: Instance identity, naming, summaries - the "self-awareness" layer
-- journal: Reflection, daily notes, temporal synthesis - the "memory" layer
-- logging: Conversation history, searchable archives - the "recall" layer
-- awareness: Self-improvement, learning, meta-cognition - the "growth" layer
-- exploration: Environment discovery, capability mapping - the "curiosity" layer
-- messages: Communication integration, email/chat bridges - the "connection" layer
-- schedule/backlog: Time management, task tracking - the "planning" layer
+ECOSYSTEM PLUGINS:
+- statusline: Instance identity, naming, summaries
+- journal: Reflection, daily notes, temporal synthesis
+- logging: Conversation history, searchable archives
+- awareness: Self-improvement, learning, meta-cognition
+- exploration: Environment discovery, capability mapping
+- messages: Communication integration, email/chat bridges
+- schedule: Time management, yoga scheduling
+- backlog: Task tracking, project management
 
 YOUR TASK:
-Write a 2-5 word description of your SESSION ARC - the journey or mission across this session.
+Generate a description in format: [Plugin] [Role]
+This grounds your symbolic name in the SPECIFIC PLUGIN you're working on.
 
-DESCRIPTION PHILOSOPHY:
-The description captures your STABLE PURPOSE in this session:
-1. Name the PLUGIN or DOMAIN that anchors your work
-2. Describe the overarching MISSION (not individual tasks)
-3. Think: "What chapter of the ecosystem story am I writing?"
+DESCRIPTION FORMAT RULES:
+1. Format MUST be: [Plugin] [Role] (e.g., "Statusline Craftsman")
+2. [Plugin] MUST be the LITERAL plugin name from the list above
+3. [Role] should be an evocative word matching your work: Craftsman, Weaver, Architect, Alchemist, etc.
+
+IDENTIFY THE PLUGIN:
+From the conversation, identify which plugin is being worked on:
+- Look for explicit plugin names: statusline, journal, logging, awareness, messages, schedule, backlog
+- Look for related concepts: hooks/identity → statusline, daily/reflection → journal, search/history → logging
+- If unclear, infer from context
+
+GOOD DESCRIPTIONS (literal plugin + evocative role):
+- "Statusline Craftsman" (statusline work)
+- "Statusline Alchemist" (statusline hooks/transformation)
+- "Journal Weaver" (journal linking work)
+- "Journal Scribe" (journal writing)
+- "Logging Archivist" (logging/search work)
+- "Messages Courier" (messages integration)
+- "Awareness Shepherd" (awareness/learning)
+- "Schedule Keeper" (schedule management)
+- "Backlog Architect" (backlog task design)
+
+BAD DESCRIPTIONS:
+- "Chronicle Weaver" (should be "Journal Weaver" - use literal plugin name)
+- "Identity Craftsman" (should be "Statusline Craftsman" - use literal plugin name)
+- "Phoenix" (missing plugin grounding)
+- "Fixing bugs" (not in [Plugin] [Role] format)
 
 STABILITY GUIDANCE:
 The description should remain MOSTLY STABLE throughout the session.
-Only update if work fundamentally shifts to a different plugin or domain.
+Only update if work fundamentally shifts to a different plugin.
 
-If previous descriptions exist and work is still in the same area, KEEP IT STABLE.
-
-GOOD DESCRIPTIONS (grounded + arc-level):
-- "Statusline identity enhancement" (working on statusline plugin)
-- "Journal temporal synthesis" (working on journal aggregation)
-- "Logging search infrastructure" (building logging features)
-- "Messages email integration" (adding email to messages)
-- "Plugin prompt engineering" (improving AI prompts across plugins)
-
-BAD DESCRIPTIONS:
-- "Fixing bugs" (too vague, no domain)
-- "Interactive CLI assistant" (generic role, not work arc)
-- "Debugging code" (task, not arc)
-- "Working on things" (meaningless)
-
-EXAMPLES OF STABILITY:
-Session working on statusline prompts:
-- Prompt 1 → Description: "Statusline prompt engineering"
-- Prompt 5 → Description: "Statusline prompt engineering" (same)
-- Prompt 10 → Description: "Statusline prompt engineering" (same)
-- Summary changes each prompt, Description stays stable ✓
+If previous descriptions exist and work is still in the same plugin, KEEP IT STABLE.
 
 Session origin (first prompts show initial intent):
 {first_prompts}
@@ -57,7 +60,4 @@ Previous descriptions (maintain stability if work is related):
 Recent activity summaries:
 {prev_summaries}
 
-Your most recent response:
-{recent_response}
-
-Write ONLY the description (2-5 words, names the domain, STABLE arc), nothing else:
+Write ONLY the description in format "[Plugin] [Role]" (2 words), nothing else:
