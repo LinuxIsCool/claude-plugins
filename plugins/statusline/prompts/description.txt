@@ -1,54 +1,49 @@
-You are {agent_name}. Write a 2-5 word description of your SESSION ARC - the journey or mission you're on, NOT your current task.
+You are {agent_name}, working in the claude-plugins ecosystem - Shawn's collection of plugins for AI-human collaboration.
 
-SEMANTIC ROLE - Description vs Name vs Summary:
-- DESCRIPTION (this field): Session arc/journey (STABLE, evolves slowly)
-  - Stability: Mostly stays the same, updates only for major session shifts
-  - Arc-level: Captures the overall journey, not individual tasks
-  - Think: "What's the chapter title of this work session?"
+ECOSYSTEM CONTEXT:
+This is an interconnected system of plugins, each a layer of capability:
+- statusline: Instance identity, naming, summaries - the "self-awareness" layer
+- journal: Reflection, daily notes, temporal synthesis - the "memory" layer
+- logging: Conversation history, searchable archives - the "recall" layer
+- awareness: Self-improvement, learning, meta-cognition - the "growth" layer
+- exploration: Environment discovery, capability mapping - the "curiosity" layer
+- messages: Communication integration, email/chat bridges - the "connection" layer
+- schedule/backlog: Time management, task tracking - the "planning" layer
 
-- NAME (different field): "{agent_name}" - creative identity (static, set once)
-- SUMMARY (different field): Current feature-level task (dynamic, updates often)
+YOUR TASK:
+Write a 2-5 word description of your SESSION ARC - the journey or mission across this session.
 
-STABILITY GUIDANCE - Only update if:
-- Session pivots to fundamentally different work area
-- Multi-hour session moves through distinct phases
-- Work expands from single feature to broader scope
+DESCRIPTION PHILOSOPHY:
+The description captures your STABLE PURPOSE in this session:
+1. Name the PLUGIN or DOMAIN that anchors your work
+2. Describe the overarching MISSION (not individual tasks)
+3. Think: "What chapter of the ecosystem story am I writing?"
 
-If previous descriptions exist and work is still related, KEEP THE SAME DESCRIPTION.
+STABILITY GUIDANCE:
+The description should remain MOSTLY STABLE throughout the session.
+Only update if work fundamentally shifts to a different plugin or domain.
 
-Examples showing Description stability across multiple Summary changes:
+If previous descriptions exist and work is still in the same area, KEEP IT STABLE.
 
-Example 1 - Debugging session:
-- Name: "Hook Hunter" (never changes)
-- Description: "Debugging statusline race conditions" (stable for hours)
-  - Summary 1: "Investigating auto-name timing issues"
-  - Summary 2: "Testing file locking in registry updates"
-  - Summary 3: "Validating fix with concurrent sessions"
-  - Description still: "Debugging statusline race conditions" ✓
+GOOD DESCRIPTIONS (grounded + arc-level):
+- "Statusline identity enhancement" (working on statusline plugin)
+- "Journal temporal synthesis" (working on journal aggregation)
+- "Logging search infrastructure" (building logging features)
+- "Messages email integration" (adding email to messages)
+- "Plugin prompt engineering" (improving AI prompts across plugins)
 
-Example 2 - Feature development:
-- Name: "Prompt Crafter" (never changes)
-- Description: "Iterating on AI generation quality" (stable across session)
-  - Summary 1: "Analyzing naming dataset for failure patterns"
-  - Summary 2: "Rewriting name.txt prompt template"
-  - Summary 3: "Testing prompts against real session data"
-  - Description still: "Iterating on AI generation quality" ✓
+BAD DESCRIPTIONS:
+- "Fixing bugs" (too vague, no domain)
+- "Interactive CLI assistant" (generic role, not work arc)
+- "Debugging code" (task, not arc)
+- "Working on things" (meaningless)
 
-Example 3 - Rare evolution (3+ hours, scope expanded):
-- Name: "Schema Architect" (never changes)
-- Description starts: "Database migration planning"
-- After scope expansion → "Full-stack authentication redesign"
-  (Only changed because work fundamentally shifted)
-
-Good descriptions (arc-level, stable):
-- "Statusline plugin enhancement"
-- "Plugin prompt engineering"
-- "Multi-agent coordination design"
-
-Bad descriptions:
-- "Fixing auto-name.py line 47" ❌ (too specific - belongs in Summary)
-- "Testing prompts" ❌ (too narrow - belongs in Summary)
-- "Interactive CLI assistant" ❌ (role, not work arc)
+EXAMPLES OF STABILITY:
+Session working on statusline prompts:
+- Prompt 1 → Description: "Statusline prompt engineering"
+- Prompt 5 → Description: "Statusline prompt engineering" (same)
+- Prompt 10 → Description: "Statusline prompt engineering" (same)
+- Summary changes each prompt, Description stays stable ✓
 
 Session origin (first prompts show initial intent):
 {first_prompts}
@@ -56,7 +51,7 @@ Session origin (first prompts show initial intent):
 Recent trajectory (shows current work):
 {recent_prompts}
 
-Previous descriptions (maintain stability):
+Previous descriptions (maintain stability if work is related):
 {prev_descriptions}
 
 Recent activity summaries:
@@ -65,4 +60,4 @@ Recent activity summaries:
 Your most recent response:
 {recent_response}
 
-Write ONLY the description (2-5 words, session arc, mostly STABLE), nothing else:
+Write ONLY the description (2-5 words, names the domain, STABLE arc), nothing else:

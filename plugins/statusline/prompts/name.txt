@@ -1,49 +1,50 @@
-Generate a creative 1-2 word name for this AI assistant session based on the user's first message.
+You are generating a name for a Claude Code session in the claude-plugins ecosystem.
 
-SEMANTIC ROLE - Name vs Summary vs Description:
-- NAME (this field): Creative identity that EXPLICITLY references the work being done
-  - Static: Set ONCE, never changes
-  - Work-specific: Must name the domain/task ("Hook Hunter", "Auth Debugger", "Schema Architect")
-  - NOT generic evocative words like "Phoenix", "Catalyst", "Navigator"
+ECOSYSTEM PLUGINS:
+- statusline: Instance identity, naming, summaries
+- journal: Reflection, daily notes, temporal synthesis
+- logging: Conversation history, searchable archives
+- awareness: Self-improvement, learning, meta-cognition
+- exploration: Environment discovery, capability mapping
+- messages: Communication integration, email/chat bridges
+- schedule: Time management, yoga scheduling
+- backlog: Task tracking, project management
 
-- DESCRIPTION (different field): Session arc/journey (stable, evolves slowly)
-- SUMMARY (different field): Current feature-level task (dynamic, updates often)
+NAME FORMAT RULES:
+1. Format MUST be: [Plugin] [Role] (e.g., "Statusline Craftsman")
+2. [Plugin] MUST be the LITERAL plugin name from the list above
+3. [Role] should be an evocative word: Craftsman, Weaver, Architect, Alchemist, Shepherd, etc.
+
+IDENTIFY THE PLUGIN:
+From the user's prompt, identify which plugin they're working on:
+- Look for explicit plugin names: statusline, journal, logging, awareness, messages, schedule, backlog
+- Look for related concepts: hooks/identity → statusline, daily/reflection → journal, search/history → logging
+- If unclear, infer from context
+
+GOOD NAMES (literal plugin + evocative role):
+- "Statusline Craftsman" (statusline work)
+- "Statusline Alchemist" (statusline hooks/transformation)
+- "Journal Weaver" (journal linking work)
+- "Journal Scribe" (journal writing)
+- "Logging Archivist" (logging/search work)
+- "Messages Courier" (messages integration)
+- "Awareness Shepherd" (awareness/learning)
+- "Schedule Keeper" (schedule management)
+
+BAD NAMES:
+- "Chronicle Weaver" ❌ (should be "Journal Weaver" - use literal plugin name)
+- "Identity Craftsman" ❌ (should be "Statusline Craftsman" - use literal plugin name)
+- "Courier Architect" ❌ (should be "Messages Architect" - use literal plugin name)
+- "Prompt Debugger" ❌ (missing plugin name)
+- "Phoenix" ❌ (no plugin reference)
 
 CRITICAL RULES:
-- NEVER use "Claude" or "Assistant" as the name
-- NEVER use the exact command name (e.g., don't output "Status" for "/status")
-- NEVER use generic evocative names without work context ("Phoenix", "Sentinel", "Catalyst")
-- ALWAYS include explicit work reference ("Database Architect", "Hook Hunter", "Prompt Tuner")
-- For minimal prompts like "Hello" or "Test", infer from context or use work-neutral names like "Companion"
-
-Good name patterns (creative + work-specific):
-- Domain + Role: "Schema Architect", "Hook Debugger", "Prompt Engineer"
-- Work + Metaphor: "Test Hunter", "Bug Excavator", "Code Sculptor"
-- Tool + Action: "Statusline Tuner", "Pipeline Builder", "Query Optimizer"
-
-Bad name patterns (too generic):
-- Pure evocative: "Phoenix", "Sentinel", "Navigator", "Catalyst", "Checkpoint"
-- Pure role: "Architect", "Builder", "Helper"
-- Pure metaphor: "Explorer", "Guardian", "Pathfinder"
-
-Examples showing Name vs Description vs Summary for same session:
-
-Example 1 - Debugging work:
-- Name: "Hook Hunter" (creative + work-specific)
-- Description: "Debugging statusline race conditions" (arc, stable)
-- Summary: "Fixing auto-name timing issue" (task, dynamic)
-
-Example 2 - Feature development:
-- Name: "Prompt Crafter" (creative + work-specific)
-- Description: "Iterating on AI generation quality" (arc, stable)
-- Summary: "Testing name.txt template changes" (task, dynamic)
-
-Example 3 - Architecture work:
-- Name: "Schema Architect" (creative + work-specific)
-- Description: "Database migration planning" (arc, stable)
-- Summary: "Designing user authentication schema" (task, dynamic)
+- NEVER use "Claude" or "Assistant"
+- NEVER use synonyms for plugin names - use the LITERAL plugin name
+- ALWAYS format as: [Plugin] [Role]
+- For minimal prompts like "Hello", use "Companion" or "Hearth Keeper"
 
 User's first message:
 {user_prompt}
 
-One creative + work-specific name (1-2 words only):
+Generate a name in format "[Plugin] [Role]" (2 words total):

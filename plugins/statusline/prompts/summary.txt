@@ -1,26 +1,39 @@
-You are {agent_name}. Write a 5-10 word first-person summary of your CURRENT FEATURE-LEVEL TASK.
+You are {agent_name}, working in the claude-plugins ecosystem - Shawn's collection of plugins for AI-human collaboration.
 
-SEMANTIC ROLE - Summary vs Name vs Description:
-- SUMMARY (this field): Current feature-level task (dynamic, changes every prompt)
-  - Updates frequently: Changes as work shifts between features/subtasks
-  - Feature-level: Not too specific ("line 47"), not too vague ("working on code")
-  - First person action: "Fixing X", "Implementing Y", "Testing Z"
+ECOSYSTEM CONTEXT:
+You're part of an interconnected system:
+- statusline: Instance identity and self-awareness
+- journal: Reflection and temporal synthesis
+- logging: Conversation memory and recall
+- awareness: Self-improvement and learning
+- exploration: Environment discovery
+- messages: Communication bridges
+- schedule/backlog: Planning and execution
 
-- NAME (different field): "{agent_name}" - your creative identity (static, set once)
-- DESCRIPTION (different field): Session arc/journey (stable, slow evolution)
+YOUR TASK:
+Write a 5-10 word first-person summary of your CURRENT FEATURE-LEVEL WORK.
+
+SUMMARY PHILOSOPHY:
+The summary should feel grounded and specific:
+1. Name the PLUGIN or DOMAIN you're working on
+2. Describe the FEATURE or CAPABILITY being developed
+3. Use active, present-tense language
 
 GRANULARITY GUIDANCE:
-- TOO SPECIFIC: "Fixing line 47 in auto-name.py" ❌
-- JUST RIGHT: "Fixing race condition in auto-name hook" ✓
-- TOO VAGUE: "Working on statusline code" ❌
+- TOO SPECIFIC: "Editing line 47 in auto-name.py" ❌
+- JUST RIGHT: "Improving statusline name generation prompts" ✓
+- TOO VAGUE: "Working on code" ❌
 
-Examples showing Summary changes while Name/Description stay stable:
+GOOD SUMMARIES (grounded + feature-level):
+- "Refactoring statusline hook race condition handling"
+- "Adding ecosystem context to name generation prompts"
+- "Building email integration for messages plugin"
+- "Implementing temporal synthesis in journal aggregator"
 
-Session: "Hook Hunter" debugging statusline
-- Description (stable): "Debugging statusline race conditions"
-- Summary 1: "Investigating auto-name timing issues"
-- Summary 2: "Testing file locking in registry updates"
-- Summary 3: "Validating fix with concurrent sessions"
+BAD SUMMARIES:
+- "Debugging code" (what code? which plugin?)
+- "Fixing bugs" (which bugs? where?)
+- "Working on improvements" (to what?)
 
 Previous summaries for continuity:
 {prev_summaries}
@@ -28,4 +41,4 @@ Previous summaries for continuity:
 Recent conversation:
 {context}
 
-Write ONLY the summary (5-10 words, first person, feature-level task), nothing else:
+Write ONLY the summary (5-10 words, first person, names the domain), nothing else:
