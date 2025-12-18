@@ -1,6 +1,6 @@
 ---
 name: interface
-description: Master skill for interface stack navigation (8 sub-skills). Covers: stack-overview, claude-code, tmux, nvim, fish, alacritty, kernel, popos. Invoke to understand or operate through the layered interface stack in which Claude Code is embedded.
+description: Master skill for interface stack navigation (9 sub-skills). Covers: stack-overview, claude-code, tmux, nvim, fish, alacritty, kernel, popos, agent-navigation. Invoke to understand or operate through the layered interface stack in which Claude Code is embedded.
 allowed-tools: Read, Bash, Glob, Grep, Task
 ---
 
@@ -46,6 +46,7 @@ Navigate the vertical interface stack through which Claude Code operates.
 | **alacritty** | Terminal emulator configuration, capabilities | `subskills/alacritty.md` |
 | **kernel** | Linux syscalls, process management, devices | `subskills/kernel.md` |
 | **popos** | Pop!_OS specifics, COSMIC DE, systemd, packages | `subskills/popos.md` |
+| **agent-navigation** | Navigating between Claude agent panes with fuzzy search | `subskills/agent-navigation.md` |
 
 ## How to Use
 
@@ -129,6 +130,9 @@ Linux kernel interface. System calls, process model, file descriptors, signals, 
 
 ### popos
 Pop!_OS distribution layer. Package management (apt, flatpak), COSMIC desktop environment, systemd services, Pop Shell tiling.
+
+### agent-navigation
+Navigate between Claude Code instances across tmux panes. Uses pane titles (set via escape sequences) for fuzzy search with fzf. Includes tools for scanning agents and interactive selection.
 
 ## Integration with Agents
 

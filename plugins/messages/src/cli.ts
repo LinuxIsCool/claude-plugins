@@ -34,6 +34,11 @@ import {
   isTelegramApiAvailable,
 } from "./adapters/telegram-api";
 import {
+  importEmail,
+  countEmail,
+  getUserEmail,
+} from "./adapters/email";
+import {
   TelegramApiClient,
   hasSession,
 } from "./integrations/telegram/client";
@@ -76,6 +81,7 @@ Commands:
   import telegram-api         Import from Telegram API (requires auth)
   import logs                 Import Claude Code logs
   import claude-web -f <zip>  Import Claude Web data export
+  import email -f <path>      Import emails (.eml directory or .mbox file)
   search <query>              Search messages
   recent [-l N]               Show recent messages
   thread <id>                 Show thread messages
@@ -109,6 +115,12 @@ Examples:
 
   # Import Claude Web data (last 30 days)
   bun plugins/messages/src/cli.ts import claude-web -f ~/Downloads/data-*.zip -s 30
+
+  # Import emails from .eml directory
+  bun plugins/messages/src/cli.ts import email -f ~/Mail/Archive/
+
+  # Import emails from .mbox file
+  bun plugins/messages/src/cli.ts import email -f ~/Downloads/gmail-export.mbox
 
   # Search messages
   bun plugins/messages/src/cli.ts search "authentication"
@@ -392,9 +404,91 @@ Chats:`);
           process.exit(1);
         }
 
+      } else if (source === "email") {
+        if (!values.file) {
+          console.error("Error: --file/-f required for email import");
+          console.error("Provide the path to .eml directory or .mbox file");
+          process.exit(1);
+        }
+
+        const userEmail = getUserEmail();
+        if (!userEmail) {
+          console.error("Error: EMAIL_ADDRESS environment variable required");
+          console.error("Set your email address in .env: EMAIL_ADDRESS=you@example.com");
+          process.exit(1);
+        }
+
+        // Parse since option (days or date)
+        let sinceDate: Date | undefined;
+        if (values.since) {
+          const daysAgo = parseInt(values.since, 10);
+          if (!isNaN(daysAgo)) {
+            sinceDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+          } else {
+            sinceDate = new Date(values.since);
+            if (isNaN(sinceDate.getTime())) {
+              console.error(`Error: Invalid date or days value: ${values.since}`);
+              process.exit(1);
+            }
+          }
+        }
+
+        if (values["dry-run"]) {
+          console.log("Counting emails...");
+          try {
+            const counts = await countEmail({
+              source: values.file,
+              userEmail,
+              since: sinceDate,
+            });
+            console.log(`
+Email Import Summary:
+  Messages: ${counts.messages}
+  Threads: ${counts.threads}
+  Accounts: ${counts.accounts.size}
+  Attachments: ${counts.attachments}
+  Date Range: ${counts.dateRange.earliest?.toISOString().slice(0, 10) || "N/A"} to ${counts.dateRange.latest?.toISOString().slice(0, 10) || "N/A"}
+${sinceDate ? `\n  (Filtered to messages since ${sinceDate.toISOString().slice(0, 10)})` : ""}
+`);
+          } catch (error) {
+            console.error("Error:", error);
+            process.exit(1);
+          }
+          return;
+        }
+
+        console.log(`Importing emails from ${values.file}...`);
+        console.log(`  User email: ${userEmail}`);
+        if (sinceDate) {
+          console.log(`  Filtering to messages since ${sinceDate.toISOString().slice(0, 10)}`);
+        }
+
+        let imported = 0;
+        try {
+          const generator = importEmail(store, {
+            source: values.file,
+            userEmail,
+            since: sinceDate,
+            includeAttachments: true,
+          });
+
+          for await (const message of generator) {
+            search.index(message);
+            imported++;
+            if (imported % 100 === 0) {
+              process.stdout.write(`\rImported ${imported} messages...`);
+            }
+          }
+
+          console.log(`\nDone! Imported ${imported} messages.`);
+        } catch (error) {
+          console.error("\nError during import:", error);
+          process.exit(1);
+        }
+
       } else {
         console.error(`Unknown import source: ${source}`);
-        console.error("Available: telegram, telegram-api, logs, claude-web");
+        console.error("Available: telegram, telegram-api, logs, claude-web, email");
         process.exit(1);
       }
       break;

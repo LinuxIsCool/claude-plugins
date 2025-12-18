@@ -58,6 +58,7 @@ from claude_backend import (
     format_messages_for_prompt,
     generate_with_backend,
     write_with_history,
+    update_registry_task,
     load_prompt_template,
     parse_hook_input,
 )
@@ -140,10 +141,16 @@ def main():
 
     if summary:
         log(f"Generated summary: {summary}")
+        # Write to history file for temporal tracking
         if write_with_history(instances_dir, session_id, "summaries", summary, DEBUG_PREFIX):
-            log("Summary saved")
+            log("Summary saved to history")
         else:
-            log("Failed to save summary")
+            log("Failed to save summary to history")
+        # Update registry task field so it's visible in the main registry
+        if update_registry_task(instances_dir, session_id, summary, DEBUG_PREFIX):
+            log("Registry task updated")
+        else:
+            log("Failed to update registry task")
     else:
         log("No summary generated")
 

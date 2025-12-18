@@ -2,15 +2,20 @@
 #
 # Agent Scanner - Extract Claude agent panes from tmux
 #
-# Scans all tmux panes across all sessions for Claude agent statuslines.
-# Detects the pattern: [Name:xxxxx] produced by the statusline plugin.
+# Discovers Claude Code instances by scanning tmux pane titles.
+# Claude Code sets pane titles via escape sequences with format: "✳ Summary"
 #
 # Output format (tab-separated):
-#   session:window.pane \t statusline_content
+#   session:window.pane \t pane_id \t pane_title
+#
+# The ✳ prefix indicates a Claude agent; other panes (nvim, fish, etc.)
+# have titles like "nvim /path" or "fish /path".
 #
 # Usage:
-#   ./agent-scanner.sh              # Scan all sessions
+#   ./agent-scanner.sh              # Scan all sessions for Claude agents
 #   ./agent-scanner.sh --session=X  # Scan specific session only
+#   ./agent-scanner.sh --all        # Include non-Claude panes too
+#   ./agent-scanner.sh --format=fzf # Output formatted for fzf selection
 #
 # Exit codes:
 #   0 - Success (found agents or not)
@@ -18,7 +23,7 @@
 
 set -euo pipefail
 
-# Verify we're in tmux (or tmux is available)
+# Verify tmux is available
 if ! command -v tmux &>/dev/null; then
     echo "Error: tmux not found" >&2
     exit 1
@@ -31,15 +36,39 @@ fi
 
 # Parse arguments
 SESSION_FILTER=""
+INCLUDE_ALL=false
+OUTPUT_FORMAT="tsv"
+
 while [[ $# -gt 0 ]]; do
     case $1 in
         --session=*)
             SESSION_FILTER="${1#*=}"
             shift
             ;;
+        --all)
+            INCLUDE_ALL=true
+            shift
+            ;;
+        --format=*)
+            OUTPUT_FORMAT="${1#*=}"
+            shift
+            ;;
         -h|--help)
-            echo "Usage: agent-scanner.sh [--session=NAME]"
-            echo "Scans tmux panes for Claude agent statuslines."
+            echo "Usage: agent-scanner.sh [OPTIONS]"
+            echo ""
+            echo "Scans tmux panes for Claude agent instances."
+            echo ""
+            echo "Options:"
+            echo "  --session=NAME  Scan specific session only"
+            echo "  --all           Include non-Claude panes"
+            echo "  --format=FORMAT Output format: tsv (default), fzf"
+            echo "  -h, --help      Show this help"
+            echo ""
+            echo "Output (tsv format):"
+            echo "  session:window.pane \\t pane_id \\t pane_title"
+            echo ""
+            echo "Output (fzf format):"
+            echo "  [session:window.pane] ✳ Summary Text"
             exit 0
             ;;
         *)
@@ -51,36 +80,43 @@ done
 
 # Build pane list command
 if [[ -n "$SESSION_FILTER" ]]; then
-    PANE_LIST_CMD="tmux list-panes -t '$SESSION_FILTER' -a -F '#{session_name}:#{window_index}.#{pane_index}\t#{pane_id}'"
+    # Validate session exists
+    if ! tmux has-session -t "$SESSION_FILTER" 2>/dev/null; then
+        echo "Error: Session '$SESSION_FILTER' not found" >&2
+        exit 1
+    fi
+    PANES=$(tmux list-panes -t "$SESSION_FILTER" -a -F '#{session_name}:#{window_index}.#{pane_index}	#{pane_id}	#{pane_title}' 2>/dev/null) || true
 else
-    PANE_LIST_CMD="tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}\t#{pane_id}'"
+    PANES=$(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index}	#{pane_id}	#{pane_title}' 2>/dev/null) || true
 fi
 
-# Statusline pattern: [Name:xxxxx] where Name can contain letters/numbers/spaces
-# and xxxxx is the short session ID (typically 5 alphanumeric chars)
-STATUSLINE_PATTERN='\[[^]]+:[a-zA-Z0-9]{5}\]'
+# Claude agent pattern: title starts with ✳
+CLAUDE_PATTERN='^✳'
 
-# Scan all panes
-eval "$PANE_LIST_CMD" 2>/dev/null | while IFS=$'\t' read -r pane_ref pane_id; do
+# Process panes
+echo "$PANES" | while IFS=$'\t' read -r pane_ref pane_id pane_title; do
     # Skip if we couldn't parse the line
     [[ -z "$pane_ref" ]] && continue
 
-    # Capture first 3 lines of pane (statusline is typically at top)
-    # Use || true to prevent set -e from killing us on capture errors
-    content=$(tmux capture-pane -t "$pane_id" -p -S 0 -E 2 2>/dev/null) || true
-
-    # Skip if capture failed or empty
-    [[ -z "$content" ]] && continue
-
-    # Look for statusline pattern in captured content
-    # Extract the full line containing the pattern
-    statusline=$(echo "$content" | grep -E "$STATUSLINE_PATTERN" 2>/dev/null | head -1) || true
-
-    # Only output if we found a statusline
-    if [[ -n "$statusline" ]]; then
-        # Output: pane_ref \t statusline (tab-separated for easy parsing)
-        printf '%s\t%s\n' "$pane_ref" "$statusline"
+    # Filter for Claude agents unless --all specified
+    if [[ "$INCLUDE_ALL" != "true" ]]; then
+        if ! echo "$pane_title" | grep -qE "$CLAUDE_PATTERN"; then
+            continue
+        fi
     fi
+
+    # Output based on format
+    case "$OUTPUT_FORMAT" in
+        fzf)
+            # Format for fzf: [pane_ref] pane_title
+            # The pane_id is embedded in the pane_ref for later extraction
+            printf '[%s] %s\n' "$pane_ref" "$pane_title"
+            ;;
+        *)
+            # Default TSV format
+            printf '%s\t%s\t%s\n' "$pane_ref" "$pane_id" "$pane_title"
+            ;;
+    esac
 done
 
 # Exit successfully even if no agents found (empty output is valid)
