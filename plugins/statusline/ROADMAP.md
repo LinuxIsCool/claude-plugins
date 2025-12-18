@@ -113,13 +113,70 @@ This document outlines the strategic roadmap for evolving the statusline plugin 
 
 ### 2.3 Identified Fragility Points
 
-| Issue | Location | Risk | Fix Priority |
-|-------|----------|------|--------------|
-| Registry race conditions | Multiple writers | Data corruption | High |
-| Duplicated log function | 3 shell scripts | Maintenance burden | Medium |
-| No atomic file writes | registry.json updates | Partial writes | High |
-| PATH assumptions | All shell scripts | Portability | Medium |
-| No error recovery | All hooks | Silent failures | High |
+| Issue | Location | Risk | Fix Priority | Status |
+|-------|----------|------|--------------|--------|
+| Registry race conditions | Multiple writers | Data corruption | High | **FIXED** (update_registry + flock) |
+| Duplicated log function | 3 shell scripts | Maintenance burden | Medium | **FIXED** (lib/statusline-utils.sh) |
+| No atomic file writes | registry.json updates | Partial writes | High | **FIXED** (update_registry + flock) |
+| PATH assumptions | All shell scripts | Portability | Medium | Pending |
+| No error recovery | All hooks | Silent failures | High | Pending |
+| Symlink resolution | statusline.sh | Source failures | High | **FIXED** (2.4 pattern) |
+
+### 2.4 Dual Invocation Pattern (CRITICAL)
+
+The plugin has **two different execution contexts** that must be understood:
+
+#### Context 1: Hooks (Direct Invocation)
+
+```
+Claude Code invokes hooks DIRECTLY from plugin cache:
+  ~/.claude/plugins/cache/linuxiscool-claude-plugins/statusline/0.4.0/hooks/session-start.sh
+
+BASH_SOURCE[0] = actual file path
+Relative sourcing works: source "$SCRIPT_DIR/../lib/statusline-utils.sh"
+```
+
+#### Context 2: Statusline Command (Symlink Invocation)
+
+```
+User configures in ~/.claude/settings.json:
+  "statusLine": { "command": "~/.claude/statusline.sh" }
+
+~/.claude/statusline.sh is a SYMLINK:
+  → /home/ygg/Workspace/.../plugins/statusline/tools/statusline.sh
+
+BASH_SOURCE[0] = symlink path (/home/ygg/.claude/statusline.sh)
+Relative sourcing FAILS without symlink resolution!
+```
+
+#### Why This Matters
+
+When sourcing relative files (like `lib/statusline-utils.sh`), `statusline.sh` must resolve symlinks first:
+
+```bash
+# WRONG (breaks when invoked via symlink):
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# CORRECT (resolves symlinks first):
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_PATH" ]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+```
+
+#### Implications for Development
+
+| File | Invocation | Symlink Resolution Needed? |
+|------|------------|---------------------------|
+| `hooks/*.sh` | Direct from cache | No |
+| `tools/statusline.sh` | Via user symlink | **Yes** |
+| `tools/history.sh` | Direct by user | Depends on setup |
+| `tools/registry.py` | Direct by user | No (Python) |
+
+**Rule**: Any shell script in `tools/` that sources relative files must include symlink resolution if it might be invoked via symlink.
 
 ---
 

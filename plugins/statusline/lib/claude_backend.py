@@ -442,7 +442,7 @@ def _generate_api(prompt: str, api_key: str, max_tokens: int = 50, temperature: 
         return ""
 
 
-def _generate_headless(prompt: str, max_tokens: int = 50, temperature: float = 0.3, prefix: str = "statusline") -> str:
+def _generate_headless(prompt: str, max_tokens: int = 50, temperature: float = 0.3, prefix: str = "statusline", multiline: bool = False) -> str:
     """Generate text using headless Claude CLI.
 
     Args:
@@ -485,8 +485,12 @@ def _generate_headless(prompt: str, max_tokens: int = 50, temperature: float = 0
             return ""
 
         text = result.stdout.strip()
-        # Clean up: remove quotes, take first line
-        text = text.strip('"').strip("'").split("\n")[0].strip()
+        # Clean up: remove quotes
+        text = text.strip('"').strip("'")
+        # For multiline=False (default), take first line only (legacy behavior)
+        # For multiline=True, return all lines for JSON parsing
+        if not multiline:
+            text = text.split("\n")[0].strip()
         debug(f"Headless response: {text}", prefix)
         return text
     except subprocess.TimeoutExpired:
@@ -503,7 +507,8 @@ def generate_with_backend(
     api_key: str,
     max_tokens: int = 50,
     temperature: float = 0.3,
-    prefix: str = "statusline"
+    prefix: str = "statusline",
+    multiline: bool = False
 ) -> str:
     """Generate text using configured backend.
 
@@ -516,6 +521,7 @@ def generate_with_backend(
         max_tokens: Maximum tokens to generate
         temperature: Sampling temperature
         prefix: Debug logging prefix
+        multiline: If True, return full response (for JSON parsing). Default False for legacy single-line.
 
     Returns:
         Generated text or empty string on error
@@ -534,24 +540,97 @@ def generate_with_backend(
     if backend == "api":
         if not api_key:
             debug("API backend selected but no API key - falling back to headless", prefix)
-            return _generate_headless(prompt, max_tokens, temperature, prefix)
+            return _generate_headless(prompt, max_tokens, temperature, prefix, multiline)
         return _generate_api(prompt, api_key, max_tokens, temperature, prefix)
     else:
-        return _generate_headless(prompt, max_tokens, temperature, prefix)
+        return _generate_headless(prompt, max_tokens, temperature, prefix, multiline)
 
 
 # =============================================================================
 # Prompt Template Loading
 # =============================================================================
 
+def _parse_prompt_config(config_path: Path) -> dict:
+    """Parse prompts/config.yaml to get active versions.
+
+    Simple parser that extracts active versions without full YAML dependency.
+    Expected format:
+        active:
+          name: 1_ecosystem_aware
+          description: 1_plugin_role
+          summary: 1_feature_level
+
+    Returns:
+        Dict mapping prompt name to active version string
+    """
+    result = {}
+    if not config_path.exists():
+        return result
+
+    try:
+        content = config_path.read_text()
+        in_active = False
+        for line in content.splitlines():
+            stripped = line.strip()
+            if stripped == "active:":
+                in_active = True
+                continue
+            if in_active and stripped and not stripped.startswith("#"):
+                if ":" in stripped and line.startswith("  "):
+                    key, value = stripped.split(":", 1)
+                    result[key.strip()] = value.strip()
+                elif not line.startswith("  "):
+                    # Exited active block
+                    break
+    except:
+        pass
+
+    return result
+
+
+def _extract_prompt_content(content: str) -> str:
+    """Extract prompt content from markdown file with YAML frontmatter.
+
+    Format:
+        ---
+        key: value
+        ...
+        ---
+        Actual prompt content here
+
+    Returns:
+        The content after the second '---' delimiter, or full content if no frontmatter
+    """
+    if not content.startswith("---"):
+        return content.strip()
+
+    # Find the second ---
+    lines = content.split("\n")
+    delimiter_count = 0
+    content_start = 0
+
+    for i, line in enumerate(lines):
+        if line.strip() == "---":
+            delimiter_count += 1
+            if delimiter_count == 2:
+                content_start = i + 1
+                break
+
+    if delimiter_count >= 2:
+        return "\n".join(lines[content_start:]).strip()
+
+    return content.strip()
+
+
 def load_prompt_template(script_dir: Path, template_name: str, default_template: str) -> str:
     """Load prompt template from file or use default.
 
     Checks (in order of priority):
-    1. Prompts directory: {plugin_root}/prompts/{short_name}.txt
-    2. Same directory as calling script: {script_dir}/{template_name}
-    3. User-global: ~/.claude/{template_name}
-    4. Fallback to provided default
+    1. Versioned prompts: {plugin_root}/prompts/{short_name}/{version}.md (from config.yaml)
+    2. Legacy prompts directory: {plugin_root}/prompts/{short_name}.txt
+    3. Same directory as calling script: {script_dir}/{template_name}
+    4. User-global: ~/.claude/{template_name}
+    5. Fallback to provided default
 
     Args:
         script_dir: Directory of the calling script (typically hooks/)
@@ -559,21 +638,39 @@ def load_prompt_template(script_dir: Path, template_name: str, default_template:
         default_template: Default template string if no file found
 
     Returns:
-        Template string
+        Template string (frontmatter stripped if present)
     """
     # Derive short name: "summary-prompt.txt" -> "summary"
     short_name = template_name.replace("-prompt.txt", "").replace(".txt", "")
 
     # Plugin root is parent of script_dir (hooks/ -> plugin/)
     plugin_root = script_dir.parent
+    prompts_dir = plugin_root / "prompts"
 
-    locations = [
-        plugin_root / "prompts" / f"{short_name}.txt",  # New: prompts/ directory
+    # Try versioned prompt first (from config.yaml)
+    config_path = prompts_dir / "config.yaml"
+    active_versions = _parse_prompt_config(config_path)
+
+    if short_name in active_versions:
+        version = active_versions[short_name]
+        versioned_path = prompts_dir / short_name / f"{version}.md"
+        if versioned_path.exists():
+            try:
+                content = versioned_path.read_text()
+                template = _extract_prompt_content(content)
+                if template:
+                    return template
+            except:
+                pass
+
+    # Fall back to legacy locations
+    legacy_locations = [
+        prompts_dir / f"{short_name}.txt",  # Legacy: prompts/ directory
         script_dir / template_name,  # Legacy: hooks/ directory
         Path.home() / ".claude" / template_name,  # User override
     ]
 
-    for loc in locations:
+    for loc in legacy_locations:
         if loc.exists():
             try:
                 template = loc.read_text().strip()

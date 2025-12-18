@@ -23,12 +23,10 @@
     "SessionStart": [{"hooks": [{"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"}]}],
     "UserPromptSubmit": [{"hooks": [
       {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/user-prompt-submit.sh"},
-      {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/auto-name-wrapper.sh"},
-      {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/auto-summary-wrapper.sh"},
-      {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/auto-description-wrapper.sh"}
+      {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/auto-identity-wrapper.sh"}
     ]}],
     "Stop": [{"hooks": [
-      {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/auto-summary-wrapper.sh"}
+      {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/auto-identity-wrapper.sh"}
     ]}]
   }
 }

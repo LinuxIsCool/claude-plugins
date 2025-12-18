@@ -1,9 +1,142 @@
-# Statusline Prompts
+# Prompt Versioning System
 
-This directory contains prompt templates for the statusline plugin's AI generation systems.
-Each prompt uses Python `.format()` style variables: `{variable_name}`.
+This directory contains versioned prompts for the statusline plugin's AI-generated content.
 
-## Quick Start: Testing Prompts
+## Structure
+
+```
+prompts/
+├── config.yaml           # Active version configuration
+├── README.md             # This file
+├── name/
+│   ├── 1_ecosystem_aware.md
+│   └── (future versions...)
+├── description/
+│   └── 1_plugin_role.md
+└── summary/
+    └── 1_feature_level.md
+```
+
+## Version Naming Convention
+
+```
+<number>_<version_name>.md
+```
+
+- `number`: Sequential version number (1, 2, 3...)
+- `version_name`: Descriptive snake_case name
+
+Examples:
+- `1_ecosystem_aware.md`
+- `2_metaphorical_focus.md`
+- `3_minimal_guidance.md`
+
+## Prompt File Format
+
+Each prompt file uses YAML frontmatter with full metadata:
+
+```markdown
+---
+version: 1
+name: ecosystem_aware
+created: 2025-12-18
+author: claude
+rationale: |
+  Why this version was created.
+  What problem it solves or improvement it makes.
+test_results: |
+  - Observed behavior in testing
+  - Strengths and weaknesses
+  - Edge cases discovered
+notes: |
+  Additional context, insights, or caveats.
+---
+
+[Actual prompt content here]
+```
+
+## Configuration
+
+Edit `config.yaml` to change active versions:
+
+```yaml
+active:
+  name: 1_ecosystem_aware
+  description: 1_plugin_role
+  summary: 1_feature_level
+```
+
+Changes take effect on next Claude Code restart (after cache clear).
+
+## Creating New Versions
+
+1. **Copy** the current active version as a starting point
+2. **Increment** the version number
+3. **Name** it descriptively (what makes it different)
+4. **Document** rationale in frontmatter
+5. **Test** before switching active version
+6. **Update** `config.yaml` to activate
+
+Example workflow:
+```bash
+# Create new version
+cp prompts/name/1_ecosystem_aware.md prompts/name/2_metaphorical_only.md
+
+# Edit the new version
+# ... make changes ...
+
+# Update config.yaml
+# active:
+#   name: 2_metaphorical_only
+
+# Clear cache and restart
+rm -rf ~/.claude/plugins/cache/linuxiscool-claude-plugins/statusline/
+```
+
+## Iteration Philosophy
+
+- **Never delete** old versions (git history helps, but explicit files are clearer)
+- **Document failures** - negative results are valuable (note in test_results)
+- **Small changes** - iterate incrementally, one hypothesis at a time
+- **A/B testing** - log which version produced which output for analysis
+
+---
+
+## Prompt Functions
+
+### name
+Generates symbolic 1-2 word session names (callsigns).
+
+| Aspect | Details |
+|--------|---------|
+| Trigger | First user prompt only |
+| Input | `{user_prompt}` - First user message |
+| Output | 1-2 words like "Oracle", "Crucible" |
+| Philosophy | Metaphorical, evocative, domain-appropriate |
+
+### description
+Generates "[Plugin] [Role]" identity descriptors.
+
+| Aspect | Details |
+|--------|---------|
+| Trigger | Every user prompt |
+| Input | Session context, previous descriptions |
+| Output | Two words like "Statusline Craftsman" |
+| Philosophy | Literal plugin name + evocative role, stable across session |
+
+### summary
+Generates feature-level work summaries.
+
+| Aspect | Details |
+|--------|---------|
+| Trigger | Every user prompt and Stop event |
+| Input | Recent conversation context |
+| Output | 5-10 word first-person summary |
+| Philosophy | Specific but not too granular, names the domain |
+
+---
+
+## Testing Prompts
 
 ```bash
 # Preview filled prompt without API call
@@ -16,118 +149,36 @@ Each prompt uses Python `.format()` style variables: `{variable_name}`.
 ./tools/test-prompts.py name --user-prompt "Help me refactor the database layer"
 ```
 
----
-
-## name.txt
-
-**Purpose:** Generate creative 1-2 word session names on first prompt.
-
-**Trigger:** First user prompt only (once per session).
-
-**Output:** 1-2 words, capitalized (e.g., "Navigator", "Thread Hunter")
-
-### Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `{user_prompt}` | First user message (truncated to 500 chars) | "Help me fix the login bug in auth.py" |
-
-### Quality Guidelines
-
-Good names are:
-- Evocative and memorable
-- Hint at session purpose
-- Feel like codenames or callsigns
-
----
-
-## summary.txt
-
-**Purpose:** Generate 5-10 word first-person summaries of current work.
-
-**Trigger:** Every user prompt.
-
-**Output:** 5-10 words, first person (e.g., "Fixing race condition in statusline hooks")
-
-### Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `{agent_name}` | Current session name | "Navigator" |
-| `{prev_summaries}` | Last 3 summaries (newline-separated) | "Debugging auth flow\nRefactoring database" |
-| `{context}` | Last 6 user/assistant messages | "User: Fix the bug\nAssistant: I found..." |
-
-### Quality Guidelines
-
-Good summaries are:
-- Action-oriented ("Fixing X" not "Looking at X")
-- Specific to current work
-- Natural first-person voice
-
----
-
-## description.txt
-
-**Purpose:** Generate 2-5 word "lifetime arc" descriptions capturing WHO the agent is.
-
-**Trigger:** Every user prompt.
-
-**Output:** 2-5 words describing role/mission (e.g., "Plugin infrastructure architect")
-
-### Variables
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `{agent_name}` | Current session name | "Phoenix" |
-| `{first_prompts}` | First 5 user prompts (origin anchor) | "User: Help me redesign..." |
-| `{recent_prompts}` | Last 20 user prompts (trajectory) | "User: Now fix the tests..." |
-| `{prev_descriptions}` | Last 10 descriptions (arc continuity) | "Database migration guide" |
-| `{prev_summaries}` | Last 10 summaries (activity log) | "Running test suite..." |
-| `{recent_response}` | Latest Claude response (500 chars) | "I've identified the issue..." |
-
-### Quality Guidelines
-
-Good descriptions:
-- Capture the journey, not just current task
-- Feel like a title or role
-- Evolve slowly as work progresses
-
----
-
-## Iteration Workflow
-
-1. **Edit prompt** in this directory
-2. **Preview** with `./tools/test-prompts.py <type> --preview`
-3. **Test with mock** to verify parsing: `./tools/test-prompts.py <type> --mock "Expected output"`
-4. **Test with API** using synthetic data or real session
-5. **Observe in production** via debug mode (see below)
-
----
-
 ## Debug Mode
 
-Enable debug output for any generation system with environment variables:
+Enable debug output with environment variables:
 
 ```bash
-# Show full prompts and responses for specific generators
 DEBUG_NAME=1 claude        # Name generation debug
 DEBUG_SUMMARY=1 claude     # Summary generation debug
 DEBUG_DESCRIPTION=1 claude # Description generation debug
-
-# Combine multiple
-DEBUG_NAME=1 DEBUG_SUMMARY=1 claude
 ```
 
-When enabled, you'll see in stderr:
-- Full prompt text with all variables filled
-- Generation parameters (max_tokens, temperature)
-- Backend selection (api/headless)
-- Generated response
+---
 
-## File Locations
+## Analyzing Results
 
-Prompts are loaded from (in order):
-1. `plugins/statusline/prompts/{name}.txt` (this directory)
-2. `plugins/statusline/hooks/{name}-prompt.txt` (legacy)
-3. `~/.claude/{name}-prompt.txt` (user override)
-4. Hardcoded default in hook script (fallback)
+Use the statusline JSONL log to analyze prompt effectiveness:
+
+```bash
+# Extract all generated names
+jq -r 'select(.type=="name") | .value' ~/.claude/instances/statusline.jsonl
+
+# Count name frequency
+jq -r 'select(.type=="name") | .value' ~/.claude/instances/statusline.jsonl | sort | uniq -c | sort -rn
+
+# Find descriptions that don't match format
+jq -r 'select(.type=="description") | .value' ~/.claude/instances/statusline.jsonl | grep -v "^[A-Z][a-z]* [A-Z][a-z]*$"
+```
+
+---
+
+## Legacy Files
+
+The old flat files (`name.txt`, `description.txt`, `summary.txt`) are deprecated.
+Python hooks now load from `prompts/<function>/<version>.md` based on `config.yaml`.

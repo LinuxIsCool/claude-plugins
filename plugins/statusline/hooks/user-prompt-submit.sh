@@ -10,18 +10,9 @@
 # Increments counter in .claude/instances/counts/{session_id}.txt
 # Ensures registry entry exists with all required fields
 
-# Log statusline event to JSONL
-log_statusline() {
-    local type="$1"
-    local session="$2"
-    local value="$3"
-    local ok="${4:-true}"
-    local log_file="$HOME/.claude/instances/statusline.jsonl"
-    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local short_session="${session:0:8}"
-    mkdir -p "$(dirname "$log_file")"
-    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"$type\",\"value\":\"$value\",\"ok\":$ok}" >> "$log_file"
-}
+# Source shared utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/statusline-utils.sh"
 
 # Read JSON input
 INPUT=$(cat)
@@ -116,52 +107,52 @@ if [ -z "$HAS_CREATED" ]; then
     # Only assign process_number if SessionStart already set one
     # Continued sessions get marked with "continued": true instead
     if [ -n "$EXISTING_PNUM" ]; then
-        # Update entry preserving existing process_number
-        jq --arg sid "$SESSION_ID" \
-           --arg name "$NAME" \
-           --arg cwd "$CWD" \
-           --arg ts "$TIMESTAMP" \
-           --arg dir "$DIR_NAME" \
-           --arg model "$EXISTING_MODEL" \
-           --argjson pnum "$EXISTING_PNUM" \
-           '.[$sid] = ((.[$sid] // {}) + {
-             "name": (if .[$sid].name then .[$sid].name else $name end),
-             "task": ("Working in " + $dir),
-             "model": (if .[$sid].model then .[$sid].model else $model end),
-             "cwd": $cwd,
-             "created": $ts,
-             "last_seen": $ts,
-             "status": "active",
-             "process_number": $pnum
-           })' \
-           "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
+        # Update entry preserving existing process_number (atomic with flock)
+        update_registry "$REGISTRY" \
+            --arg sid "$SESSION_ID" \
+            --arg name "$NAME" \
+            --arg cwd "$CWD" \
+            --arg ts "$TIMESTAMP" \
+            --arg dir "$DIR_NAME" \
+            --arg model "$EXISTING_MODEL" \
+            --argjson pnum "$EXISTING_PNUM" \
+            '.[$sid] = ((.[$sid] // {}) + {
+              "name": (if .[$sid].name then .[$sid].name else $name end),
+              "task": ("Working in " + $dir),
+              "model": (if .[$sid].model then .[$sid].model else $model end),
+              "cwd": $cwd,
+              "created": $ts,
+              "last_seen": $ts,
+              "status": "active",
+              "process_number": $pnum
+            })'
     else
-        # Continued session without process_number - mark as continued
-        jq --arg sid "$SESSION_ID" \
-           --arg name "$NAME" \
-           --arg cwd "$CWD" \
-           --arg ts "$TIMESTAMP" \
-           --arg dir "$DIR_NAME" \
-           --arg model "$EXISTING_MODEL" \
-           '.[$sid] = ((.[$sid] // {}) + {
-             "name": (if .[$sid].name then .[$sid].name else $name end),
-             "task": ("Working in " + $dir),
-             "model": (if .[$sid].model then .[$sid].model else $model end),
-             "cwd": $cwd,
-             "created": $ts,
-             "last_seen": $ts,
-             "status": "active",
-             "continued": true
-           })' \
-           "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
+        # Continued session without process_number - mark as continued (atomic with flock)
+        update_registry "$REGISTRY" \
+            --arg sid "$SESSION_ID" \
+            --arg name "$NAME" \
+            --arg cwd "$CWD" \
+            --arg ts "$TIMESTAMP" \
+            --arg dir "$DIR_NAME" \
+            --arg model "$EXISTING_MODEL" \
+            '.[$sid] = ((.[$sid] // {}) + {
+              "name": (if .[$sid].name then .[$sid].name else $name end),
+              "task": ("Working in " + $dir),
+              "model": (if .[$sid].model then .[$sid].model else $model end),
+              "cwd": $cwd,
+              "created": $ts,
+              "last_seen": $ts,
+              "status": "active",
+              "continued": true
+            })'
     fi
 fi
 
-# Update last_seen for existing sessions
-jq --arg sid "$SESSION_ID" \
-   --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-   'if .[$sid] then .[$sid].last_seen = $ts | .[$sid].status = "active" else . end' \
-   "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
+# Update last_seen for existing sessions (atomic with flock)
+update_registry "$REGISTRY" \
+    --arg sid "$SESSION_ID" \
+    --arg ts "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+    'if .[$sid] then .[$sid].last_seen = $ts | .[$sid].status = "active" else . end'
 
 # Create required directories
 COUNTS_DIR="$INSTANCES_DIR/counts"

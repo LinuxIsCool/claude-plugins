@@ -39,19 +39,29 @@ if ! command -v jq &> /dev/null; then
     exit 0
 fi
 
+# Source shared utilities (resolve symlinks to find actual plugin location)
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_PATH" ]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+source "$SCRIPT_DIR/../lib/statusline-utils.sh"
+
 # Read JSON input
 input=$(cat)
 
 # Log raw Claude input for historical analysis
 log_claude_input() {
-    local log_file="$HOME/.claude/instances/statusline.jsonl"
-    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local ts
+    ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local sid=$(echo "$input" | jq -r '.session_id // "unknown"')
     local short_session="${sid:0:8}"
-    mkdir -p "$(dirname "$log_file")"
+    mkdir -p "$(dirname "$STATUSLINE_LOG")"
     # Compact the input JSON and embed it
     local compact_input=$(echo "$input" | jq -c '.')
-    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"claude_input\",\"value\":$compact_input,\"ok\":true}" >> "$log_file"
+    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"claude_input\",\"value\":$compact_input,\"ok\":true}" >> "$STATUSLINE_LOG"
 }
 
 log_claude_input
@@ -84,9 +94,10 @@ COST=$(echo "$input" | jq -r '.cost.total_cost_usd // 0')
 COST_FMT=$(printf "%.2f" "$COST")
 
 # Look up instance name from registry
-# Check multiple locations for the registry
+# Check multiple locations for the registry (project-local first, then global)
+# Use CURRENT_DIR from input, not shell CWD, to ensure consistency with hooks
 REGISTRY=""
-for loc in ".claude/instances/registry.json" "$HOME/.claude/instances/registry.json"; do
+for loc in "${CURRENT_DIR}/.claude/instances/registry.json" "$HOME/.claude/instances/registry.json"; do
     if [ -f "$loc" ]; then
         REGISTRY="$loc"
         break
@@ -114,21 +125,20 @@ if [ -n "$REGISTRY" ] && command -v jq &> /dev/null; then
         fi
         echo "$PROCESS_NUM" > "$COUNTER_FILE"
 
-        # Register in registry
+        # Register in registry (atomic with flock)
+        # CRITICAL: Preserve existing name and created timestamp - only add missing fields
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-        jq --arg sid "$SESSION_ID" \
-           --arg ts "$TIMESTAMP" \
-           --arg cwd "$CURRENT_DIR" \
-           --argjson pnum "$PROCESS_NUM" \
-           '.[$sid] = ((.[$sid] // {}) + {
-             "name": "Claude",
-             "cwd": $cwd,
-             "created": $ts,
-             "last_seen": $ts,
-             "status": "active",
-             "process_number": $pnum
-           })' \
-           "$REGISTRY" > "$REGISTRY.tmp" 2>/dev/null && mv "$REGISTRY.tmp" "$REGISTRY" 2>/dev/null
+        update_registry "$REGISTRY" \
+            --arg sid "$SESSION_ID" \
+            --arg ts "$TIMESTAMP" \
+            --arg cwd "$CURRENT_DIR" \
+            --argjson pnum "$PROCESS_NUM" \
+            '.[$sid] = ((.[$sid] // {}) + {
+              "cwd": $cwd,
+              "last_seen": $ts,
+              "status": "active",
+              "process_number": $pnum
+            }) | .[$sid].name = (.[$sid].name // "Claude") | .[$sid].created = (.[$sid].created // $ts)'
 
         # Log the auto-registration
         log_statusline "auto_register" "$SESSION_ID" "process=$PROCESS_NUM"
@@ -173,25 +183,14 @@ else
     MODEL_SHORT="Claude"
 fi
 
-# Log statusline event to JSONL
-log_statusline() {
-    local type="$1"
-    local session="$2"
-    local value="$3"
-    local log_file="$HOME/.claude/instances/statusline.jsonl"
-    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local short_session="${session:0:8}"
-    mkdir -p "$(dirname "$log_file")"
-    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"$type\",\"value\":\"$value\",\"ok\":true}" >> "$log_file"
-}
-
-# Backfill model to registry if missing
+# Backfill model to registry if missing (atomic with flock)
 if [ -n "$REGISTRY" ] && [ -n "$SESSION_ID" ] && [ "$SESSION_ID" != "unknown" ]; then
     STORED_MODEL=$(jq -r --arg sid "$SESSION_ID" '.[$sid].model // empty' "$REGISTRY" 2>/dev/null)
     if [ -z "$STORED_MODEL" ] && [ -n "$MODEL" ] && [ "$MODEL" != "Claude" ]; then
-        jq --arg sid "$SESSION_ID" --arg model "$MODEL" \
-           '.[$sid].model = $model' "$REGISTRY" > "$REGISTRY.tmp" 2>/dev/null && \
-           mv "$REGISTRY.tmp" "$REGISTRY" 2>/dev/null
+        update_registry "$REGISTRY" \
+            --arg sid "$SESSION_ID" \
+            --arg model "$MODEL" \
+            '.[$sid].model = $model'
         # Log model detection
         log_statusline "model" "$SESSION_ID" "$MODEL"
     fi
@@ -383,10 +382,10 @@ fi
 # Log complete statusline state for historical analysis
 # This captures ALL data displayed in the statusline
 log_statusline_state() {
-    local log_file="$HOME/.claude/instances/statusline.jsonl"
-    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local ts
+    ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     local short_session="${SESSION_ID:0:8}"
-    mkdir -p "$(dirname "$log_file")"
+    mkdir -p "$(dirname "$STATUSLINE_LOG")"
 
     # Escape values for JSON
     local name_escaped=$(echo "$NAME" | sed 's/"/\\"/g')
@@ -396,7 +395,7 @@ log_statusline_state() {
     local summary_escaped=$(echo "$SUMMARY" | sed 's/"/\\"/g' | tr '\n' ' ')
     local desc_escaped=$(echo "$DESCRIPTION" | sed 's/"/\\"/g' | tr '\n' ' ')
 
-    cat >> "$log_file" << JSONEOF
+    cat >> "$STATUSLINE_LOG" << JSONEOF
 {"ts":"$ts","session":"$short_session","type":"statusline_render","value":{"name":"$name_escaped","short_id":"$SHORT_ID","model":"$model_escaped","cwd":"$cwd_escaped","context_pct":$PCT,"cost":"$COST_FMT","process_num":"${PROCESS_NUM:-?}","agent_session":"$AGENT_SESSION","prompt_count":"$MSG_COUNT","duration":"$DURATION","branch":"$branch_escaped","git_stats":"$GIT_STATS","git_dirty":"${GIT_DIRTY:-no}","description":"$desc_escaped","summary":"$summary_escaped"},"ok":true}
 JSONEOF
 }

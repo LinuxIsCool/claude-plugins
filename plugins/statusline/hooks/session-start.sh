@@ -10,18 +10,9 @@
 # Registers instance in .claude/instances/registry.json
 # Exports SESSION_ID via CLAUDE_ENV_FILE for Claude to use
 
-# Log statusline event to JSONL
-log_statusline() {
-    local type="$1"
-    local session="$2"
-    local value="$3"
-    local ok="${4:-true}"
-    local log_file="$HOME/.claude/instances/statusline.jsonl"
-    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    local short_session="${session:0:8}"
-    mkdir -p "$(dirname "$log_file")"
-    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"$type\",\"value\":\"$value\",\"ok\":$ok}" >> "$log_file"
-}
+# Source shared utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/../lib/statusline-utils.sh"
 
 # Read JSON input
 INPUT=$(cat)
@@ -62,12 +53,12 @@ fi
 EXISTING=$(jq -r --arg sid "$SESSION_ID" '.[$sid].name // empty' "$REGISTRY" 2>/dev/null)
 
 if [ -n "$EXISTING" ]; then
-    # Update last_seen only
+    # Update last_seen only (atomic with flock)
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-    jq --arg sid "$SESSION_ID" \
-       --arg ts "$TIMESTAMP" \
-       '.[$sid].last_seen = $ts | .[$sid].status = "active"' \
-       "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
+    update_registry "$REGISTRY" \
+        --arg sid "$SESSION_ID" \
+        --arg ts "$TIMESTAMP" \
+        '.[$sid].last_seen = $ts | .[$sid].status = "active"'
 
     # Log session resume
     log_statusline "session_resume" "$SESSION_ID" "source=$SOURCE"
@@ -88,23 +79,24 @@ else
     fi
     echo "$PROCESS_NUM" > "$COUNTER_FILE"
 
-    jq --arg sid "$SESSION_ID" \
-       --arg name "$DEFAULT_NAME" \
-       --arg cwd "$CWD" \
-       --arg ts "$TIMESTAMP" \
-       --arg dir "$DIR_NAME" \
-       --argjson pnum "$PROCESS_NUM" \
-       '.[$sid] = {
-         "name": $name,
-         "task": ("Working in " + $dir),
-         "model": "",
-         "cwd": $cwd,
-         "created": $ts,
-         "last_seen": $ts,
-         "status": "active",
-         "process_number": $pnum
-       }' \
-       "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
+    # Register new session (atomic with flock)
+    update_registry "$REGISTRY" \
+        --arg sid "$SESSION_ID" \
+        --arg name "$DEFAULT_NAME" \
+        --arg cwd "$CWD" \
+        --arg ts "$TIMESTAMP" \
+        --arg dir "$DIR_NAME" \
+        --argjson pnum "$PROCESS_NUM" \
+        '.[$sid] = {
+          "name": $name,
+          "task": ("Working in " + $dir),
+          "model": "",
+          "cwd": $cwd,
+          "created": $ts,
+          "last_seen": $ts,
+          "status": "active",
+          "process_number": $pnum
+        }'
 
     # Log session start
     log_statusline "session_start" "$SESSION_ID" "cwd=$CWD|process=$PROCESS_NUM|source=$SOURCE"
