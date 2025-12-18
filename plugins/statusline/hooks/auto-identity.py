@@ -136,6 +136,15 @@ def save_name(instances_dir: Path, session_id: str, name: str) -> bool:
         return False
 
 
+def check_needs_description(instances_dir: Path, session_id: str) -> bool:
+    """Check if session needs a description (doesn't have one yet)."""
+    desc_file = instances_dir / "descriptions" / f"{session_id}.txt"
+    if desc_file.exists():
+        log(f"Description already exists, skipping generation")
+        return False
+    return True
+
+
 def save_description(instances_dir: Path, session_id: str, description: str):
     """Save description to file."""
     desc_dir = instances_dir / "descriptions"
@@ -154,6 +163,7 @@ def save_summary(instances_dir: Path, session_id: str, summary: str, cwd: str):
 def build_combined_prompt(
     script_dir: Path,
     needs_name: bool,
+    needs_description: bool,
     user_prompt: str,
     agent_name: str,
     context: str,
@@ -166,6 +176,7 @@ def build_combined_prompt(
 
     Loads prompts from prompts/{name,description,summary}/*.md based on config.yaml.
     Template variables are filled in before composing into the final prompt.
+    Only includes name/description sections if they need to be generated.
     """
     sections = []
 
@@ -187,18 +198,19 @@ CRITICAL RULES:
         name_prompt = name_prompt.format(user_prompt=user_prompt[:500] if user_prompt else "(none)")
         sections.append(f"\n=== NAME ===\n{name_prompt}")
 
-    # Load and add DESCRIPTION section
-    desc_default = "Generate a 2-word description in format [Plugin] [Role]."
-    desc_prompt = load_prompt_template(script_dir, "description-prompt.txt", desc_default)
-    # Fill in template variables
-    desc_prompt = desc_prompt.format(
-        agent_name=agent_name,
-        first_prompts=first_prompts,
-        recent_prompts=recent_prompts,
-        prev_descriptions=prev_descriptions,
-        prev_summaries=prev_summaries,
-    )
-    sections.append(f"\n=== DESCRIPTION ===\n{desc_prompt}")
+    # Load and add DESCRIPTION section if needed
+    if needs_description:
+        desc_default = "Generate a 2-word description in format [Plugin] [Role]."
+        desc_prompt = load_prompt_template(script_dir, "description-prompt.txt", desc_default)
+        # Fill in template variables
+        desc_prompt = desc_prompt.format(
+            agent_name=agent_name,
+            first_prompts=first_prompts,
+            recent_prompts=recent_prompts,
+            prev_descriptions=prev_descriptions,
+            prev_summaries=prev_summaries,
+        )
+        sections.append(f"\n=== DESCRIPTION ===\n{desc_prompt}")
 
     # Load and add SUMMARY section
     summary_default = "Write a 5-10 word first-person summary of current work."
@@ -213,16 +225,19 @@ CRITICAL RULES:
 
     # Output format - JSON on single line for headless compatibility
     # CRITICAL: headless backend only captures first line, so NO code blocks
+    # Build JSON template based on what we need
+    json_fields = []
     if needs_name:
-        sections.append("""
+        json_fields.append('"name":"NAME"')
+    if needs_description:
+        json_fields.append('"description":"DESCRIPTION"')
+    json_fields.append('"summary":"SUMMARY"')  # Always need summary
+    json_template = "{" + ",".join(json_fields) + "}"
+
+    sections.append(f"""
 === OUTPUT ===
 CRITICAL: Output ONLY this JSON on ONE line, NO code blocks, NO explanation:
-{"name":"NAME","description":"DESCRIPTION","summary":"SUMMARY"}""")
-    else:
-        sections.append("""
-=== OUTPUT ===
-CRITICAL: Output ONLY this JSON on ONE line, NO code blocks, NO explanation:
-{"description":"DESCRIPTION","summary":"SUMMARY"}""")
+{json_template}""")
 
     return "\n".join(sections)
 
@@ -306,12 +321,13 @@ def main():
 
     # Determine what we need to generate
     needs_name = check_needs_name(instances_dir, session_id)
+    needs_description = check_needs_description(instances_dir, session_id)
 
     # If we need a name, try to claim naming rights
     if needs_name:
         needs_name = claim_naming_rights(instances_dir, session_id)
 
-    log(f"Needs name: {needs_name}")
+    log(f"Needs name: {needs_name}, needs description: {needs_description}")
 
     # Gather context
     agent_name = get_agent_name(instances_dir, session_id)
@@ -329,6 +345,7 @@ def main():
     prompt = build_combined_prompt(
         script_dir=script_dir,
         needs_name=needs_name,
+        needs_description=needs_description,
         user_prompt=user_prompt,
         agent_name=agent_name,
         context=context,
@@ -371,12 +388,14 @@ def main():
             success = False
             log_statusline_event("name", session_id, "", False, DEBUG_PREFIX)
 
-    if result["description"]:
-        save_description(instances_dir, session_id, result["description"])
-        log_statusline_event("description", session_id, result["description"], True, DEBUG_PREFIX)
-    else:
-        log_statusline_event("description", session_id, "", False, DEBUG_PREFIX)
-        success = False
+    if needs_description:
+        if result["description"]:
+            save_description(instances_dir, session_id, result["description"])
+            log_statusline_event("description", session_id, result["description"], True, DEBUG_PREFIX)
+        else:
+            log_statusline_event("description", session_id, "", False, DEBUG_PREFIX)
+            success = False
+    # else: description already exists, nothing to do
 
     if result["summary"]:
         save_summary(instances_dir, session_id, result["summary"], cwd)
