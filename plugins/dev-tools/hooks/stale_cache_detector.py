@@ -86,7 +86,11 @@ def main():
 
     if stale:
         plugins_list = ', '.join(stale)
-        print(f"Stale plugin cache detected: {plugins_list}. Consider restarting for latest changes.")
+        if len(stale) == 1:
+            cmd_hint = f"Run: /dev-tools:reload {stale[0]}"
+        else:
+            cmd_hint = "Run: /dev-tools:reload all"
+        print(f"Stale plugin cache detected: {plugins_list}. {cmd_hint} then restart Claude Code.")
 
 
 if __name__ == "__main__":

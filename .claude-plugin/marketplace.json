@@ -20,6 +20,7 @@
     {"name": "agentnet", "source": "./plugins/agentnet/"},
     {"name": "temporal", "source": "./plugins/temporal/"},
     {"name": "statusline", "source": "./plugins/statusline/"},
-    {"name": "autocommit", "source": "./plugins/autocommit/"}
+    {"name": "autocommit", "source": "./plugins/autocommit/"},
+    {"name": "dev-tools", "source": "./plugins/dev-tools/"}
   ]
 }
