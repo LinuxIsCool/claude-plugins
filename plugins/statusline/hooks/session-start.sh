@@ -68,6 +68,9 @@ if [ -n "$EXISTING" ]; then
        --arg ts "$TIMESTAMP" \
        '.[$sid].last_seen = $ts | .[$sid].status = "active"' \
        "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
+
+    # Log session resume
+    log_statusline "session_resume" "$SESSION_ID" "source=$SOURCE"
 else
     # New registration with default name
     TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -105,9 +108,6 @@ else
 
     # Log session start
     log_statusline "session_start" "$SESSION_ID" "cwd=$CWD|process=$PROCESS_NUM|source=$SOURCE"
-else
-    # Log session resume
-    log_statusline "session_resume" "$SESSION_ID" "source=$SOURCE"
 fi
 
 # Determine current name

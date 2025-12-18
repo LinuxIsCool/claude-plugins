@@ -452,6 +452,68 @@ done
 
 ---
 
+## Development Workflow
+
+**Reference**: [[2025-12-18/12-36-plugin-update-mechanics-deep-dive]]
+
+### The Cache Problem
+
+Claude Code uses **copy-on-install** architecture:
+- Plugin files are copied to `~/.claude/plugins/cache/{marketplace}/{plugin}/{version}/`
+- Source file edits are invisible to running sessions
+- No hot-reload mechanism exists for plugins
+- Restart is required after changes (architectural constraint)
+
+### Development Cycle
+
+```
+1. Edit source files
+   └── plugins/statusline/hooks/*.py, *.sh
+
+2. Clear cache
+   └── /dev-tools:reload statusline
+   └── OR: rm -rf ~/.claude/plugins/cache/linuxiscool-claude-plugins/statusline/
+
+3. Restart Claude Code
+   └── Exit current session, start new one
+
+4. Verify changes took effect
+   └── Check logs, test functionality
+```
+
+### Available Tools (dev-tools plugin)
+
+| Tool | Purpose |
+|------|---------|
+| `hooks/cache_invalidator.py` | Auto-clears cache when plugin files change |
+| `hooks/stale_cache_detector.py` | Warns at session start if cache is stale |
+| `/dev-tools:reload <plugin>` | Manual cache clear |
+| `/dev-tools:refresh <plugin>` | Clear + headless rebuild (updates all instances) |
+| `tools/refresh-plugins.sh` | Shell script for external/CI use |
+
+### Testing Changes
+
+Before declaring a change "done":
+
+1. **Clear cache**: `/dev-tools:reload statusline`
+2. **Start fresh session**: New Claude Code instance
+3. **Verify in logs**: `tail ~/.claude/instances/statusline.jsonl`
+4. **Test edge cases**: New session, continued session, compaction
+
+### Cache Location Reference
+
+```
+~/.claude/plugins/cache/linuxiscool-claude-plugins/statusline/
+├── 0.4.0/           # Version directory (copied files live here)
+│   ├── hooks/
+│   ├── tools/
+│   ├── lib/
+│   └── ...
+└── current -> 0.4.0  # Symlink to active version
+```
+
+---
+
 ## Implementation Priority
 
 ### Immediate (This Week)
