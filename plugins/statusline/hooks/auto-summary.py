@@ -61,6 +61,7 @@ from claude_backend import (
     update_registry_task,
     load_prompt_template,
     parse_hook_input,
+    log_statusline_event,
 )
 
 DEBUG_PREFIX = "summary"
@@ -151,8 +152,10 @@ def main():
             log("Registry task updated")
         else:
             log("Failed to update registry task")
+        log_statusline_event("summary", session_id, summary, True, DEBUG_PREFIX)
     else:
         log("No summary generated")
+        log_statusline_event("summary", session_id, "", False, DEBUG_PREFIX)
 
 
 if __name__ == "__main__":

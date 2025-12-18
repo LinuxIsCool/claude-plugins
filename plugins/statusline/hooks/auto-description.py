@@ -49,6 +49,7 @@ from claude_backend import (
     write_with_history,
     load_prompt_template,
     parse_hook_input,
+    log_statusline_event,
 )
 
 DEBUG_PREFIX = "description"
@@ -168,8 +169,10 @@ def main():
             log("Description saved")
         else:
             log("Failed to save description")
+        log_statusline_event("description", session_id, description, True, DEBUG_PREFIX)
     else:
         log("No description generated")
+        log_statusline_event("description", session_id, "", False, DEBUG_PREFIX)
 
 
 if __name__ == "__main__":

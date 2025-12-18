@@ -40,6 +40,7 @@ from claude_backend import (
     generate_with_backend,
     load_prompt_template,
     parse_hook_input,
+    log_statusline_event,
 )
 
 DEBUG_PREFIX = "name"
@@ -195,9 +196,11 @@ def main():
         # Atomically claim naming rights and update - only first caller wins
         if try_claim_and_update_name(instances_dir, session_id, name):
             log("Name saved to registry")
+            log_statusline_event("name", session_id, name, True, DEBUG_PREFIX)
         # If claim failed, another hook instance already named this session
     else:
         log("No name generated")
+        log_statusline_event("name", session_id, "", False, DEBUG_PREFIX)
 
 
 if __name__ == "__main__":
