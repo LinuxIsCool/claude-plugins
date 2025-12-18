@@ -10,6 +10,19 @@
 # Increments counter in .claude/instances/counts/{session_id}.txt
 # Ensures registry entry exists with all required fields
 
+# Log statusline event to JSONL
+log_statusline() {
+    local type="$1"
+    local session="$2"
+    local value="$3"
+    local ok="${4:-true}"
+    local log_file="$HOME/.claude/instances/statusline.jsonl"
+    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local short_session="${session:0:8}"
+    mkdir -p "$(dirname "$log_file")"
+    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"$type\",\"value\":\"$value\",\"ok\":$ok}" >> "$log_file"
+}
+
 # Read JSON input
 INPUT=$(cat)
 
@@ -177,5 +190,8 @@ else
 fi
 
 echo "$COUNT" > "$COUNT_FILE"
+
+# Log prompt count
+log_statusline "prompt_count" "$SESSION_ID" "$COUNT"
 
 exit 0

@@ -10,6 +10,19 @@
 # Registers instance in .claude/instances/registry.json
 # Exports SESSION_ID via CLAUDE_ENV_FILE for Claude to use
 
+# Log statusline event to JSONL
+log_statusline() {
+    local type="$1"
+    local session="$2"
+    local value="$3"
+    local ok="${4:-true}"
+    local log_file="$HOME/.claude/instances/statusline.jsonl"
+    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local short_session="${session:0:8}"
+    mkdir -p "$(dirname "$log_file")"
+    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"$type\",\"value\":\"$value\",\"ok\":$ok}" >> "$log_file"
+}
+
 # Read JSON input
 INPUT=$(cat)
 
@@ -89,6 +102,12 @@ else
          "process_number": $pnum
        }' \
        "$REGISTRY" > "$REGISTRY.tmp" && mv "$REGISTRY.tmp" "$REGISTRY"
+
+    # Log session start
+    log_statusline "session_start" "$SESSION_ID" "cwd=$CWD|process=$PROCESS_NUM|source=$SOURCE"
+else
+    # Log session resume
+    log_statusline "session_resume" "$SESSION_ID" "source=$SOURCE"
 fi
 
 # Determine current name

@@ -129,6 +129,18 @@ else
     MODEL_SHORT="Claude"
 fi
 
+# Log statusline event to JSONL
+log_statusline() {
+    local type="$1"
+    local session="$2"
+    local value="$3"
+    local log_file="$HOME/.claude/instances/statusline.jsonl"
+    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local short_session="${session:0:8}"
+    mkdir -p "$(dirname "$log_file")"
+    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"$type\",\"value\":\"$value\",\"ok\":true}" >> "$log_file"
+}
+
 # Backfill model to registry if missing
 if [ -n "$REGISTRY" ] && [ -n "$SESSION_ID" ] && [ "$SESSION_ID" != "unknown" ]; then
     STORED_MODEL=$(jq -r --arg sid "$SESSION_ID" '.[$sid].model // empty' "$REGISTRY" 2>/dev/null)
@@ -136,6 +148,8 @@ if [ -n "$REGISTRY" ] && [ -n "$SESSION_ID" ] && [ "$SESSION_ID" != "unknown" ];
         jq --arg sid "$SESSION_ID" --arg model "$MODEL" \
            '.[$sid].model = $model' "$REGISTRY" > "$REGISTRY.tmp" 2>/dev/null && \
            mv "$REGISTRY.tmp" "$REGISTRY" 2>/dev/null
+        # Log model detection
+        log_statusline "model" "$SESSION_ID" "$MODEL"
     fi
 fi
 
