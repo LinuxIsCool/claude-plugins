@@ -99,19 +99,49 @@ PROCESS_NUM=""
 if [ -n "$REGISTRY" ] && command -v jq &> /dev/null; then
     REGISTERED_NAME=$(jq -r --arg sid "$SESSION_ID" '.[$sid].name // empty' "$REGISTRY" 2>/dev/null)
     PROCESS_NUM=$(jq -r --arg sid "$SESSION_ID" '.[$sid].process_number // empty' "$REGISTRY" 2>/dev/null)
+
+    # Auto-register session if process_number is missing (race condition fix)
+    if [ -z "$PROCESS_NUM" ] && [ "$SESSION_ID" != "unknown" ]; then
+        INSTANCES_DIR=$(dirname "$REGISTRY")
+        COUNTER_FILE="$INSTANCES_DIR/process_counter.txt"
+
+        # Atomically get next process number
+        if [ -f "$COUNTER_FILE" ]; then
+            PROCESS_NUM=$(cat "$COUNTER_FILE" 2>/dev/null)
+            PROCESS_NUM=$((PROCESS_NUM + 1))
+        else
+            PROCESS_NUM=1
+        fi
+        echo "$PROCESS_NUM" > "$COUNTER_FILE"
+
+        # Register in registry
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        jq --arg sid "$SESSION_ID" \
+           --arg ts "$TIMESTAMP" \
+           --arg cwd "$CURRENT_DIR" \
+           --argjson pnum "$PROCESS_NUM" \
+           '.[$sid] = ((.[$sid] // {}) + {
+             "name": "Claude",
+             "cwd": $cwd,
+             "created": $ts,
+             "last_seen": $ts,
+             "status": "active",
+             "process_number": $pnum
+           })' \
+           "$REGISTRY" > "$REGISTRY.tmp" 2>/dev/null && mv "$REGISTRY.tmp" "$REGISTRY" 2>/dev/null
+
+        # Log the auto-registration
+        log_statusline "auto_register" "$SESSION_ID" "process=$PROCESS_NUM"
+    fi
 fi
 
 # Determine display name
-if [ -n "$REGISTERED_NAME" ] && [[ ! "$REGISTERED_NAME" =~ ^Claude- ]]; then
+if [ -n "$REGISTERED_NAME" ] && [[ ! "$REGISTERED_NAME" =~ ^Claude- ]] && [ "$REGISTERED_NAME" != "Claude" ]; then
     # Custom name set - use it
     NAME="$REGISTERED_NAME"
 else
-    # No custom name - show just the model (Opus, Sonnet, Haiku)
-    # The short_id is already shown after the colon
-    NAME=$(echo "$MODEL" | sed -E 's/.*(Opus|Sonnet|Haiku).*/\1/')
-    if [ -z "$NAME" ] || [ "$NAME" = "$MODEL" ]; then
-        NAME="Claude"
-    fi
+    # No custom name - default to "Claude"
+    NAME="Claude"
 fi
 
 # ANSI colors (optional, comment out for plain text)
@@ -322,23 +352,21 @@ if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ]; then
 
     # Check if both are placeholders (fresh instance)
     if [ "$DESCRIPTION" = "Awaiting instructions." ] && [ "$SUMMARY" = "Awaiting instructions." ]; then
-        LINE2="Awaiting instructions."
+        echo -e "${WHITE}Awaiting instructions.${RST}"
     else
-        # Build content line, filtering individual placeholders
+        # Build content line with description bold, summary not bold
+        LINE2=""
         if [ -n "$DESCRIPTION" ] && [ "$DESCRIPTION" != "Awaiting instructions." ]; then
-            LINE2="${DESCRIPTION}"
+            LINE2="${BOLD}${WHITE}${DESCRIPTION}${RST}"
         fi
         if [ -n "$SUMMARY" ] && [ "$SUMMARY" != "Awaiting instructions." ]; then
             if [ -n "$LINE2" ]; then
-                LINE2="${LINE2}: ${SUMMARY}"
+                LINE2="${LINE2}${WHITE}: ${SUMMARY}${RST}"
             else
-                LINE2="${SUMMARY}"
+                LINE2="${WHITE}${SUMMARY}${RST}"
             fi
         fi
-    fi
-
-    if [ -n "$LINE2" ]; then
-        echo -e "${BOLD}${WHITE}${LINE2}${RST}"
+        [ -n "$LINE2" ] && echo -e "$LINE2"
     fi
 fi
 
