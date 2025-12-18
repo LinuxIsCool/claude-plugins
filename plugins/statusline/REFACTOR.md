@@ -81,8 +81,21 @@ Tasks:
 - [x] Log on UserPromptSubmit and Stop events
 - [x] Include: timestamp, session_id, type, value, success/failure
 - [x] Single file: `~/.claude/instances/statusline.jsonl`
+- [x] Log raw Claude Code input (`claude_input` event type)
+- [x] Log complete statusline render with all 15 display values (`statusline_render` event type)
 
-**Implementation**: Added `log_statusline_event()` to claude_backend.py, integrated into all 3 hooks.
+**Implementation**:
+- Added `log_statusline_event()` to claude_backend.py, integrated into all 3 hooks
+- Added `log_claude_input()` to statusline.sh - captures raw JSON from Claude Code
+- Added `log_statusline_state()` to statusline.sh - captures all derived display values
+
+**Event types logged**:
+- `session_start` / `session_resume` - from session-start.sh
+- `prompt_count` - from user-prompt-submit.sh
+- `model` - from statusline.sh (backfill)
+- `name` / `description` / `summary` - from Python hooks
+- `claude_input` - raw Claude Code JSON
+- `statusline_render` - all 15 display values
 
 **Note**: Also fixed critical issue where `lib/` directory was not tracked by git due to .gitignore rule. Added exception `!plugins/*/lib/`.
 

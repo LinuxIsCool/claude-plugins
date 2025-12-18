@@ -42,6 +42,20 @@ fi
 # Read JSON input
 input=$(cat)
 
+# Log raw Claude input for historical analysis
+log_claude_input() {
+    local log_file="$HOME/.claude/instances/statusline.jsonl"
+    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local sid=$(echo "$input" | jq -r '.session_id // "unknown"')
+    local short_session="${sid:0:8}"
+    mkdir -p "$(dirname "$log_file")"
+    # Compact the input JSON and embed it
+    local compact_input=$(echo "$input" | jq -c '.')
+    echo "{\"ts\":\"$ts\",\"session\":\"$short_session\",\"type\":\"claude_input\",\"value\":$compact_input,\"ok\":true}" >> "$log_file"
+}
+
+log_claude_input
+
 # Parse fields with jq
 SESSION_ID=$(echo "$input" | jq -r '.session_id // "unknown"')
 SHORT_ID=$(echo "$SESSION_ID" | cut -c1-5)
@@ -327,3 +341,26 @@ if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ]; then
         echo -e "${BOLD}${WHITE}${LINE2}${RST}"
     fi
 fi
+
+# Log complete statusline state for historical analysis
+# This captures ALL data displayed in the statusline
+log_statusline_state() {
+    local log_file="$HOME/.claude/instances/statusline.jsonl"
+    local ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    local short_session="${SESSION_ID:0:8}"
+    mkdir -p "$(dirname "$log_file")"
+
+    # Escape values for JSON
+    local name_escaped=$(echo "$NAME" | sed 's/"/\\"/g')
+    local model_escaped=$(echo "$MODEL_SHORT" | sed 's/"/\\"/g')
+    local cwd_escaped=$(echo "$CWD_DISPLAY" | sed 's/"/\\"/g')
+    local branch_escaped=$(echo "$BRANCH" | sed 's/"/\\"/g')
+    local summary_escaped=$(echo "$SUMMARY" | sed 's/"/\\"/g' | tr '\n' ' ')
+    local desc_escaped=$(echo "$DESCRIPTION" | sed 's/"/\\"/g' | tr '\n' ' ')
+
+    cat >> "$log_file" << JSONEOF
+{"ts":"$ts","session":"$short_session","type":"statusline_render","value":{"name":"$name_escaped","short_id":"$SHORT_ID","model":"$model_escaped","cwd":"$cwd_escaped","context_pct":$PCT,"cost":"$COST_FMT","process_num":"${PROCESS_NUM:-?}","agent_session":"$AGENT_SESSION","prompt_count":"$MSG_COUNT","duration":"$DURATION","branch":"$branch_escaped","git_stats":"$GIT_STATS","git_dirty":"${GIT_DIRTY:-no}","description":"$desc_escaped","summary":"$summary_escaped"},"ok":true}
+JSONEOF
+}
+
+log_statusline_state
