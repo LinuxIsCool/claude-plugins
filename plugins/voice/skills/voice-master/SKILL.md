@@ -1,6 +1,6 @@
 ---
 name: voice-master
-description: Master skill for voice I/O (5 sub-skills). Covers: TTS backends (ElevenLabs, HuggingFace, pyttsx3), STT backends (Whisper, Vosk, Deepgram), voice daemon, tmux voice control, agent voice mapping. Invoke for voice synthesis, speech recognition, voice commands, or agent-specific voices.
+description: Master skill for voice I/O (6 sub-skills). Covers: ElevenLabs API, TTS backends (HuggingFace, pyttsx3), STT backends (Whisper, Vosk, Deepgram), voice daemon, tmux voice control, agent voice mapping. Invoke for voice synthesis, speech recognition, voice commands, or agent-specific voices.
 allowed-tools: Read, Bash, Glob, Grep, Task
 ---
 
@@ -12,6 +12,7 @@ Voice input/output infrastructure for the Claude Code ecosystem.
 
 | Sub-Skill | Use When | File |
 |-----------|----------|------|
+| **elevenlabs** | ElevenLabs API, voice settings, models, latency optimization | `subskills/elevenlabs.md` |
 | **backends** | Configuring TTS/STT backends, comparing options | `subskills/backends.md` |
 | **daemon** | Managing the voice daemon, systemd setup | `subskills/daemon.md` |
 | **tmux** | Voice-controlled tmux navigation | `subskills/tmux.md` |

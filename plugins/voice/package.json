@@ -7,14 +7,21 @@
   "exports": {
     ".": "./src/index.ts",
     "./tts": "./src/adapters/tts/index.ts",
+    "./stt": "./src/adapters/stt/index.ts",
     "./identity": "./src/identity/resolver.ts",
+    "./quality": "./src/quality/index.ts",
     "./ports/*": "./src/ports/*.ts"
   },
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "lint": "biome lint src/",
-    "hook": "bun run hooks/voice-hook.ts"
+    "hook": "bun run hooks/voice-hook.ts",
+    "quality:benchmark": "bun run src/quality/cli.ts benchmark",
+    "quality:compare": "bun run src/quality/cli.ts compare",
+    "quality:regression": "bun run src/quality/cli.ts regression",
+    "quality:baseline": "bun run src/quality/cli.ts baseline",
+    "quality:list": "bun run src/quality/cli.ts list"
   },
   "dependencies": {},
   "devDependencies": {

@@ -8,6 +8,8 @@
 import type { TTSPort, TTSBackendFactory, TTSOptions, TTSResult } from "../../ports/tts.js";
 import { ElevenLabsAdapter, createElevenLabsAdapter } from "./elevenlabs.js";
 import { Pyttsx3Adapter, createPyttsx3Adapter } from "./pyttsx3.js";
+import { HuggingFaceXTTSAdapter, createHuggingFaceXTTSAdapter, type HuggingFaceXTTSConfig } from "./huggingface-xtts.js";
+import { PiperAdapter, createPiperAdapter, type PiperConfig } from "./piper.js";
 
 /**
  * Backend configuration
@@ -23,10 +25,11 @@ export interface BackendConfig {
     rate?: number;
     volume?: number;
   };
+  "huggingface-xtts"?: HuggingFaceXTTSConfig;
+  piper?: PiperConfig;
   // Future backends
   huggingface?: Record<string, unknown>;
   openai?: Record<string, unknown>;
-  piper?: Record<string, unknown>;
   coqui?: Record<string, unknown>;
 }
 
@@ -34,7 +37,8 @@ export interface BackendConfig {
  * Backend priority (higher number = higher priority)
  */
 const BACKEND_PRIORITY: Record<string, number> = {
-  huggingface: 100,  // Local GPU, best quality
+  "huggingface-xtts": 100,  // Local GPU, XTTS v2, best free quality
+  huggingface: 95,   // Local GPU, generic (future)
   elevenlabs: 90,    // Cloud, excellent quality
   openai: 80,        // Cloud, good quality
   piper: 70,         // Local, fast
@@ -61,16 +65,21 @@ export class TTSFactory implements TTSBackendFactory {
     const backendConfig = { ...this.config[name as keyof BackendConfig], ...config };
 
     switch (name) {
+      case "huggingface-xtts":
+        adapter = createHuggingFaceXTTSAdapter(backendConfig as HuggingFaceXTTSConfig);
+        break;
       case "elevenlabs":
         adapter = createElevenLabsAdapter(backendConfig);
         break;
       case "pyttsx3":
         adapter = createPyttsx3Adapter(backendConfig);
         break;
+      case "piper":
+        adapter = createPiperAdapter(backendConfig as PiperConfig);
+        break;
       // Future backends
       case "huggingface":
       case "openai":
-      case "piper":
       case "coqui":
         throw new Error(`Backend "${name}" not yet implemented`);
       default:
@@ -189,3 +198,5 @@ export async function speakAndPlay(
 // Re-export adapters
 export { ElevenLabsAdapter, createElevenLabsAdapter } from "./elevenlabs.js";
 export { Pyttsx3Adapter, createPyttsx3Adapter } from "./pyttsx3.js";
+export { HuggingFaceXTTSAdapter, createHuggingFaceXTTSAdapter, type HuggingFaceXTTSConfig } from "./huggingface-xtts.js";
+export { PiperAdapter, createPiperAdapter, type PiperConfig } from "./piper.js";

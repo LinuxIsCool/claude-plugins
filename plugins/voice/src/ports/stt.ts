@@ -193,4 +193,9 @@ export interface STTBackendFactory {
    * Get batch backend (for high accuracy)
    */
   getBatch(): Promise<STTPort | null>;
+
+  /**
+   * Get preferred backend with priority-based fallback
+   */
+  getWithFallback(preferred?: string): Promise<STTPort>;
 }

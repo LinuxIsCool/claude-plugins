@@ -50,6 +50,19 @@ export {
   createPyttsx3Adapter,
 } from "./adapters/tts/index.js";
 
+// STT adapters
+export {
+  STTFactory,
+  createSTTFactory,
+  getDefaultSTTFactory,
+  transcribe,
+  transcribeStream,
+  WhisperAdapter,
+  createWhisperAdapter,
+} from "./adapters/stt/index.js";
+
+export type { WhisperConfig } from "./adapters/stt/index.js";
+
 // Voice identity
 export {
   resolveVoiceForSession,
