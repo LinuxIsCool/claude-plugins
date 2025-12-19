@@ -50,18 +50,72 @@ import { resolveVoiceForSession, resolveVoiceForAgent, normalizeVoiceSettings } 
 import type { TTSOptions } from "../src/ports/tts.js";
 
 /**
- * Debug logging
+ * Debug logging - always logs to file, only stderr if DEBUG
  */
 const DEBUG = process.env.VOICE_DEBUG === "1";
 const LOG_PATH = process.env.VOICE_LOG_PATH || "/tmp/voice-hook.log";
+const LOCK_DIR = "/tmp/claude-voice-locks";
 
-function log(msg: string): void {
-  if (DEBUG) {
-    const timestamp = new Date().toISOString();
-    const logLine = `[${timestamp}] ${msg}\n`;
-    Bun.write(LOG_PATH, logLine, { append: true }).catch(() => {});
-    console.error(`[voice] ${msg}`);
+// Get unique invocation ID for tracing
+const INVOCATION_ID = Math.random().toString(36).slice(2, 8);
+
+function log(msg: string, alwaysLog: boolean = false): void {
+  const timestamp = new Date().toISOString();
+  const logLine = `[${timestamp}] [${INVOCATION_ID}] ${msg}\n`;
+
+  // Always write to log file for diagnostics
+  Bun.write(LOG_PATH, logLine, { append: true }).catch(() => {});
+
+  // Only stderr if DEBUG mode
+  if (DEBUG || alwaysLog) {
+    console.error(`[voice:${INVOCATION_ID}] ${msg}`);
   }
+}
+
+/**
+ * Lock file mechanism to prevent overlapping voice output
+ * Returns true if lock acquired, false if another instance is speaking
+ */
+async function acquireLock(sessionId: string, event: string): Promise<boolean> {
+  const { mkdir, writeFile, readFile, unlink, stat } = await import("fs/promises");
+
+  try {
+    await mkdir(LOCK_DIR, { recursive: true });
+  } catch {}
+
+  const lockFile = `${LOCK_DIR}/${sessionId}-${event}.lock`;
+
+  try {
+    // Check if lock exists and is recent (within 30 seconds)
+    const lockStat = await stat(lockFile).catch(() => null);
+    if (lockStat) {
+      const ageMs = Date.now() - lockStat.mtimeMs;
+      if (ageMs < 30000) {
+        log(`Lock exists (age: ${ageMs}ms), skipping duplicate ${event}`);
+        return false;
+      }
+      // Stale lock, remove it
+      await unlink(lockFile).catch(() => {});
+    }
+
+    // Create lock
+    await writeFile(lockFile, `${INVOCATION_ID}\n${Date.now()}`);
+    log(`Acquired lock for ${event}`);
+    return true;
+  } catch (e) {
+    log(`Failed to acquire lock: ${e}`);
+    return true; // Proceed anyway on error
+  }
+}
+
+async function releaseLock(sessionId: string, event: string): Promise<void> {
+  const { unlink } = await import("fs/promises");
+  const lockFile = `${LOCK_DIR}/${sessionId}-${event}.lock`;
+
+  try {
+    await unlink(lockFile);
+    log(`Released lock for ${event}`);
+  } catch {}
 }
 
 /**
@@ -129,6 +183,9 @@ async function readStdin(): Promise<Record<string, unknown>> {
 
 /**
  * Extract last assistant response from transcript
+ *
+ * Collects ALL text blocks from the last assistant message and joins them,
+ * ensuring we get the complete response rather than just the first block.
  */
 function extractResponse(transcriptPath: string): string {
   if (!transcriptPath || !existsSync(transcriptPath)) {
@@ -147,14 +204,21 @@ function extractResponse(transcriptPath: string): string {
         const message = entry.message || {};
         const blocks = message.content || [];
 
+        // Collect ALL text blocks from this message
+        const textParts: string[] = [];
         for (const block of blocks) {
           if (block.type === "text") {
             const text = block.text || "";
             // Skip system reminders
             if (!text.startsWith("<system-reminder>")) {
-              return text;
+              textParts.push(text.trim());
             }
           }
+        }
+
+        // Return combined text if we found any
+        if (textParts.length > 0) {
+          return textParts.join("\n\n");
         }
       }
     }
@@ -209,6 +273,10 @@ function summarizeForVoice(text: string): string {
 
 /**
  * Get agent info from subagent transcript
+ *
+ * Extracts the LAST assistant message's full text, concatenating all
+ * text blocks from that single message. This avoids capturing intermediate
+ * thinking/planning output from earlier messages.
  */
 function getSubagentInfo(
   transcriptPath: string
@@ -222,13 +290,15 @@ function getSubagentInfo(
   try {
     const content = readFileSync(transcriptPath, "utf-8");
     const lines = content.trim().split("\n");
-    const responses: string[] = [];
 
-    for (const line of lines) {
-      if (!line.trim()) continue;
+    // Find the LAST assistant message by iterating in reverse
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
       const entry = JSON.parse(line);
 
-      // Get model from first entry
+      // Get model from any entry that has it
       if (!result.model) {
         const model = entry.message?.model || "";
         if (model.includes("opus")) result.model = "opus";
@@ -236,21 +306,29 @@ function getSubagentInfo(
         else if (model.includes("haiku")) result.model = "haiku";
       }
 
-      // Collect text responses
+      // Only process assistant messages
+      if (entry.type !== "assistant") continue;
+
+      // Collect ALL text blocks from this single message
       const blocks = entry.message?.content || [];
+      const textParts: string[] = [];
+
       for (const block of blocks) {
         if (block.type === "text") {
           const text = block.text?.trim();
           if (text && !text.startsWith("<system-reminder>")) {
-            responses.push(text);
+            textParts.push(text);
           }
         }
       }
-    }
 
-    // Use last response as summary
-    if (responses.length > 0) {
-      result.summary = summarizeForVoice(responses[responses.length - 1]);
+      // If we found text in this message, use it and stop
+      if (textParts.length > 0) {
+        // Join all text blocks from this message
+        const fullText = textParts.join("\n\n");
+        result.summary = summarizeForVoice(fullText);
+        break;
+      }
     }
   } catch (e) {
     log(`Failed to get subagent info: ${e}`);
@@ -261,6 +339,7 @@ function getSubagentInfo(
 
 /**
  * Speak text using resolved voice configuration
+ * Uses lock file to prevent overlapping voice output from duplicate hooks
  */
 async function speak(
   text: string,
@@ -270,6 +349,14 @@ async function speak(
   agentId?: string
 ): Promise<void> {
   if (!text) return;
+
+  // Acquire lock to prevent duplicate/overlapping speech
+  const lockKey = agentId || "main";
+  const hasLock = await acquireLock(sessionId, `${eventType}-${lockKey}`);
+  if (!hasLock) {
+    log(`Skipping speech - another instance is already speaking for ${eventType}`);
+    return;
+  }
 
   const startTime = Date.now();
   const timestamp = new Date().toISOString();
@@ -330,6 +417,9 @@ async function speak(
     // Log to stderr so failures are visible even without debug mode
     console.error(`[voice] TTS failed: ${errorMsg}`);
     // Don't throw - voice failure shouldn't break Claude
+  } finally {
+    // Release lock
+    await releaseLock(sessionId, `${eventType}-${lockKey}`);
   }
 
   // Always log the event (success or failure)
