@@ -14,7 +14,7 @@
     "plugins/*/skills/**/*.md",
     "plugins/*/.claude-plugin/plugin.json"
   ],
-  "indexed_at": "2025-12-18T10:28:04.119398",
-  "num_documents": 21188,
+  "indexed_at": "2025-12-18T18:50:49.738272",
+  "num_documents": 4582,
   "embedding_dim": 768
 }

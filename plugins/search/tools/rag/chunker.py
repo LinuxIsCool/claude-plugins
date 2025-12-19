@@ -107,10 +107,35 @@ class RecursiveTextSplitter:
                     # Recurse with remaining separators
                     result.extend(self._split_recursive(part, remaining_seps))
 
+            # Merge small chunks to target chunk_size
+            result = self._merge_small_chunks(result)
             return result
 
         # Separator not found, try next
         return self._split_recursive(text, remaining_seps)
+
+    def _merge_small_chunks(self, chunks: list[str]) -> list[str]:
+        """Merge adjacent small chunks up to chunk_size."""
+        if not chunks:
+            return []
+
+        merged = []
+        current = chunks[0]
+
+        for chunk in chunks[1:]:
+            # Can we merge?
+            combined_len = len(current) + len(chunk) + 1  # +1 for newline
+            if combined_len <= self.chunk_size:
+                current = current + "\n" + chunk
+            else:
+                if current.strip():
+                    merged.append(current)
+                current = chunk
+
+        if current.strip():
+            merged.append(current)
+
+        return merged
 
     def _split_fixed(self, text: str) -> list[str]:
         """Fixed-size split as final fallback."""
