@@ -369,7 +369,7 @@ def main():
 
     if not response:
         log("Generation failed")
-        log_statusline_event("identity", session_id, "", False, DEBUG_PREFIX)
+        log_statusline_event("identity", session_id, "", False, DEBUG_PREFIX, instances_dir)
         return
 
     log(f"Response: {response}")
@@ -383,25 +383,25 @@ def main():
 
     if needs_name and result["name"]:
         if save_name(instances_dir, session_id, result["name"]):
-            log_statusline_event("name", session_id, result["name"], True, DEBUG_PREFIX)
+            log_statusline_event("name", session_id, result["name"], True, DEBUG_PREFIX, instances_dir)
         else:
             success = False
-            log_statusline_event("name", session_id, "", False, DEBUG_PREFIX)
+            log_statusline_event("name", session_id, "", False, DEBUG_PREFIX, instances_dir)
 
     if needs_description:
         if result["description"]:
             save_description(instances_dir, session_id, result["description"])
-            log_statusline_event("description", session_id, result["description"], True, DEBUG_PREFIX)
+            log_statusline_event("description", session_id, result["description"], True, DEBUG_PREFIX, instances_dir)
         else:
-            log_statusline_event("description", session_id, "", False, DEBUG_PREFIX)
+            log_statusline_event("description", session_id, "", False, DEBUG_PREFIX, instances_dir)
             success = False
     # else: description already exists, nothing to do
 
     if result["summary"]:
         save_summary(instances_dir, session_id, result["summary"], cwd)
-        log_statusline_event("summary", session_id, result["summary"], True, DEBUG_PREFIX)
+        log_statusline_event("summary", session_id, result["summary"], True, DEBUG_PREFIX, instances_dir)
     else:
-        log_statusline_event("summary", session_id, "", False, DEBUG_PREFIX)
+        log_statusline_event("summary", session_id, "", False, DEBUG_PREFIX, instances_dir)
         success = False
 
     log(f"Identity generation complete, success={success}")

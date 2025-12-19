@@ -43,6 +43,10 @@ fi
 
 REGISTRY="$INSTANCES_DIR/registry.json"
 
+# Configure JSONL logging to same directory as registry
+# This ensures all instance data (registry, summaries, descriptions, logs) stays together
+STATUSLINE_LOG="$INSTANCES_DIR/statusline.jsonl"
+
 # Initialize registry if needed
 if [ ! -f "$REGISTRY" ]; then
     echo "{}" > "$REGISTRY"

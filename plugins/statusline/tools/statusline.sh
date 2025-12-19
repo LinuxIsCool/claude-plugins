@@ -104,6 +104,12 @@ for loc in "${CURRENT_DIR}/.claude/instances/registry.json" "$HOME/.claude/insta
     fi
 done
 
+# Configure JSONL logging to same directory as registry
+# This ensures all instance data (registry, summaries, descriptions, logs) stays together
+if [ -n "$REGISTRY" ]; then
+    STATUSLINE_LOG="$(dirname "$REGISTRY")/statusline.jsonl"
+fi
+
 # Get instance name and process number from registry
 REGISTERED_NAME=""
 PROCESS_NUM=""
@@ -306,9 +312,17 @@ fi
 
 # Read pane title from tmux (Claude Code's internal task summary with ✳ prefix)
 # This is set internally by Claude Code and provides a complementary view of current work
+# IMPORTANT: Use -t "$TMUX_PANE" to target THIS Claude's pane, not the currently focused pane.
+# Without -t, tmux returns the title of whatever pane happens to be focused, which causes
+# cross-contamination (showing other Claude instances' titles or shell command lines).
 PANE_TITLE=""
 if command -v tmux &> /dev/null && [ -n "$TMUX" ]; then
-    PANE_TITLE=$(tmux display-message -p '#{pane_title}' 2>/dev/null)
+    if [ -n "$TMUX_PANE" ]; then
+        PANE_TITLE=$(tmux display-message -t "$TMUX_PANE" -p '#{pane_title}' 2>/dev/null)
+    else
+        # Fallback if TMUX_PANE not set (shouldn't happen in normal Claude Code execution)
+        PANE_TITLE=$(tmux display-message -p '#{pane_title}' 2>/dev/null)
+    fi
 fi
 
 # Output the statusline

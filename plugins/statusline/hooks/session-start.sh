@@ -45,6 +45,10 @@ if [ -z "$REGISTRY" ]; then
     REGISTRY="$HOME/.claude/instances/registry.json"
 fi
 
+# Configure JSONL logging to same directory as registry
+# This ensures all instance data (registry, summaries, descriptions, logs) stays together
+STATUSLINE_LOG="$(dirname "$REGISTRY")/statusline.jsonl"
+
 # Initialize registry if needed
 if [ ! -f "$REGISTRY" ]; then
     echo "{}" > "$REGISTRY"

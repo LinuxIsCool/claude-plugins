@@ -11,8 +11,54 @@
 # Configuration
 # ============================================================================
 
+# Default paths - can be overridden by calling configure_statusline_paths()
 STATUSLINE_LOG="${STATUSLINE_LOG:-$HOME/.claude/instances/statusline.jsonl}"
 STATUSLINE_INSTANCES_DIR="${STATUSLINE_INSTANCES_DIR:-$HOME/.claude/instances}"
+
+# ============================================================================
+# Path Resolution
+# ============================================================================
+
+# Get the instances directory for a given working directory
+# Prefers project-local (.claude/instances) if .claude exists, otherwise uses home
+#
+# Usage: instances_dir=$(get_instances_dir_for_cwd "/path/to/project")
+#
+# Arguments:
+#   cwd - The working directory to check for .claude
+#
+# Returns: Path to the instances directory (project-local or home)
+#
+get_instances_dir_for_cwd() {
+    local cwd="$1"
+
+    # Check project-local first - if .claude exists there, use project instances
+    if [ -d "$cwd/.claude" ]; then
+        echo "$cwd/.claude/instances"
+        return
+    fi
+
+    # Fall back to home
+    echo "$HOME/.claude/instances"
+}
+
+# Configure STATUSLINE_LOG and STATUSLINE_INSTANCES_DIR based on working directory
+# Call this after determining cwd to ensure logging goes to the correct location
+#
+# Usage: configure_statusline_paths "/path/to/project"
+#
+# This ensures that registry, summaries, descriptions, AND jsonl logs
+# all live in the same directory (either project-local or home).
+#
+configure_statusline_paths() {
+    local cwd="$1"
+
+    STATUSLINE_INSTANCES_DIR=$(get_instances_dir_for_cwd "$cwd")
+    STATUSLINE_LOG="$STATUSLINE_INSTANCES_DIR/statusline.jsonl"
+
+    # Ensure directory exists
+    mkdir -p "$STATUSLINE_INSTANCES_DIR"
+}
 
 # ============================================================================
 # Logging

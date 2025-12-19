@@ -41,7 +41,8 @@ def log_statusline_event(
     session_id: str,
     value: str,
     success: bool,
-    prefix: str = "statusline"
+    prefix: str = "statusline",
+    instances_dir: Path = None
 ) -> None:
     """Append a statusline event to the JSONL log for historical analysis.
 
@@ -51,10 +52,17 @@ def log_statusline_event(
         value: Generated value (empty string if failed)
         success: Whether generation succeeded
         prefix: Debug logging prefix
+        instances_dir: Optional path to instances directory. If provided, logs to
+                      that directory's statusline.jsonl. This ensures logs stay
+                      with the registry (project-local or home).
     """
     from datetime import datetime, timezone
 
-    log_file = Path.home() / ".claude" / "instances" / "statusline.jsonl"
+    # Use provided instances_dir, or fall back to home
+    if instances_dir:
+        log_file = instances_dir / "statusline.jsonl"
+    else:
+        log_file = Path.home() / ".claude" / "instances" / "statusline.jsonl"
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
     entry = {
