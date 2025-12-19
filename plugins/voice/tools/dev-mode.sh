@@ -116,10 +116,17 @@ sync_cache() {
     mkdir -p "$CACHE_DIR/.claude-plugin"
     cp -r "$SOURCE_DIR/.claude-plugin/"* "$CACHE_DIR/.claude-plugin/"
 
+    # Sync agents (subagents via Task tool)
+    if [[ -d "$SOURCE_DIR/agents" ]]; then
+        echo "  Syncing agents/..."
+        mkdir -p "$CACHE_DIR/agents"
+        cp -r "$SOURCE_DIR/agents/"* "$CACHE_DIR/agents/"
+    fi
+
     echo ""
     echo -e "${GREEN}Sync complete!${NC}"
     echo ""
-    echo "Changes to hooks/ and src/ will take effect on next hook invocation."
+    echo "Changes to hooks/, src/, and agents/ take effect on next invocation."
     echo "No restart needed for TTS/voice changes."
 }
 
@@ -142,8 +149,8 @@ watch_and_sync() {
     echo -e "${CYAN}Watching for changes...${NC}"
     echo ""
 
-    # Watch and sync
-    inotifywait -m -r -e modify,create,delete "$SOURCE_DIR/hooks" "$SOURCE_DIR/src" 2>/dev/null | while read -r directory events filename; do
+    # Watch and sync (hooks, src, agents)
+    inotifywait -m -r -e modify,create,delete "$SOURCE_DIR/hooks" "$SOURCE_DIR/src" "$SOURCE_DIR/agents" 2>/dev/null | while read -r directory events filename; do
         echo -e "${CYAN}[$(date +%H:%M:%S)]${NC} $events: $filename"
         sync_cache
     done
