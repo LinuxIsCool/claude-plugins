@@ -380,12 +380,11 @@ echo -e "$LINE1"
 if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ] || [ -n "$PANE_TITLE" ]; then
     LINE2=""
 
-    # Check if both are placeholders (fresh instance) and no pane title
-    if [ "$DESCRIPTION" = "Awaiting instructions." ] && [ "$SUMMARY" = "Awaiting instructions." ] && [ -z "$PANE_TITLE" ]; then
-        echo -e "${WHITE}Awaiting instructions.${RST}"
+    # Check if both are placeholders (fresh instance) - show only "Awaiting instructions."
+    if [ "$DESCRIPTION" = "Awaiting instructions." ] && [ "$SUMMARY" = "Awaiting instructions." ]; then
+        echo -e "${BOLD}${WHITE}Awaiting instructions.${RST}"
     else
         # Build content line with description bold, summary not bold
-        LINE2=""
         if [ -n "$DESCRIPTION" ] && [ "$DESCRIPTION" != "Awaiting instructions." ]; then
             LINE2="${BOLD}${WHITE}${DESCRIPTION}${RST}"
         fi
@@ -396,6 +395,7 @@ if [ -n "$DESCRIPTION" ] || [ -n "$SUMMARY" ] || [ -n "$PANE_TITLE" ]; then
                 LINE2="${WHITE}${SUMMARY}${RST}"
             fi
         fi
+
         # Append pane title (Claude's internal task summary) if available
         # The ✳ emoji is included as-is from the pane title
         if [ -n "$PANE_TITLE" ] && [ "$PANE_TITLE" != "bash" ] && [ "$PANE_TITLE" != "fish" ]; then

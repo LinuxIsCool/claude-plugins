@@ -137,10 +137,15 @@ def save_name(instances_dir: Path, session_id: str, name: str) -> bool:
 
 
 def check_needs_description(instances_dir: Path, session_id: str) -> bool:
-    """Check if session needs a description (doesn't have one yet)."""
+    """Check if session needs a description (doesn't have one yet or has placeholder)."""
     desc_file = instances_dir / "descriptions" / f"{session_id}.txt"
     if desc_file.exists():
-        log(f"Description already exists, skipping generation")
+        content = desc_file.read_text().strip()
+        # Regenerate if file contains placeholder
+        if content == "Awaiting instructions." or content == "":
+            log(f"Description is placeholder, will regenerate")
+            return True
+        log(f"Description already exists: {content[:30]}...")
         return False
     return True
 

@@ -186,16 +186,14 @@ export class PiperAdapter extends BaseTTSAdapter {
 
     const voices: VoiceInfo[] = [];
 
-    if (!existsSync(this.voicesDir)) {
-      return voices;
-    }
-
-    const files = readdirSync(this.voicesDir);
-    for (const file of files) {
-      if (file.endsWith(".onnx")) {
-        const voiceId = file.replace(".onnx", "");
-        const info = this.parseVoiceId(voiceId);
-        voices.push(info);
+    if (existsSync(this.voicesDir)) {
+      const files = readdirSync(this.voicesDir);
+      for (const file of files) {
+        if (file.endsWith(".onnx")) {
+          const voiceId = file.replace(".onnx", "");
+          const info = this.parseVoiceId(voiceId);
+          voices.push(info);
+        }
       }
     }
 

@@ -104,20 +104,25 @@ format_statusline() {
     printf "\n"
 
     # Build line 2 (description: summary)
-    local line2=""
-    if [[ -n "$desc" && "$desc" != "Awaiting instructions." ]]; then
-        line2="$desc"
-    fi
-    if [[ -n "$summary" && "$summary" != "Awaiting instructions." ]]; then
-        if [[ -n "$line2" ]]; then
-            line2="${line2}: ${summary}"
-        else
-            line2="$summary"
+    # If both are placeholder, show "Awaiting instructions." in white bold
+    if [[ "$desc" == "Awaiting instructions." && "$summary" == "Awaiting instructions." ]]; then
+        printf "${BOLD}${WHITE}Awaiting instructions.${RST}\n"
+    else
+        local line2=""
+        if [[ -n "$desc" && "$desc" != "Awaiting instructions." ]]; then
+            line2="$desc"
         fi
-    fi
+        if [[ -n "$summary" && "$summary" != "Awaiting instructions." ]]; then
+            if [[ -n "$line2" ]]; then
+                line2="${line2}: ${summary}"
+            else
+                line2="$summary"
+            fi
+        fi
 
-    if [[ -n "$line2" ]]; then
-        printf "${DIM}%s${RST}\n" "$line2"
+        if [[ -n "$line2" ]]; then
+            printf "${DIM}%s${RST}\n" "$line2"
+        fi
     fi
 }
 
