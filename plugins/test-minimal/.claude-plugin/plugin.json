@@ -1,6 +1,0 @@
-{
-  "name": "test-minimal",
-  "version": "0.1.0",
-  "description": "Minimal test plugin",
-  "hooks": "./hooks/hooks.json"
-}

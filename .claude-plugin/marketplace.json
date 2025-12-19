@@ -22,7 +22,6 @@
     {"name": "statusline", "source": "./plugins/statusline/"},
     {"name": "autocommit", "source": "./plugins/autocommit/"},
     {"name": "dev-tools", "source": "./plugins/dev-tools/"},
-    {"name": "voice", "source": "./plugins/voice/"},
-    {"name": "test-minimal", "source": "./plugins/test-minimal/"}
+    {"name": "voice", "source": "./plugins/voice/"}
   ]
 }
