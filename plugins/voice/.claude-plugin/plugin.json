@@ -17,30 +17,5 @@
   "skills": ["./skills/"],
   "commands": ["./commands/"],
   "agents": ["./agents/voice-conductor.md"],
-  "hooks": {
-    "SessionStart": [{
-      "hooks": [{
-        "type": "command",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh SessionStart"
-      }]
-    }],
-    "Stop": [{
-      "hooks": [{
-        "type": "command",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh Stop"
-      }]
-    }],
-    "Notification": [{
-      "hooks": [{
-        "type": "command",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh Notification"
-      }]
-    }],
-    "SubagentStop": [{
-      "hooks": [{
-        "type": "command",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh SubagentStop"
-      }]
-    }]
-  }
+  "hooks": "./hooks/hooks.json"
 }
