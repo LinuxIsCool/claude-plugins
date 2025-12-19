@@ -247,12 +247,22 @@ print(json.dumps(result))
       end_ms: seg.end_ms,
     }));
 
+    // Convert embeddings from number[] to Float32Array
+    const embeddings: Record<string, Float32Array> | undefined = data.embeddings
+      ? Object.fromEntries(
+          Object.entries(data.embeddings as Record<string, number[]>).map(
+            ([speaker, emb]) => [speaker, new Float32Array(emb)]
+          )
+        )
+      : undefined;
+
     return {
       segments,
       speaker_count: data.speaker_count,
       speaker_labels: data.speaker_labels,
       duration_ms: data.duration_ms,
       processing_time_ms: data.load_time_ms + data.diarize_time_ms,
+      embeddings,
     };
   }
 

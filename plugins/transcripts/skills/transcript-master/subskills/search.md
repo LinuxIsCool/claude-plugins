@@ -15,17 +15,46 @@ Search and query transcripts, speakers, and entities across the corpus.
 
 ## MCP Tools
 
-### transcripts_search (planned)
+### transcripts_search
+
+Full-text search across transcript utterances using FTS5.
 
 ```json
 {
   "query": "quarterly review",
-  "filters": {
-    "speaker_id": "spk_abc123",
-    "date_from": "2025-01-01",
-    "date_to": "2025-03-31"
-  },
-  "limit": 20
+  "speakers": ["spk_abc123"],
+  "limit": 20,
+  "highlights": true,
+  "grouped": false
+}
+```
+
+**Parameters:**
+- `query` (required): FTS5 query (supports AND, OR, NOT, "phrases", prefix*)
+- `speakers`: Filter by speaker IDs
+- `transcripts`: Filter by transcript IDs
+- `limit`: Max results (default 20)
+- `offset`: Pagination offset
+- `highlights`: Include highlighted snippets (default true)
+- `grouped`: Group results by transcript (default false)
+
+### transcripts_search_stats
+
+Get statistics about the search index.
+
+```json
+{}
+```
+
+Returns: `{ transcripts_indexed, utterances_indexed, unique_speakers, date_range }`
+
+### transcripts_rebuild_index
+
+Rebuild the FTS5 search index from all stored transcripts.
+
+```json
+{
+  "clear": true
 }
 ```
 
@@ -107,16 +136,71 @@ const utterances = await store.searchUtterances({
 
 ## Search Index
 
-The store maintains indexes for efficient search:
+The plugin uses **SQLite FTS5** for full-text search, following the same pattern as the messages plugin:
 
 ```typescript
-// In-memory indexes (rebuilt on load)
-interface SearchIndexes {
-  transcriptsByDate: Map<string, TID[]>;       // YYYY-MM-DD
-  transcriptsBySpeaker: Map<SpeakerID, TID[]>;
-  utterancesByText: InvertedIndex;             // Full-text
-  speakersByName: Map<string, SpeakerID[]>;    // Lowercase
-  entitiesByType: Map<EntityType, EntityID[]>;
+import { TranscriptSearchIndex } from "../infrastructure/search.js";
+
+const searchIndex = new TranscriptSearchIndex();
+
+// Search utterances
+const results = searchIndex.search("quarterly review", {
+  limit: 20,
+  speakers: ["spk_alice"],
+  createdAfter: Date.parse("2025-01-01"),
+});
+
+// Search with highlights
+const highlighted = searchIndex.searchWithHighlights("machine learning");
+
+// Get stats
+const stats = searchIndex.stats();
+// → { transcripts: 42, utterances: 1234, speakers: 8, dateRange: {...} }
+```
+
+### Database Schema
+
+```sql
+-- FTS5 virtual table for full-text search
+CREATE VIRTUAL TABLE utterances_fts USING fts5(
+  id UNINDEXED,
+  transcript_id UNINDEXED,
+  speaker_id UNINDEXED,
+  speaker_name,
+  text,
+  tokenize='porter unicode61'
+);
+
+-- Metadata table for filtering
+CREATE TABLE utterances_meta (
+  id TEXT PRIMARY KEY,
+  transcript_id TEXT NOT NULL,
+  speaker_id TEXT NOT NULL,
+  speaker_name TEXT NOT NULL,
+  text TEXT NOT NULL,
+  start_ms INTEGER NOT NULL,
+  end_ms INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);
+```
+
+### Migration
+
+To rebuild the search index from existing transcripts:
+
+```bash
+/transcripts rebuild-index
+```
+
+Or programmatically:
+
+```typescript
+const store = new TranscriptStore();
+const searchIndex = new TranscriptSearchIndex();
+
+for await (const summary of store.listTranscripts()) {
+  const transcript = await store.getTranscript(summary.id);
+  if (transcript) searchIndex.index(transcript);
 }
 ```
 

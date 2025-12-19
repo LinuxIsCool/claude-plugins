@@ -6,12 +6,13 @@
  */
 
 import { createStore, TranscriptStore } from "../infrastructure/store.js";
+import { TranscriptSearchIndex } from "../infrastructure/search.js";
 import { transcriptionFactory } from "../adapters/transcription/index.js";
 import {
   isMessagesPluginAvailable,
   emitTranscriptToMessages,
 } from "../infrastructure/messages-bridge.js";
-import type { TranscriptInput } from "../domain/entities/transcript.js";
+import type { TranscriptInput, TID } from "../domain/entities/transcript.js";
 import type { SpeakerInput } from "../domain/entities/speaker.js";
 
 // MCP protocol types
@@ -38,9 +39,11 @@ interface MCPResponse {
  */
 export class TranscriptsMCPServer {
   private store: TranscriptStore;
+  private searchIndex: TranscriptSearchIndex;
 
   constructor() {
     this.store = createStore();
+    this.searchIndex = new TranscriptSearchIndex();
   }
 
   /**
@@ -216,6 +219,61 @@ export class TranscriptsMCPServer {
             properties: {},
           },
         },
+        {
+          name: "transcripts_search",
+          description: "Full-text search across transcript utterances using FTS5",
+          inputSchema: {
+            type: "object",
+            properties: {
+              query: {
+                type: "string",
+                description: "Search query (supports AND, OR, NOT, \"phrase\", prefix*)",
+              },
+              speakers: {
+                type: "array",
+                items: { type: "string" },
+                description: "Filter by speaker IDs",
+              },
+              transcripts: {
+                type: "array",
+                items: { type: "string" },
+                description: "Filter by transcript IDs",
+              },
+              limit: { type: "number", description: "Max results (default 20)" },
+              offset: { type: "number", description: "Pagination offset" },
+              highlights: {
+                type: "boolean",
+                description: "Include highlighted snippets (default true)",
+              },
+              grouped: {
+                type: "boolean",
+                description: "Group results by transcript (default false)",
+              },
+            },
+            required: ["query"],
+          },
+        },
+        {
+          name: "transcripts_search_stats",
+          description: "Get statistics about the search index",
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
+        {
+          name: "transcripts_rebuild_index",
+          description: "Rebuild the FTS5 search index from all stored transcripts",
+          inputSchema: {
+            type: "object",
+            properties: {
+              clear: {
+                type: "boolean",
+                description: "Clear existing index before rebuilding (default true)",
+              },
+            },
+          },
+        },
       ],
     };
   }
@@ -253,6 +311,15 @@ export class TranscriptsMCPServer {
 
       case "transcripts_backends_list":
         return this.toolBackendsList();
+
+      case "transcripts_search":
+        return this.toolSearch(args);
+
+      case "transcripts_search_stats":
+        return this.toolSearchStats();
+
+      case "transcripts_rebuild_index":
+        return this.toolRebuildIndex(args);
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -577,6 +644,185 @@ export class TranscriptsMCPServer {
           text: JSON.stringify({
             backends,
             default: "whisper",
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Full-text search across utterances
+   */
+  private toolSearch(args: Record<string, unknown>) {
+    const query = args.query as string;
+    const speakers = args.speakers as string[] | undefined;
+    const transcripts = args.transcripts as TID[] | undefined;
+    const limit = (args.limit as number) ?? 20;
+    const offset = (args.offset as number) ?? 0;
+    const highlights = (args.highlights as boolean) ?? true;
+    const grouped = (args.grouped as boolean) ?? false;
+
+    const options = {
+      limit,
+      offset,
+      speakers,
+      transcripts,
+    };
+
+    try {
+      if (grouped) {
+        // Return results grouped by transcript
+        const results = this.searchIndex.searchGrouped(query, options);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                query,
+                grouped: true,
+                transcript_count: results.length,
+                results: results.map((r) => ({
+                  transcript_id: r.transcript_id,
+                  title: r.title,
+                  match_count: r.matches.length,
+                  total_score: r.total_score,
+                  matches: r.matches.slice(0, 5).map((m) => ({
+                    utterance_id: m.utterance_id,
+                    speaker: m.speaker_name,
+                    text: m.text.slice(0, 200) + (m.text.length > 200 ? "..." : ""),
+                    time: formatTime(m.start_ms),
+                    score: m.score,
+                  })),
+                  more_matches: r.matches.length > 5 ? r.matches.length - 5 : 0,
+                })),
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      if (highlights) {
+        // Return results with highlighted snippets
+        const results = this.searchIndex.searchWithHighlights(query, options);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                query,
+                count: results.length,
+                results: results.map((r) => ({
+                  transcript_id: r.transcript_id,
+                  utterance_id: r.utterance_id,
+                  speaker: r.speaker_name,
+                  highlight: r.highlight,
+                  full_text: r.text.length > 300 ? r.text.slice(0, 300) + "..." : r.text,
+                  time: formatTime(r.start_ms),
+                  duration: formatTime(r.end_ms - r.start_ms),
+                  score: r.score,
+                })),
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      // Plain search
+      const results = this.searchIndex.search(query, options);
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              query,
+              count: results.length,
+              results: results.map((r) => ({
+                transcript_id: r.transcript_id,
+                utterance_id: r.utterance_id,
+                speaker: r.speaker_name,
+                text: r.text.slice(0, 200) + (r.text.length > 200 ? "..." : ""),
+                time: formatTime(r.start_ms),
+                score: r.score,
+              })),
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Search failed: ${error instanceof Error ? error.message : String(error)}`,
+              hint: "FTS5 query syntax: use AND/OR/NOT, \"phrases\", prefix* wildcards",
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * Get search index statistics
+   */
+  private toolSearchStats() {
+    const stats = this.searchIndex.stats();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            transcripts_indexed: stats.transcripts,
+            utterances_indexed: stats.utterances,
+            unique_speakers: stats.speakers,
+            date_range: stats.dateRange
+              ? {
+                  first: new Date(stats.dateRange.first).toISOString(),
+                  last: new Date(stats.dateRange.last).toISOString(),
+                }
+              : null,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Rebuild the search index from all stored transcripts
+   */
+  private async toolRebuildIndex(args: Record<string, unknown>) {
+    const clear = (args.clear as boolean) ?? true;
+
+    if (clear) {
+      this.searchIndex.clear();
+    }
+
+    let indexed = 0;
+    const errors: string[] = [];
+
+    for await (const summary of this.store.listTranscripts()) {
+      try {
+        const transcript = await this.store.getTranscript(summary.id);
+        if (transcript) {
+          this.searchIndex.index(transcript);
+          indexed++;
+        }
+      } catch (error) {
+        errors.push(`${summary.id}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            indexed,
+            cleared: clear,
+            errors: errors.length > 0 ? errors : undefined,
+            stats: this.searchIndex.stats(),
           }, null, 2),
         },
       ],

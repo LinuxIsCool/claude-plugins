@@ -46,6 +46,13 @@ export interface DiarizationResult {
   speaker_labels: string[];     // All unique speaker labels
   duration_ms: number;
   processing_time_ms: number;
+
+  /**
+   * Speaker embeddings (256-dimensional vectors from pyannote).
+   * Used for voice fingerprinting and cross-meeting speaker identification.
+   * Key: speaker label (e.g., "SPEAKER_00"), Value: embedding vector
+   */
+  embeddings?: Record<string, Float32Array>;
 }
 
 /**

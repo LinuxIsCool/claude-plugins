@@ -39,12 +39,21 @@ View a specific transcript.
 ```
 
 ### search <query>
-Search across transcripts.
+Full-text search across transcript utterances using FTS5.
 
 ```
 /transcripts search "quarterly budget"
-/transcripts search "machine learning" --speaker "John"
+/transcripts search "machine learning" --speaker "spk_abc123"
+/transcripts search "budget OR revenue" --grouped
+/transcripts search "project*" --limit 50
 ```
+
+**Query syntax:**
+- Simple words: `budget meeting`
+- Phrases: `"quarterly review"`
+- Boolean: `budget AND review`, `budget OR revenue`, `budget NOT annual`
+- Prefix: `project*` (matches project, projects, projection...)
+- Combined: `"machine learning" AND python`
 
 ### speakers
 Manage speaker database.
@@ -91,6 +100,19 @@ Emit transcript to messages plugin.
 /transcripts emit tx_abc123...
 ```
 
+### rebuild-index
+Rebuild the FTS5 search index from all stored transcripts.
+
+```
+/transcripts rebuild-index
+/transcripts rebuild-index --clear  # Clear before rebuilding
+```
+
+This is useful for:
+- Migrating existing transcripts to the new search index
+- Fixing a corrupted index
+- Updating after manual transcript edits
+
 ## Implementation
 
 When the user runs `/transcripts`, invoke the transcript-master skill and use the appropriate MCP tools.
@@ -111,6 +133,49 @@ When the user runs `/transcripts`, invoke the transcript-master skill and use th
 ### For messages integration:
 1. Read messages-integration sub-skill
 2. Use `transcripts_emit_to_messages` MCP tool
+
+### For search:
+1. Use `transcripts_search` MCP tool with query and optional filters
+2. For grouped results: set `grouped: true`
+3. For highlighted snippets: set `highlights: true` (default)
+4. Filter by speaker: `speakers: ["spk_abc123"]`
+5. Filter by transcript: `transcripts: ["tx_abc123"]`
+
+Example:
+```json
+{
+  "name": "transcripts_search",
+  "arguments": {
+    "query": "quarterly review",
+    "limit": 20,
+    "grouped": true
+  }
+}
+```
+
+### For search-stats:
+1. Use `transcripts_search_stats` MCP tool to get index statistics
+
+### For rebuild-index:
+1. **Preferred**: Use `transcripts_rebuild_index` MCP tool
+   - Clears and rebuilds the entire FTS5 index
+   - Returns count of indexed transcripts and any errors
+
+2. **Alternative**: Programmatic approach
+```typescript
+import { TranscriptStore } from "../infrastructure/store.js";
+import { TranscriptSearchIndex } from "../infrastructure/search.js";
+
+const store = new TranscriptStore();
+const searchIndex = new TranscriptSearchIndex();
+
+// Clear and rebuild
+searchIndex.clear();
+for await (const summary of store.listTranscripts()) {
+  const transcript = await store.getTranscript(summary.id);
+  if (transcript) searchIndex.index(transcript);
+}
+```
 
 ### For probe (Concrete Computing):
 Execute resource probe directly using Bash:
