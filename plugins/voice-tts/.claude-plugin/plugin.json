@@ -1,5 +1,5 @@
 {
-  "name": "voice",
+  "name": "voice-tts",
   "version": "0.1.0",
   "description": "Voice TTS feedback for Claude Code",
   "hooks": "./hooks/hooks.json"
