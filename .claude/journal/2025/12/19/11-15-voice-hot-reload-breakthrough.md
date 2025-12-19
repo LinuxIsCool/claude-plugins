@@ -133,6 +133,26 @@ Examples:
 
 - `[plugin:voice,dev-tools] feat: hot-reload for hook-based plugins`
 
+## Update: Symlinks Don't Persist
+
+After testing, discovered that **Claude Code actively rebuilds plugin caches on startup**, replacing symlinks with directory copies. The symlink approach was promising but doesn't survive session boundaries.
+
+### Final Solution: Fast Sync
+
+Instead of fighting the cache system, created `dev-mode.sh` with sync-based workflow:
+
+```bash
+./dev-mode.sh sync    # Instant copy to cache
+./dev-mode.sh watch   # Auto-sync on file changes
+./dev-mode.sh status  # Check sync state
+```
+
+The end result is similar: edit source, changes take effect on next hook. Just requires running sync (or using watch mode) instead of relying on symlinks.
+
+### Key Learning
+
+Claude Code's plugin system is designed for stability, not live development. The cache validation on startup ensures all running instances have consistent plugin state. For development, work with the system (fast sync) rather than against it (symlinks).
+
 ---
 
 *Parent: [[2025-12-19]]*
