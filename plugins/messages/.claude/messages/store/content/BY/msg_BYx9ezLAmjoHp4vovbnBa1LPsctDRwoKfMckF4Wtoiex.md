@@ -1,0 +1,25 @@
+---
+id: msg_BYx9ezLAmjoHp4vovbnBa1LPsctDRwoKfMckF4Wtoiex
+kind: 1010
+account_id: email_williamsburg_othership_us
+created_at: 1764189742000
+imported_at: 1766105315713
+author_name: Othership Williamsburg
+title: 🌀SWEAT WITH TRUEMED🌀
+thread_id: email_c36e7b7bc807
+platform: email
+platform_id: <eIOvuBIgRCSS6VEY6yT0BA@geopod-ismtpd-16>
+tags: [["subject","🌀SWEAT WITH TRUEMED🌀"],["folder","INBOX"]]
+---
+
+Through our partnership with Truemed, qualified journeyers can shop Pack Friday
+offers with their Health Savings Account (HSA) or Flexible Savings Account (FSA)
+to get 30-40% additional savings.
+
+[https://assets.brandbot.com/emails/1277744/ab0cacbb-3642-4bd4-a75d-67e055605459.png]http://link.brndbot.com/ls/click?upn=u001.8u24aOIJspexYCseXV005gYFKLhVlwzN2Kw-2FCqWik-2BgWoFE801acqPk0kwzjzvLXJ0siRRdewNcsCp9DCx9baA-3D-3DlXW0_9dnU1zGWJMtetNfBTOW5c1SnkmB8Vbb72Zbkovm9dNGHMLsPklZ4aoLqorlM31lZtxCgrW32sZP6DG8WqrekLGpa8r7ECMV4hgO77-2FGPOt2PeVO6KsWM9Bo8v1qmV0cfF6r4n-2B-2FnDNAz4TvpRyoYP5VJOTllMidfbP8Qwo7qNHEHtu8m3IkC14wgfdAe5J1XewOyVKdd3BAl-2B10kwRFiQnnMSMncoblSQDq0qpfUVGBJ4HruduA1uPpCVzIpKdIww5CobesFbNL7c-2B32z-2FAoS3ziKjYlAzXTFJevx2fQBPW8wCx7MC5ctdKGgKJIFYLDqMoGDM-2FQwBITivvy5j819metqOqU-2Fm0hSuESW6FpUK0DBO3jKIi4QDobGorJC-2FgJjSeuaf6kZfvG27QpAnjusNmdE7WwUXjkVxTsVrwPVAUAcSJ0UVKrtIBktnmuHIWLktlmjt6YKRRoNL3Fv8Ak41w7wB5VSeNv3uJH7bG3678-3D
+
+| 25 Kent Ave Suite 100, Brooklyn New York 11249 US
+Unsubscribe
+[http://link.brndbot.com/wf/unsubscribe?upn=u001.yVmcaFlf3gf2lBQir9nZKdFoXuC5SKYdB1x4T6-2Fy-2FLqbWtRHTEA9o1zHvlW9QayJmaxcYljlu9siTKHl71rcAp2dM5QkEcsU1I1f6dAn7RuDPwf-2Bb-2Blm5bapUOmAzq6fHwbKtqcq6AGCA9MLQGGuZpMs55ZpfrMElsJ6xSZj7R1In1h1ARxVibmWsm-2FxLVDhhsQWgx4asSAHE3Nrx9MGOuPWNt3fl5Tk9Qa244v3H-2FgT-2B96MWwWPnO3RVddW5gpeEVguzBOkzdpQvJt5MEXt0k2RJ9-2F5PunupdiHJQrH-2F51H4sw32H2NQhT8JWokOaJ-2FUb02E2T2fQ2c7-2B36wnxTGkKbzHWIgntpiAbSkRQgg0u3PjCscaiCt5qq3LSYol2I4rweDq7dc6jChI21-2F5JCAnGLZWezG20zM2bgx28aqTz4tTMWBi4sPyNEtHC-2BZZTEdjlH7Ixm6rHncklayF-2BOnw-2B-2F3JpJxwAgIYqqe5y-2BUa-2FFoGkBtLaOlBbPd2Ut7t5g]
+
+[http://link.brndbot.com/wf/open?upn=u001.yVmcaFlf3gf2lBQir9nZKdFoXuC5SKYdB1x4T6-2Fy-2FLqbWtRHTEA9o1zHvlW9QayJmaxcYljlu9siTKHl71rcAp2dM5QkEcsU1I1f6dAn7RuDPwf-2Bb-2Blm5bapUOmAzq6fHwbKtqcq6AGCA9MLQGGuZpMs55ZpfrMElsJ6xSZj7R1In1h1ARxVibmWsm-2FxLVDhhsQWgx4asSAHE3Nrx9MGOuPWNt3fl5Tk9Qa244v3H-2FgT-2B96MWwWPnO3RVddW5gpeEVguzBOkzdpQvJt5MEXt0k2RJ9-2F5PunupdiHJQrH-2F51H4sw32H2NQhT8JWokOaJ-2FUb02E2T2fQ2c7-2B36wnxTGpaovzjbkxSZKWW5EQtcgZP99QJZoRstKvOoM9fxC-2Balv2irJ1CdILAfuqihOVUJTXNAzUaobSc2TYkjXd339jfEEgCFtO-2Bph-2BOr4ld6OcDOI8HxkpwJ-2FKRAPByG-2BRmxZex0sPMoiEaWmn0AT1NFX90-3D]

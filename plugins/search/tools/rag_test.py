@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["numpy", "httpx"]
+# dependencies = ["numpy", "httpx", "sentence-transformers", "torch"]
 # ///
 """
 RAG Test Harness - Test retrieval quality against real user prompts.

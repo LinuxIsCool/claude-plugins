@@ -6,22 +6,153 @@
   "timeSlotMinutes": 30,
   "defaultPort": 6421,
   "categories": {
-    "work": { "id": "work", "label": "Work", "color": "#3b82f6" },
-    "yoga": { "id": "yoga", "label": "Yoga", "color": "#22c55e" },
-    "meal": { "id": "meal", "label": "Meal", "color": "#eab308" },
-    "outdoor": { "id": "outdoor", "label": "Outdoor", "color": "#14b8a6" },
-    "therapy": { "id": "therapy", "label": "Therapy", "color": "#ec4899" },
-    "chores": { "id": "chores", "label": "Chores", "color": "#a855f7" },
-    "groceries": { "id": "groceries", "label": "Groceries", "color": "#f97316" }
+    "work": {
+      "id": "work",
+      "label": "Work",
+      "color": "#3b82f6"
+    },
+    "yoga": {
+      "id": "yoga",
+      "label": "Yoga",
+      "color": "#22c55e"
+    },
+    "meal": {
+      "id": "meal",
+      "label": "Meal",
+      "color": "#eab308"
+    },
+    "outdoor": {
+      "id": "outdoor",
+      "label": "Outdoor",
+      "color": "#14b8a6"
+    },
+    "therapy": {
+      "id": "therapy",
+      "label": "Therapy",
+      "color": "#ec4899"
+    },
+    "chores": {
+      "id": "chores",
+      "label": "Chores",
+      "color": "#a855f7"
+    },
+    "groceries": {
+      "id": "groceries",
+      "label": "Groceries",
+      "color": "#f97316"
+    }
   },
   "integrations": {
     "googleCalendar": {
       "enabled": true,
       "calendars": [
         {
-          "id": "primary",
-          "name": "Primary Calendar",
-          "enabled": true
+          "id": "en.canadian#holiday@group.v.calendar.google.com",
+          "name": "Holidays in Canada",
+          "enabled": true,
+          "color": "#16a765"
+        },
+        {
+          "id": "c_huqip4qi7oa25k1k4i2ddhn2ag@group.calendar.google.com",
+          "name": "LTF Time Away",
+          "enabled": true,
+          "color": "#f83a22"
+        },
+        {
+          "id": "c_k77c78d1kdt9e1vpk2cvjcc7jg@group.calendar.google.com",
+          "name": "1Hive Community Events",
+          "enabled": true,
+          "color": "#fad165"
+        },
+        {
+          "id": "3cer68o5fu3sp9flijh17t9sp4@group.calendar.google.com",
+          "name": "Longtail Financial",
+          "enabled": true,
+          "color": "#ff7537"
+        },
+        {
+          "id": "c_40nvk42lqfump4asid52ih0nls@group.calendar.google.com",
+          "name": "CCSBeeCommittee[ALL]",
+          "enabled": true,
+          "color": "#cd74e6"
+        },
+        {
+          "id": "58nmhriscc77mekme6a315bsco@group.calendar.google.com",
+          "name": "Balancer Simulations",
+          "enabled": true,
+          "color": "#a47ae2"
+        },
+        {
+          "id": "c_g62me60albkc74v7g3o0b4di2s@group.calendar.google.com",
+          "name": "ApeWorX Community Calendar",
+          "enabled": true,
+          "color": "#9fc6e7"
+        },
+        {
+          "id": "terran.io_sgs9gf29jikc177p8r53uaoo2g@group.calendar.google.com",
+          "name": "Terran Community Events",
+          "enabled": true,
+          "color": "#42d692"
+        },
+        {
+          "id": "c_d7e357fa4702584efcb3182a901231fda49d741a71a4abdc19432aecd4f65cd6@group.calendar.google.com",
+          "name": "Transferred from austin@longtailfinancial.com",
+          "enabled": true,
+          "color": "#f83a22"
+        },
+        {
+          "id": "liam@longtailfinancial.com",
+          "name": "liam@longtailfinancial.com",
+          "enabled": true,
+          "color": "#7bd148"
+        },
+        {
+          "id": "5mkep1ad1j860k6g7i7fr8plq0@group.calendar.google.com",
+          "name": "TEC Internal",
+          "enabled": true,
+          "color": "#4986e7"
+        },
+        {
+          "id": "c_classroomff9a3d34@group.calendar.google.com",
+          "name": "Longtail FInancial ReFi TE Bootcamp Cohort 1 Google Classroom",
+          "enabled": true,
+          "color": "#1967d2"
+        },
+        {
+          "id": "shawn@kwaxala.com",
+          "name": "shawn@kwaxala.com",
+          "enabled": true,
+          "color": "#9a9cff"
+        },
+        {
+          "id": "shawn@centree.org",
+          "name": "shawn@centree.org",
+          "enabled": true,
+          "color": "#a47ae2"
+        },
+        {
+          "id": "c_cfcqar32usaola94h8vuigdjuc@group.calendar.google.com",
+          "name": "LTF ReFi Bootcamp Calendar",
+          "enabled": true,
+          "color": "#fad165"
+        },
+        {
+          "id": "c_b0bd7764c88715baf239afaeec4512b2077450c00c18ab01185d377862a69eed@group.calendar.google.com",
+          "name": "OpenCivics Public Calendar",
+          "enabled": true,
+          "color": "#cca6ac"
+        },
+        {
+          "id": "shawn@longtailfinancial.com",
+          "name": "shawn@longtailfinancial.com",
+          "enabled": true,
+          "color": "#9fe1e7"
+        },
+        {
+          "id": "c_1250640b0093c1453ac648937f168c97e48175e7862fb02d38f45e0639df2b25@group.calendar.google.com",
+          "name": "Regen Network Community Calendar",
+          "enabled": true,
+          "color": "#d06b64"
         }
       ]
     }

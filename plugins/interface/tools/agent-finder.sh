@@ -5,18 +5,24 @@
 # Uses fzf to present a searchable list of Claude agent panes,
 # then switches to the selected pane.
 #
+# Features:
+#   - Full statusline display (name, model, context%, cost, summary)
+#   - Composite preview: terminal content + prompt/statusline history
+#   - ANSI color support for visual richness
+#
 # Designed to be invoked from:
 #   - tmux display-popup (recommended)
 #   - Direct shell execution
 #   - tmux keybinding
 #
 # Usage:
-#   ./agent-finder.sh              # Interactive fuzzy finder
+#   ./agent-finder.sh              # Interactive fuzzy finder with statuslines
 #   ./agent-finder.sh --popup      # Optimized for tmux popup context
-#   ./agent-finder.sh --preview    # Include preview pane
+#   ./agent-finder.sh --preview    # Include composite preview pane
+#   ./agent-finder.sh --simple     # Use simple pane title format
 #
 # Keybinding example (add to ~/.tmux.conf):
-#   bind-key g display-popup -E -w 80% -h 60% "path/to/agent-finder.sh --popup"
+#   bind-key f display-popup -E -w 90% -h 80% "path/to/agent-finder.sh --popup --preview"
 #
 # Exit codes:
 #   0 - Success (selection made or cancelled)
@@ -27,6 +33,7 @@ set -euo pipefail
 # Script directory (for finding agent-scanner.sh)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCANNER="${SCRIPT_DIR}/agent-scanner.sh"
+PREVIEW_HELPER="${SCRIPT_DIR}/agent-preview.sh"
 
 # Verify dependencies
 if ! command -v fzf &>/dev/null; then
@@ -47,6 +54,7 @@ fi
 # Parse arguments
 POPUP_MODE=false
 PREVIEW_MODE=false
+SIMPLE_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -58,6 +66,10 @@ while [[ $# -gt 0 ]]; do
             PREVIEW_MODE=true
             shift
             ;;
+        --simple)
+            SIMPLE_MODE=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: agent-finder.sh [OPTIONS]"
             echo ""
@@ -65,11 +77,17 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Options:"
             echo "  --popup    Optimized for tmux popup context"
-            echo "  --preview  Show preview pane with pane content"
+            echo "  --preview  Show composite preview (terminal + history)"
+            echo "  --simple   Use simple pane title format instead of statusline"
             echo "  -h, --help Show this help"
             echo ""
+            echo "Features:"
+            echo "  - Statusline display with name, model, context%, cost"
+            echo "  - Composite preview: terminal content + prompt/statusline history"
+            echo "  - ANSI colors for visual richness"
+            echo ""
             echo "Keybinding example (add to ~/.tmux.conf):"
-            echo "  bind-key g display-popup -E -w 80% -h 60% \"${SCRIPT_DIR}/agent-finder.sh --popup\""
+            echo "  bind-key f display-popup -E -w 90% -h 80% \"${SCRIPT_DIR}/agent-finder.sh --popup --preview\""
             exit 0
             ;;
         *)
@@ -79,8 +97,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Get list of Claude agents in fzf format
-AGENTS=$("$SCANNER" --format=fzf)
+# Choose scanner format based on mode
+SCAN_FORMAT="statusline"
+if [[ "$SIMPLE_MODE" == "true" ]]; then
+    SCAN_FORMAT="fzf"
+fi
+
+# Get list of Claude agents
+AGENTS=$("$SCANNER" --format="$SCAN_FORMAT")
 
 if [[ -z "$AGENTS" ]]; then
     echo "No Claude agents found in tmux panes." >&2
@@ -103,12 +127,20 @@ FZF_OPTS=(
 
 # Add preview if requested
 if [[ "$PREVIEW_MODE" == "true" ]]; then
-    # Preview shows captured pane content with colors
-    # Extract pane ref using cut (faster than awk), preserve ANSI with -e
-    FZF_OPTS+=(
-        --preview="tmux capture-pane -e -t \$(echo {} | cut -d']' -f1 | cut -d'[' -f2) -p -S -20 2>/dev/null | head -30"
-        --preview-window=right:50%:wrap
-    )
+    # Check if composite preview helper exists
+    if [[ -x "$PREVIEW_HELPER" ]]; then
+        # Composite preview: terminal + history
+        FZF_OPTS+=(
+            --preview="$PREVIEW_HELPER {}"
+            --preview-window=right:60%:wrap
+        )
+    else
+        # Fallback: simple terminal capture
+        FZF_OPTS+=(
+            --preview="tmux capture-pane -e -t \$(echo {} | sed 's/^\[\\([^]]*\\)\\].*/\\1/') -p -S -20 2>/dev/null | head -30"
+            --preview-window=right:50%:wrap
+        )
+    fi
 fi
 
 # Run fzf for selection (force bash for preview commands)
@@ -120,7 +152,9 @@ if [[ -z "$SELECTED" ]]; then
 fi
 
 # Extract pane reference from selected line
-# Format: [session:window.pane] ✳ Summary
+# Both formats use: [session:window.pane] as prefix
+# - Simple: [session:window.pane] ✳ Summary
+# - Statusline: [session:window.pane] [Name:id] Model | ctx:X% | ...
 PANE_REF=$(echo "$SELECTED" | sed 's/^\[\([^]]*\)\].*/\1/')
 
 if [[ -z "$PANE_REF" ]]; then

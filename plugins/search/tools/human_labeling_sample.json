@@ -1,0 +1,1232 @@
+[
+  {
+    "query_id": 0,
+    "query": "Where is the vis?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/tools/.claude/logging/2025/12/16/09-07-55-7f5d9f72.md:chunk:145",
+        "score": 0.6566,
+        "snippet": "> - Renders with D3.js or vis.js",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agno.md:chunk:118",
+        "score": 0.5933,
+        "snippet": ")",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/openai-agents-python.md:chunk:78",
+        "score": 0.5933,
+        "snippet": "        )",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/openai-agents-python.md:chunk:148",
+        "score": 0.5933,
+        "snippet": "            )",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/openai-agents-python.md:chunk:152",
+        "score": 0.5933,
+        "snippet": "    )",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 1,
+    "query": "OK. Is this work owned by a particular agent? Are we developing particular skills around our practices that we are developing here? ultrathink with awareness.",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/tools/.claude/logging/2025/12/16/09-07-55-7f5d9f72.md:chunk:165",
+        "score": 0.6813,
+        "snippet": "`09:31:49` \ud83c\udf44 User > Yes please. ultrathink ",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": ".claude/agents/librarian.md:chunk:2",
+        "score": 0.667,
+        "snippet": "You are the keeper of sources. While other agents work with ideas and implementations, you ensure that every piece of external knowledge - every URL fetched, every paper referenced, every dataset discovered - is properly catalogued, cached, and connected.",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/a2a.md:chunk:141",
+        "score": 0.6667,
+        "snippet": "- **Opaque Agent Collaboration**: Agents maintain autonomy without exposing internals",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/15/09-46-02-e78df85e.md:chunk:2",
+        "score": 0.6582,
+        "snippet": "`09:46:02` \ud83c\udf44 User > What does this imply for our repository? ultrathink ",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agents.md:chunk:136",
+        "score": 0.6573,
+        "snippet": "Skills work alongside agents: - **Agents**: High-level reasoning and orchestration - **Skills**: Specialized knowledge and implementation patterns",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 2,
+    "query": "What is the registry?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/git-flow/skills/git-flow-master/subskills/registry-ops.md:chunk:2",
+        "score": 0.9826,
+        "snippet": "## What Is The Registry?",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": ".claude/agents/agent-architect.md:chunk:16",
+        "score": 0.9198,
+        "snippet": "## The Registry",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": ".claude/agents/temporal-validator.md:chunk:47",
+        "score": 0.8297,
+        "snippet": "## Your Registry",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": ".claude/registry/processes.md:chunk:0",
+        "score": 0.8203,
+        "snippet": "# Process Registry",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/README.md:chunk:19",
+        "score": 0.8199,
+        "snippet": "\u251c\u2500\u2500 registry/",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 3,
+    "query": "Instances should not update their own summaries, it should be done automatically using hooks. Can you do this using headless claude?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": ".claude/registry/processes.md:chunk:359",
+        "score": 0.7138,
+        "snippet": "\u2502                   Update parent summaries                        \u2502",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/adk-python.md:chunk:128",
+        "score": 0.6677,
+        "snippet": "    async def summarize(         self,         events: list[Event],         invocation_ids: list[str]     ) -> str:         # Implement custom summarization logic         # Could use LLM to create intelligent summaries         return f\"Summary of {len(events)} events across {len(invocation_ids)} inv",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/awareness/skills/awareness/subskills/guide-utilizer.md:chunk:25",
+        "score": 0.6674,
+        "snippet": "# Follow-up (preserves context) Resume claude-code-guide abc123: \"Now show me examples of PostToolUse hooks\" ```",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/git-flow/skills/git-flow-master/SKILL.md:chunk:75",
+        "score": 0.6653,
+        "snippet": "| Plugin | Enhancement | Without It | |--------|-------------|------------| | **Statusline** | Provides agent names for branch naming | Defaults to \"claude\" | | **Autocommit** | Handles commit decisions | You commit manually | | **Logging** | Operations become searchable | Less observability | | **J",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/journal/skills/journal-master/subskills/journal-aggregator.md:chunk:69",
+        "score": 0.6607,
+        "snippet": "Update `index.md` with: ```markdown ## Recent Summaries - [[HHMMSS-december-summary|December 2025]] - [[HHMMSS-q4-summary|Q4 2025]] ```",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 4,
+    "query": "OK awesome. I appreciate that. What's the system using now? Headless claude or API? And when does it get updated? For what hooks is it updated?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/interface/skills/interface-master/SKILL.md:chunk:56",
+        "score": 0.7049,
+        "snippet": "### claude-code The Claude Code CLI itself. Tool behavior, context management, how Claude interacts with the terminal. The entry point of the stack.",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/interface/skills/interface-master/subskills/claude-code.md:chunk:4",
+        "score": 0.7,
+        "snippet": "Claude Code is Anthropic's official CLI for Claude. It provides: - Interactive conversation with Claude models - Tool access (Bash, Read, Write, Edit, Glob, Grep, etc.) - Plugin system for extensibility - Sub-agent spawning for parallel work - MCP (Model Context Protocol) server integration",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/exploration/skills/exploration-master/subskills/tool-cartographer.md:chunk:10",
+        "score": 0.6964,
+        "snippet": "**Questions to answer:** - What Claude Code version? - What global settings are configured? - What project-specific settings exist? - What MCP servers are configured?",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/awareness/skills/awareness/subskills/guide-utilizer.md:chunk:5",
+        "score": 0.6777,
+        "snippet": "1. **Claude Code (CLI)** - Features, hooks, slash commands, MCP servers, settings, IDE integrations, keyboard shortcuts 2. **Claude Agent SDK** - Building custom agents programmatically 3. **Claude API** - API usage, tool use, Anthropic SDK usage",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/agents/skills/agents-master/SKILL.md:chunk:51",
+        "score": 0.6719,
+        "snippet": "**claude-agent-sdk-python** - Control Claude Code programmatically. Hooks, tools, streaming.",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 5,
+    "query": "Wait... did you delete the registry file?!",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": ".claude/agents/temporal-validator.md:chunk:47",
+        "score": 0.7568,
+        "snippet": "## Your Registry",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": ".claude/agents/agent-architect.md:chunk:16",
+        "score": 0.7532,
+        "snippet": "## The Registry",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/git-flow/skills/git-flow-master/subskills/registry-ops.md:chunk:2",
+        "score": 0.7413,
+        "snippet": "## What Is The Registry?",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/statusline/skills/statusline-master/subskills/instance-tracker.md:chunk:26",
+        "score": 0.6933,
+        "snippet": "## Registry Management",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/statusline/skills/statusline-master/SKILL.md:chunk:28",
+        "score": 0.6927,
+        "snippet": "## Registry Format",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 6,
+    "query": "Did the registration hook fire? Why did this agent become named Opus?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": ".claude/agents/archivist.md:chunk:4",
+        "score": 0.6768,
+        "snippet": "model: opus",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/claude-agent-sdk-python.md:chunk:92",
+        "score": 0.6701,
+        "snippet": "            model=\"opus\"",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/company/skills/company-master/subskills/jurisdictions/comparative-us.md:chunk:105",
+        "score": 0.6686,
+        "snippet": "### Registered Agent",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": ".claude/registry/agents.md:chunk:0",
+        "score": 0.6603,
+        "snippet": "# Agent Registry",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/registry/agents-complete.md:chunk:21",
+        "score": 0.6544,
+        "snippet": "| 6 | **agent-architect** | opus | Read, Glob, Grep, Write, Edit | Fleet management, cataloguing, taxonomy, governance | Official (Meta) |",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 7,
+    "query": "No it should be using headless claude to use haiku to generate a name based off the first user submit prompt in the thread. Was I duped by a previous agent who said they implemented this?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/statusline/skills/statusline-master/subskills/generation-tuner.md:chunk:45",
+        "score": 0.6906,
+        "snippet": "| AI outputs \"Claude\" | 23 sessions named exactly \"Claude\" | Add CRITICAL RULE: \"NEVER use Claude or Assistant\" |",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/statusline/skills/statusline-master/subskills/generation-tuner.md:chunk:52",
+        "score": 0.6722,
+        "snippet": "**Before** (original prompt): ``` Based on this user's first message, generate a creative 1-2 word name for this Claude session. ```",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/git-flow/skills/git-flow-master/subskills/branch-naming.md:chunk:16",
+        "score": 0.6677,
+        "snippet": "# Haiku generates title from context ```",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/autocommit/skills/autocommit-conventions/SKILL.md:chunk:13",
+        "score": 0.6445,
+        "snippet": "\ud83e\udd16 Generated with [Claude Code](https://claude.ai/code) Co-Authored-By: {agent-name} <agent@claude-ecosystem> ```",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agents.md:chunk:70",
+        "score": 0.6407,
+        "snippet": "```markdown --- name: agent-name description: Expert description. Use PROACTIVELY for [use cases]. model: opus|inherit|sonnet|haiku ---",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 8,
+    "query": "Can you change the default agent name from the model (like Opus) to Claude?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": ".claude/registry/processes.md:chunk:93",
+        "score": 0.7527,
+        "snippet": "\u2502       \u2502                 .claude/agents/{name}.md                 \u2502",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/agentnet/skills/agentnet-master/subskills/commander-cli.md:chunk:96",
+        "score": 0.7147,
+        "snippet": "        message: 'Agent name:',",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agno.md:chunk:71",
+        "score": 0.7137,
+        "snippet": "    analyst: Agent = Agent(         name=\"Analyst\",         role=\"Analysis specialist\",         model=Claude(id=\"claude-sonnet-4-5\"),     )",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agno.md:chunk:36",
+        "score": 0.7128,
+        "snippet": "agent = Agent(     name=\"Production Agent\",     model=Claude(id=\"claude-sonnet-4-5\"),     db=SqliteDb(db_file=\"agno.db\"),     markdown=True, )",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/registry/processes.md:chunk:349",
+        "score": 0.711,
+        "snippet": "\u2502                   - author: user | claude-X | agent-name         \u2502",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 9,
+    "query": "I'm wondering if the temporal timestamps plugin should show date and time instead of just time?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:785",
+        "score": 0.7399,
+        "snippet": ">   - `timestamp`",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:842",
+        "score": 0.7191,
+        "snippet": ">    - `timestamp`: full datetime",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/graphiti.md:chunk:31",
+        "score": 0.7054,
+        "snippet": "\u2502   \u2502   \u251c\u2500\u2500 datetime_utils.py         # Temporal handling",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/openapi-specification.md:chunk:176",
+        "score": 0.693,
+        "snippet": "                  format: date-time",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/openapi-specification.md:chunk:81",
+        "score": 0.693,
+        "snippet": "                          format: date-time",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 10,
+    "query": "Can claude code plugins contain output styles?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/company/.claude-plugin/plugin.json:chunk:19",
+        "score": 0.7744,
+        "snippet": "    \"output-style\"",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/vault-manager.md:chunk:15",
+        "score": 0.746,
+        "snippet": "\u2514\u2500\u2500 plugins/             # Claude Code plugins",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/awareness/skills/awareness/subskills/temporal-kg-memory.md:chunk:160",
+        "score": 0.7291,
+        "snippet": "- Claude is working with plugins.",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:38",
+        "score": 0.7281,
+        "snippet": "> \u2514\u2500\u2500 Claude is working with plugins.",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:31",
+        "score": 0.7281,
+        "snippet": "> \u251c\u2500\u2500 Claude is working with plugins.",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 11,
+    "query": "Can plugins distribute general folders? Is there a workaround there?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/quartz-pipeline.md:chunk:28",
+        "score": 0.6931,
+        "snippet": "      Plugin.FolderPage(),",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/git-flow/skills/git-flow-master/SKILL.md:chunk:76",
+        "score": 0.689,
+        "snippet": "The plugins are like UNIX tools - each does one thing well, can be combined, but don't depend on each other.",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agents.md:chunk:8",
+        "score": 0.6792,
+        "snippet": "\u251c\u2500\u2500 plugins/                       # 67 isolated plugin directories",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "CLAUDE.md:chunk:39",
+        "score": 0.6579,
+        "snippet": "### Directory Structure ``` plugins/{plugin-name}/ \u251c\u2500\u2500 .claude-plugin/ \u2502   \u2514\u2500\u2500 plugin.json        # Include \"agents\": [\"./agents/\"] \u251c\u2500\u2500 skills/                # Skills (via Skill tool) \u251c\u2500\u2500 commands/              # Slash commands \u2514\u2500\u2500 agents/                # Subagents (via Task tool)     \u2514\u2500\u2500 {agent-n",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "CLAUDE.md:chunk:27",
+        "score": 0.6565,
+        "snippet": "### Directory Structure ``` plugins/{plugin-name}/skills/ \u2514\u2500\u2500 {skill-name}/     \u251c\u2500\u2500 SKILL.md           # Master skill (discoverable)     \u2514\u2500\u2500 subskills/         # Sub-skills (loaded via Read)         \u251c\u2500\u2500 sub1.md         \u251c\u2500\u2500 sub2.md         \u2514\u2500\u2500 ... ```",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 12,
+    "query": "Where is it documented?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": ".claude/registry/processes.md:chunk:343",
+        "score": 0.7879,
+        "snippet": "\u2502                   - Discovery documented?                        \u2502",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/logseq.md:chunk:205",
+        "score": 0.7234,
+        "snippet": "- Official Documentation: https://docs.logseq.com/",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/crewai.md:chunk:110",
+        "score": 0.6801,
+        "snippet": "Key documentation:",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/logseq.md:chunk:190",
+        "score": 0.6692,
+        "snippet": "| User documentation | https://docs.logseq.com/ |",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/codebase-digest.md:chunk:150",
+        "score": 0.6684,
+        "snippet": "**Documentation**: `/home/ygg/Workspace/sandbox/marketplaces/claude/resources/knowledge_graphs/codebase-digest/README.md`",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 13,
+    "query": "What does this imply for our repository? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/15/09-46-02-e78df85e.md:chunk:2",
+        "score": 0.8989,
+        "snippet": "`09:46:02` \ud83c\udf44 User > What does this imply for our repository? ultrathink ",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/tools/.claude/logging/2025/12/16/09-07-55-7f5d9f72.md:chunk:165",
+        "score": 0.7432,
+        "snippet": "`09:31:49` \ud83c\udf44 User > Yes please. ultrathink ",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/15/09-46-02-e78df85e.md:chunk:9",
+        "score": 0.709,
+        "snippet": "> ## Repository Implications",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/tools/.claude/logging/2025/12/15/09-54-50-e78df85e.md:chunk:281",
+        "score": 0.6943,
+        "snippet": "> - \"Find all ultrathink requests\" \u2192 10 found accurately",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/agents/process-cartographer.md:chunk:23",
+        "score": 0.6719,
+        "snippet": "## In This Repository",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 14,
+    "query": "How can I see the entire network of all my journal files? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/wikilink-injector.md:chunk:5",
+        "score": 0.6584,
+        "snippet": "#### Journal Files",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:135",
+        "score": 0.6441,
+        "snippet": "> -- See all nodes and relationships",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:173",
+        "score": 0.6344,
+        "snippet": "`16:32:29` \ud83c\udf44 User > How do I see the network in the browser?",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/koi-net.md:chunk:204",
+        "score": 0.6319,
+        "snippet": "### Network Graph",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/koi-net.md:chunk:99",
+        "score": 0.6269,
+        "snippet": "## Network Graph",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 15,
+    "query": "Are you aware of agentnet? How does that work in terms of agent IDs? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/agentnet/skills/agentnet-master/subskills/tui.md:chunk:7",
+        "score": 0.7485,
+        "snippet": "\u2502 AgentNet - Agent Profiles                           \u2502",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": ".claude/registry/agents.md:chunk:35",
+        "score": 0.7401,
+        "snippet": "| **agentnet** | Social curator | Agent social network\u2014profiles, walls, DMs | agentnet (5 sub-skills) |",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/agentnet/.claude-plugin/plugin.json:chunk:0",
+        "score": 0.7273,
+        "snippet": "{ \t\"name\": \"agentnet\", \t\"version\": \"0.1.0\", \t\"description\": \"Social network for AI agents - profiles, walls, DMs, and social interaction\", \t\"skills\": [\"./skills/\"], \t\"commands\": [\"./commands/\"], \t\"agents\": [\"./agents/social-curator.md\", \"./agents/engineer.md\"] } ",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": ".claude/registry/agents.md:chunk:139",
+        "score": 0.7263,
+        "snippet": "#### AgentNet Domain-Specific Agents (CRITICAL)",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/agentnet/skills/agentnet-docs/subskills/gray-matter.md:chunk:76",
+        "score": 0.719,
+        "snippet": "## AgentNet Patterns",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 16,
+    "query": "I think I do want agent hex IDs in git so that we can map git to logs... does that make sense? or..? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "CLAUDE.md:chunk:8",
+        "score": 0.6662,
+        "snippet": "**Agent ID traceability**: After spawning a subagent, include its hex ID (from Task output) in commits to enable direct transcript lookup. Use `.claude/tools/correlate_commits.py` for retroactive correlation.",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "CLAUDE.md:chunk:6",
+        "score": 0.6628,
+        "snippet": "**Git is the inter-agent coordination layer.** Agents coordinate through observable file changes, not complex protocols.",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": ".claude/agents/archivist.md:chunk:64",
+        "score": 0.6529,
+        "snippet": "# Agent-specific activity git log --oneline --grep=\"agent:\" -20",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": ".claude/agents/git-historian.md:chunk:85",
+        "score": 0.6445,
+        "snippet": "Session: {session-id from .claude/logging/} Agent: git-historian Intent: {what this analysis reveals}",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/tools/.claude/logging/2025/12/16/09-07-55-7f5d9f72.md:chunk:134",
+        "score": 0.6421,
+        "snippet": "> # Instead of just agent_id",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 17,
+    "query": "I love the above observations. Can you please write a journal entry that expands on the above? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/tools/.claude/logging/2025/12/16/09-07-55-7f5d9f72.md:chunk:165",
+        "score": 0.6819,
+        "snippet": "`09:31:49` \ud83c\udf44 User > Yes please. ultrathink ",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/statusline/skills/statusline-master/SKILL.md:chunk:24",
+        "score": 0.6613,
+        "snippet": "### Journal Entries",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "CLAUDE.md:chunk:15",
+        "score": 0.6566,
+        "snippet": "# Journal Entries",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/journal/skills/journal-master/SKILL.md:chunk:11",
+        "score": 0.6492,
+        "snippet": "| **journal-aggregator** | Summaries, patterns, reports, synthesis across entries | `subskills/journal-aggregator.md` |",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/agents/archivist.md:chunk:20",
+        "score": 0.6468,
+        "snippet": "**Journal Entries** (via journal plugin) - Daily reflections - Temporal patterns - Wikilink networks",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 18,
+    "query": "How does this work with agentnet? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/agentnet/skills/agentnet-master/subskills/tui.md:chunk:7",
+        "score": 0.7176,
+        "snippet": "\u2502 AgentNet - Agent Profiles                           \u2502",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/agentnet/skills/agentnet-docs/subskills/zod-validation.md:chunk:109",
+        "score": 0.7034,
+        "snippet": "## AgentNet Patterns",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/agentnet/skills/agentnet-docs/subskills/gray-matter.md:chunk:76",
+        "score": 0.7034,
+        "snippet": "## AgentNet Patterns",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": ".claude/registry/agents.md:chunk:139",
+        "score": 0.7009,
+        "snippet": "#### AgentNet Domain-Specific Agents (CRITICAL)",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/registry/agents.md:chunk:35",
+        "score": 0.6945,
+        "snippet": "| **agentnet** | Social curator | Agent social network\u2014profiles, walls, DMs | agentnet (5 sub-skills) |",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 19,
+    "query": "Are you aware that each plugin should have a flagship plugin persona agent? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": ".claude/registry/agents-complete.md:chunk:38",
+        "score": 0.8113,
+        "snippet": "## Plugin Persona Agents",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": ".claude/registry/agents.md:chunk:20",
+        "score": 0.7773,
+        "snippet": "### Plugin Personas",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": ".claude/briefings/2025-12-13-strategic-briefing.md:chunk:70",
+        "score": 0.7511,
+        "snippet": "Additionally, 10 plugin personas exist (per PERSONA_SUBAGENTS_STRATEGY.md): - The Archivist (logging) - *Note: different from new Archivist* - The Mentor (awareness) - The Explorer (exploration) - The Scribe (journal) - The Coordinator (schedule) - The Organizer (backlog) - The Synthesizer (brainsto",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": ".claude/agents/agent-architect.md:chunk:23",
+        "score": 0.7451,
+        "snippet": "### Plugin Personas [Table of plugin identities]",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/registry/agents.md:chunk:22",
+        "score": 0.7329,
+        "snippet": "| Plugin | Persona Identity | Domain | Primary Skill |",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 20,
+    "query": "I just installed 9 plugins that are newly available from the claude official plugins, do you see those?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:31",
+        "score": 0.7899,
+        "snippet": "> \u251c\u2500\u2500 Claude is working with plugins.",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:38",
+        "score": 0.7899,
+        "snippet": "> \u2514\u2500\u2500 Claude is working with plugins.",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/awareness/skills/awareness/subskills/temporal-kg-memory.md:chunk:160",
+        "score": 0.7876,
+        "snippet": "- Claude is working with plugins.",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:117",
+        "score": 0.7722,
+        "snippet": "> 9. Claude works with Plugins.",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/vault-manager.md:chunk:15",
+        "score": 0.7529,
+        "snippet": "\u2514\u2500\u2500 plugins/             # Claude Code plugins",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 21,
+    "query": "Can you explain each of these 10 plugins in detail?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agents.md:chunk:64",
+        "score": 0.7631,
+        "snippet": "### Understanding Plugin Structure",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/transcripts/skills/transcript-master/SKILL.md:chunk:65",
+        "score": 0.7528,
+        "snippet": "## Related Plugins",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/awareness/skills/awareness/subskills/plugin-studier.md:chunk:41",
+        "score": 0.7297,
+        "snippet": "When studying multiple plugins:",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/logseq.md:chunk:86",
+        "score": 0.7296,
+        "snippet": "### Plugin Development Basics",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/search/skills/search-master/SKILL.md:chunk:90",
+        "score": 0.7238,
+        "snippet": "### With Other Plugins",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 22,
+    "query": "Can you make the oneline summaries in the statusline white and bold? Can you also make the agent name in the statusline bold and can you make the last subdirectory in the path bold and can you make the branch name bold? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/statusline/skills/statusline-master/SKILL.md:chunk:0",
+        "score": 0.6928,
+        "snippet": "--- name: statusline-master description: Master skill for instance identity management. Sub-skills (3): self-namer, instance-tracker, generation-tuner. Invoke for naming yourself, tracking other instances, or improving name/summary/description generation quality. allowed-tools: Read, Bash, Write, Ed",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/statusline/.claude-plugin/plugin.json:chunk:8",
+        "score": 0.6874,
+        "snippet": "    \"statusline\",",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/statusline/skills/statusline-master/subskills/generation-tuner.md:chunk:1",
+        "score": 0.6862,
+        "snippet": "Iterate on and improve the AI-generated names, summaries, and descriptions that appear in the statusline.",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/statusline/.claude-plugin/plugin.json:chunk:1",
+        "score": 0.6801,
+        "snippet": "  \"name\": \"statusline\",",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/interface/skills/interface-master/subskills/agent-navigation.md:chunk:8",
+        "score": 0.6628,
+        "snippet": "### Why Not Capture the Statusline?",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 23,
+    "query": "/feature-dev:feature-dev \u00a0I'm looking at the log markdown files they are so cool. I'm wondering if we can build a slash command in our logging plugin that opens the log directory in obsidian as a vault? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/SKILL.md:chunk:26",
+        "score": 0.7436,
+        "snippet": "### With Logging Plugin Log sessions are markdown \u2192 Can be opened as vault \u2192 Graph shows session relationships",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/vault-manager.md:chunk:18",
+        "score": 0.7153,
+        "snippet": "```bash # Open specific path as vault xdg-open \"obsidian://open?path=/path/to/vault\" >/dev/null 2>&1 &",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/logseq.md:chunk:151",
+        "score": 0.7138,
+        "snippet": "| Feature | Logseq | Obsidian | Roam Research | Notion | |---------|--------|----------|---------------|--------| | Open Source | Yes | No | No | No | | Local-first | Yes | Yes | No | No | | Outliner | Yes | Mixed | Yes | Yes | | Datalog Queries | Yes | No | Limited | No | | Whiteboard | Yes | Canva",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/exploration/skills/exploration-master/subskills/curiosity-cultivator.md:chunk:112",
+        "score": 0.7094,
+        "snippet": "### Logging Plugin",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/link-patterns.md:chunk:16",
+        "score": 0.7057,
+        "snippet": "### Session References When one entry discusses another session: ```markdown This builds on work from [[13-00-log-archaeology-and-obsidian-command]]. ```",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 24,
+    "query": "Why is agent renaming not working for the statusline right now? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/statusline/.claude-plugin/plugin.json:chunk:1",
+        "score": 0.7357,
+        "snippet": "  \"name\": \"statusline\",",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/git-flow/skills/git-flow-master/subskills/branch-naming.md:chunk:29",
+        "score": 0.7241,
+        "snippet": "Agent names come from statusline registry. The tool checks:",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/git-flow/skills/git-flow-master/subskills/branch-naming.md:chunk:28",
+        "score": 0.708,
+        "snippet": "## Agent Name Resolution",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/autocommit/skills/autocommit-conventions/SKILL.md:chunk:33",
+        "score": 0.6979,
+        "snippet": "### Statusline Plugin Autocommit reads agent names from the statusline registry at `.claude/instances/registry.json`. This ensures commit attribution matches the session's identity.",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/agents/.claude-plugin/plugin.json:chunk:1",
+        "score": 0.6888,
+        "snippet": "  \"name\": \"agents\",",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 25,
+    "query": "Can you briefly explain why we have 19000+ unstaged additions? I thought this plugin was working nicely earlier in the day, but it seems to have generally stopped working, or was it only working for certain agents or something? Can you investigate? ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/agents.md:chunk:33",
+        "score": 0.662,
+        "snippet": "**Key Statistics:** - 65 focused plugins optimized for minimal token usage - 91 specialized agents across 8 domains - 57 agent skills with progressive disclosure - 15 multi-agent workflow orchestrators - 45 development tools and utilities - 23 categories with 1-6 plugins each - Average 3.4 component",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": ".claude/registry/agents-complete.md:chunk:5",
+        "score": 0.6508,
+        "snippet": "| Tier | Count | Location | |------|-------|----------| | Project-Level Custom Agents | 10 | `.claude/agents/` | | Plugin Persona Agents | 14 | `plugins/*/agents/` | | **Total** | **24** | |",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/logseq.md:chunk:221",
+        "score": 0.64,
+        "snippet": "- **Extensible**: Rich plugin API with 300+ community plugins",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:270",
+        "score": 0.6266,
+        "snippet": "`16:37:08` \ud83c\udf44 User > It's quite confusing to me, why does there appear to be so much duplication? ultrathink Can you please consult with a knowledge graph expert to get some help with your approach?",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/logseq.md:chunk:34",
+        "score": 0.6265,
+        "snippet": "- **Plugin API**: Extensible architecture with 300+ community plugins",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 26,
+    "query": "How do I interact with it?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/memvid.md:chunk:226",
+        "score": 0.6353,
+        "snippet": "# Chat with your knowledge chat = MemvidChat(\"knowledge.mp4\", \"knowledge_index.json\", llm_provider=\"google\") chat.interactive_chat() ```",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/agents/skills/agents-master/subskills/eliza.md:chunk:50",
+        "score": 0.6351,
+        "snippet": "**Actions**: User interaction handlers",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/awareness/skills/temporal-kg-memory/.claude/logging/2025/12/12/16-14-25-e78df85e.md:chunk:448",
+        "score": 0.6215,
+        "snippet": "> Or see the conversation flow:",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/memvid.md:chunk:28",
+        "score": 0.6198,
+        "snippet": "### 3. Interactive Chat",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/exploration/skills/exploration-master/subskills/network-prober.md:chunk:56",
+        "score": 0.6178,
+        "snippet": "``` User: What network resources can I reach?",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 27,
+    "query": "OK it seemed to work! Can you please write a journal entry reflecting on our work today?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/journal/skills/journal-master/subskills/journal-reflector.md:chunk:2",
+        "score": 0.6808,
+        "snippet": "Create reflection-focused journal entries for retrospectives, lessons learned, reviews, and backward-looking thought.",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/statusline/skills/statusline-master/SKILL.md:chunk:24",
+        "score": 0.6614,
+        "snippet": "### Journal Entries",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "CLAUDE.md:chunk:15",
+        "score": 0.6534,
+        "snippet": "# Journal Entries",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/journal/skills/journal-master/SKILL.md:chunk:6",
+        "score": 0.6456,
+        "snippet": "| **journal-writer** | Creating entries, daily/monthly/yearly, atomic notes, capturing thoughts | `subskills/journal-writer.md` |",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/journal/skills/journal-master/subskills/journal-reflector.md:chunk:0",
+        "score": 0.6436,
+        "snippet": "--- name: journal-reflector description: Reflection-focused journaling for retrospectives, lessons learned, reviews, and backward-looking entries. Use when the user wants to reflect, review, conduct retrospectives, extract lessons, or think about what happened. allowed-tools: Read, Write, Edit, Glob",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 28,
+    "query": "What is the command doing? Is it tracking all the obsidian logs or something? Also it doesn't seem to currently open with the logging directory visible in the graph view. ultrathink",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/vault-manager.md:chunk:52",
+        "score": 0.7067,
+        "snippet": "# Try direct command obsidian \"obsidian://open?path=$(pwd)\" ```",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/journal/skills/journal-master/subskills/journal-linker.md:chunk:39",
+        "score": 0.704,
+        "snippet": "The journal is Obsidian-compatible. Opening `.claude/journal/` in Obsidian provides: - Visual graph view - Automatic backlink tracking - Local graph for each note",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/journal/skills/journal-master/subskills/journal-linker.md:chunk:38",
+        "score": 0.6968,
+        "snippet": "### Obsidian Graph",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/obsidian/skills/obsidian-master/subskills/graph-config.md:chunk:3",
+        "score": 0.6919,
+        "snippet": "Location: `.obsidian/graph.json`",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": ".claude/agents/obsidian-quartz.md:chunk:83",
+        "score": 0.6917,
+        "snippet": "\u2502  \u2502 obsidian-quartz \u2502\u25c4\u2500\u2500\u2500\u2500\u2500\u2500 \"Show me the graph\"              \u2502",
+        "human_relevant": null
+      }
+    ]
+  },
+  {
+    "query_id": 29,
+    "query": "What is the bash command doing with logging when I run that command? What's it doing?",
+    "results": [
+      {
+        "rank": 1,
+        "doc_id": "plugins/interface/skills/interface-master/subskills/stack-overview.md:chunk:40",
+        "score": 0.7217,
+        "snippet": "\u2502  \u2022 Actually bash runs for Bash tool, but fish is login shell    \u2502",
+        "human_relevant": null
+      },
+      {
+        "rank": 2,
+        "doc_id": "plugins/knowledge-graphs/skills/kg-master/subskills/lightrag.md:chunk:231",
+        "score": 0.712,
+        "snippet": "```bash # === Server Configuration === HOST=0.0.0.0 PORT=9621 WORKERS=4 TIMEOUT=150 LOG_LEVEL=INFO",
+        "human_relevant": null
+      },
+      {
+        "rank": 3,
+        "doc_id": "plugins/interface/skills/interface-master/subskills/claude-code.md:chunk:16",
+        "score": 0.7095,
+        "snippet": "### Bash Tool - Spawns a bash shell (even if fish is login shell) - Commands run in Claude Code's working directory - Output is captured and returned - Long-running commands can timeout",
+        "human_relevant": null
+      },
+      {
+        "rank": 4,
+        "doc_id": "plugins/logging/skills/log-search/SKILL.md:chunk:95",
+        "score": 0.7085,
+        "snippet": "```bash # 1. Check stats uv run plugins/logging/tools/search_logs.py --stats --format text",
+        "human_relevant": null
+      },
+      {
+        "rank": 5,
+        "doc_id": "plugins/interface/skills/interface-master/subskills/fish.md:chunk:4",
+        "score": 0.7067,
+        "snippet": "```bash # Check login shell echo \"Login shell: $SHELL\"",
+        "human_relevant": null
+      }
+    ]
+  }
+]

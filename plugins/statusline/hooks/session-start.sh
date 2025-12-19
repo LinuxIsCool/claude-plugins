@@ -13,6 +13,7 @@
 # Source shared utilities
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../lib/statusline-utils.sh"
+source "$SCRIPT_DIR/../lib/pane-identity.sh" 2>/dev/null || true
 
 # Read JSON input
 INPUT=$(cat)
@@ -79,6 +80,15 @@ else
     fi
     echo "$PROCESS_NUM" > "$COUNTER_FILE"
 
+    # Detect tmux pane identity (for direct pane-to-session correlation)
+    PANE_INFO=$(get_current_pane_info 2>/dev/null) || PANE_INFO=""
+    PANE_ID=""
+    PANE_REF=""
+    if [ -n "$PANE_INFO" ]; then
+        PANE_ID=$(echo "$PANE_INFO" | cut -d'|' -f2)
+        PANE_REF=$(echo "$PANE_INFO" | cut -d'|' -f3)
+    fi
+
     # Register new session (atomic with flock)
     update_registry "$REGISTRY" \
         --arg sid "$SESSION_ID" \
@@ -87,6 +97,8 @@ else
         --arg ts "$TIMESTAMP" \
         --arg dir "$DIR_NAME" \
         --argjson pnum "$PROCESS_NUM" \
+        --arg pane_id "$PANE_ID" \
+        --arg pane_ref "$PANE_REF" \
         '.[$sid] = {
           "name": $name,
           "task": ("Working in " + $dir),
@@ -95,7 +107,9 @@ else
           "created": $ts,
           "last_seen": $ts,
           "status": "active",
-          "process_number": $pnum
+          "process_number": $pnum,
+          "pane_id": (if $pane_id != "" then $pane_id else null end),
+          "pane_ref": (if $pane_ref != "" then $pane_ref else null end)
         }'
 
     # Log session start

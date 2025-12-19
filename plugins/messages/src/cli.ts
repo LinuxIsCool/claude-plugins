@@ -39,6 +39,13 @@ import {
   getUserEmail,
 } from "./adapters/email";
 import {
+  importEmailImap,
+  countImapMessages,
+  listImapFolders,
+  isImapAvailable,
+  getImapStatus,
+} from "./adapters/email-imap";
+import {
   TelegramApiClient,
   hasSession,
 } from "./integrations/telegram/client";
@@ -77,6 +84,7 @@ Usage:
 
 Commands:
   telegram-auth               Authenticate with Telegram (one-time setup)
+  email-sync                  Sync emails from IMAP server (Gmail, Outlook, etc.)
   import telegram -f <file>   Import Telegram JSON export
   import telegram-api         Import from Telegram API (requires auth)
   import logs                 Import Claude Code logs
@@ -121,6 +129,12 @@ Examples:
 
   # Import emails from .mbox file
   bun plugins/messages/src/cli.ts import email -f ~/Downloads/gmail-export.mbox
+
+  # Sync emails from IMAP (last 30 days)
+  bun plugins/messages/src/cli.ts email-sync
+
+  # Sync emails from IMAP (last 7 days)
+  bun plugins/messages/src/cli.ts email-sync -s 7
 
   # Search messages
   bun plugins/messages/src/cli.ts search "authentication"
@@ -194,6 +208,88 @@ async function main(): Promise<void> {
         console.log("Session saved. You can now run: import telegram-api");
       } catch (error) {
         console.error("\nAuthentication failed:", error);
+        process.exit(1);
+      }
+      break;
+    }
+
+    case "email-sync": {
+      console.log("Email IMAP Sync");
+      console.log("===============\n");
+
+      // Check configuration
+      const imapStatus = getImapStatus();
+      if (!imapStatus.configured) {
+        console.error("Error: IMAP not configured.");
+        console.log("\nRequired environment variables:");
+        console.log("  IMAP_HOST=imap.gmail.com");
+        console.log("  IMAP_USER=you@gmail.com (or use EMAIL_ADDRESS)");
+        console.log("  IMAP_PASSWORD=your-app-password");
+        console.log("\nFor Gmail:");
+        console.log("  1. Enable 2FA on your Google account");
+        console.log("  2. Generate an App Password: https://myaccount.google.com/apppasswords");
+        console.log("  3. Use the App Password as IMAP_PASSWORD");
+        console.log("\nCommon IMAP hosts:");
+        console.log("  Gmail:    imap.gmail.com");
+        console.log("  Outlook:  outlook.office365.com");
+        console.log("  Yahoo:    imap.mail.yahoo.com");
+        console.log("  iCloud:   imap.mail.me.com");
+        process.exit(1);
+      }
+
+      console.log(`Host: ${imapStatus.host}`);
+      console.log(`User: ${imapStatus.user}`);
+      console.log(`Auth: ${imapStatus.authType}`);
+      console.log();
+
+      // Parse since option (days)
+      const daysBack = values.since ? parseInt(values.since, 10) : 30;
+      if (isNaN(daysBack)) {
+        console.error(`Error: Invalid days value: ${values.since}`);
+        process.exit(1);
+      }
+      const sinceDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+
+      if (values["dry-run"]) {
+        console.log("Connecting and counting messages...");
+        try {
+          const counts = await countImapMessages({ since: sinceDate });
+          console.log(`
+IMAP Summary:
+  Folders: ${counts.folders}
+  Estimated messages: ${counts.estimatedMessages}
+
+Folder breakdown:`);
+          for (const folder of counts.folderDetails.slice(0, 20)) {
+            console.log(`  ${folder.path}: ${folder.messages} messages`);
+          }
+          if (counts.folderDetails.length > 20) {
+            console.log(`  ... and ${counts.folderDetails.length - 20} more folders`);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          process.exit(1);
+        }
+        return;
+      }
+
+      console.log(`Syncing emails from last ${daysBack} days...`);
+
+      let imported = 0;
+      try {
+        const generator = importEmailImap(store, { since: sinceDate });
+
+        for await (const message of generator) {
+          search.index(message);
+          imported++;
+          if (imported % 50 === 0) {
+            process.stdout.write(`\rImported ${imported} messages...`);
+          }
+        }
+
+        console.log(`\nDone! Imported ${imported} messages.`);
+      } catch (error) {
+        console.error("\nError during sync:", error);
         process.exit(1);
       }
       break;

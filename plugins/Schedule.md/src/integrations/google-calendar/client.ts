@@ -81,7 +81,10 @@ export class GoogleCalendarClient {
     }
 
     const now = new Date();
-    const timeMin = now.toISOString();
+    // Start from beginning of current week (7 days ago) to include past events this week
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    weekStart.setHours(0, 0, 0, 0);
+    const timeMin = weekStart.toISOString();
     const timeMax = new Date(
       now.getTime() + daysAhead * 24 * 60 * 60 * 1000
     ).toISOString();

@@ -1,0 +1,15 @@
+---
+id: msg_HoEenRjjXAX2n7BsaQHCDiaFygJy464HP7q4N2BD8mRA
+kind: 1010
+account_id: email_deborah_harmonyyogacenter_ccsend_com
+created_at: 1765391475000
+imported_at: 1766105413991
+author_name: Vancouver Island Yoga School
+title: New Year Yoga Starter Series Dates are Here!
+thread_id: email_91d74a3d9c6b
+platform: email
+platform_id: <1142289554339.1116681235785.1142303619.0.381330JL.2002@synd.ccsend.com>
+tags: [["subject","New Year Yoga Starter Series Dates are Here!"],["folder","INBOX"]]
+---
+
+Email from Harmony Yoga Center Start (or Restart) Your Practice: Join Our Yoga Starter Series You are receiving this email because you provided your email address when you registered as a member at Vancouver Island Yoga School. We value your email privacy so if you prefer not to receive occasional emails from us please click the "Unsubscribe" link at the bottom of this email.  Hi Shawn, Thanks to the amazing response to our first two Yoga Starter Series, we’re thrilled to open a new session this January. If you know someone who’s ready to experience the many benefits of yoga — from greater flexibility and strength to a more balanced nervous system and the sense of connection that comes with practicing in community — we’d be grateful if you passed this email along. Our new series dates are below. Thank you so much for your continued support. This series isn’t just for beginners — if you’d like to revisit the foundations and deepen your practice, we’d love to have you join us too! NEW YEAR YOGA STARTER SERIES Are You Ready to Start Yoga or Want to Revisit the Basics? Join us for three engaging sessions designed to help you move with confidence, connect with your breath, and discover the joy of yoga. In the first two sessions, Charlotte and Susan will guide you step-by-step through the key movements, postures, and principles that form the foundation of most yoga classes. You’ll learn posture names, how to align safely and effectively for your body, and build the confidence to join our new Start Slow & Strong classes offered in January on Thursdays and Saturdays at noon. You’ll also feel prepared to step into any of our Level 1 or Level 1–2 classes with ease. And we’ll leave time for Q&A in every session. Our final session is a special practice exclusively for our Yoga Starters — a 1-hour Level 1 class followed by a short Q&A with your teachers. You’ll also receive a printed reference guide and video overview to support your practice and continued learning. ﻿ ﻿3 Consecutive Sundays Sunday Jan 4th & 11th | 12:15–1:45 PM﻿ ﻿and Sunday, Jan. 18th | 3:15-4:45 PM Limited to 10 participants The Workshop Only is ﻿ ﻿$65 + tax or Purchase our New Year Yoga Starter Pack﻿ ﻿$275 + tax includes the workshop and 2-months of unlimited Yoga (pass is good for all regular classes and must start by Jan 31st) GET THE STARTER PACK HERE! OR Click Here to Register for just the workshop with love, VI Yoga School   Website: VI Yoga School Email: info@viyogaschool.com We're also on Facebook, Instagram, and YouTube! Click below!         V.I Yoga School | 103-360 Duncan St. | Duncan, BC V9L 3W4 CA Unsubscribe | Update Profile | Constant Contact Data Notice

@@ -3,3 +3,5 @@
 {"model":"faster-whisper-tiny","device":"cuda","load_ms":500,"inference_ms":310,"success":true,"note":"Multi-model test - tiny","timestamp":"2025-12-18T09:09:17-08:00"}
 {"model":"faster-whisper-base","device":"cuda","load_ms":350,"inference_ms":120,"success":true,"note":"Multi-model test - base (even faster)","timestamp":"2025-12-18T09:09:17-08:00"}
 {"component":"pyannote-audio","version":"4.0.3","status":"installed","note":"Ready for diarization, needs HF_TOKEN for pretrained models","timestamp":"2025-12-18T09:11:30-08:00"}
+{"component":"pyannote-diarization","version":"3.1","device":"cuda","inference_ms":180,"success":true,"note":"GPU diarization working, 0.18s for 5s audio","timestamp":"2025-12-18T17:28:40-08:00"}
+{"component":"pyannote-diarization","test":"jfk_speech","duration_s":11,"inference_ms":570,"speakers_detected":1,"segments":5,"embedding_dim":256,"success":true,"timestamp":"2025-12-18T17:29:47-08:00"}

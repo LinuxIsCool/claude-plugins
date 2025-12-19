@@ -1,0 +1,52 @@
+---
+id: msg_9CBZu93VWJVbNH4R8uMHkfxoUxcv9YqnbsodWrViVA2e
+kind: 1010
+account_id: email_venturesummits_youngstartupmailercampaign_com
+created_at: 1763652727000
+imported_at: 1766105217737
+author_name: Venture Summit
+title: Countdown...$300 off ends in...
+thread_id: email_cb8d39e8a2f5
+platform: email
+platform_id: <1763652727269.b4cfddac-abee-4c7d-9c6d-ea0c4534c7cd@536350m.youngstartup.com>
+tags: [["subject","Countdown...$300 off ends in..."],["folder","INBOX"]]
+---
+
+Discount ends at midnight...get it before it's too late
+
+NEVS300x (1) (https://c3pYq04.na1.hubspotlinks.com/Ctc/LT+113/c3pYq04/VWMmNc6jJxHdN4BSpDsscmqVW7vv0b_5G5x2fN8mSy4P3lcq-W6N1vHY6lZ3pXW2VKMFJ65kl0DW1094RS8jD2-bW4m57DP7vg3WTW1ZdZ1r12jc-2W4G0swG7GY3tkW7mK4113Dsdn3W3qnV5y3vzkVzW1WX3f26Z0KrjW80hv3H3J-M6-Vfb13p8mV1-5W7PybxB5JlPK9W4zPhRD6nHqjRW2s-c3L8vYz6VW2v1Wxf32Nxs8VDD4dS4NSt6lW2HPM5f1JBs4pW4WJfLt1Z0tX4VH753m896t_XVjXXvR6nZzD1W5R_c5R95VvPkW7fpPk63Bv9SdW3Kjrkj5P2jtyf4RCZTC04 )
+
+Hi Shawn,
+
+A quick reminder that registration savings of $300 off to attend The New England Venture Summit, EXPIRE TODAY, November 20th at midnight.
+
+Whether you're a startup seeking capital and exposure, or an investor seeking new deals, this is one event you don't want to miss!
+
+MEET MORE THAN 120 EARLY-STAGE VCs:
+
+Discover what industries they favor, what they are looking for in their next investment, and what you must do to get them excited.
+
+HEAR FROM MORE THAN 140 TOP INNOVATORS
+
+Top founders showcasing cutting-edge innovations will be on hand to present their investor decks.
+
+Register now and take advantage of the $300 off registration savings before they expire.
+
+Book (3) (https://c3pYq04.na1.hubspotlinks.com/Ctc/LT+113/c3pYq04/VWMmNc6jJxHdN4BSpDsscmqVW7vv0b_5G5x2fN8mSy5n3lcq-W7Y8-PT6lZ3nvW2Xkjz75F62PHVzg5-H6XDTM_VCVK6F2qlJ0cW3mVQ9v6M6StWW62mGkw3D7q36W80c_-J1hhZPWW8fgWNP4gH8x0N93Wl1tMgzvfW2C2RZX2WC4k2W7Z5Qvw53B0GkW8kTNpz54M4L9W16598K7b21zjMPsQpKRJGmmW8GFtWF7vCkzxVb--DS4mmPckW5KrhGH7JZL_VW2NKF7v4cS7-MW1966zy5FV1rsW55hr8Y8JqdYvVDxP429hvZHYW27m5H91BYp9GW6lgLky3BkCg_W7hR72f4zpgQkW1yl_F24nT4tnW1PJmSW5mND0QVT840y38zRM7f4CmqKx04 )
+
+OVER 120 VCs CONFIRMED
+
+Sign up today to solidify your space.
+
+vcs collage 14 (2) (https://c3pYq04.na1.hubspotlinks.com/Ctc/LT+113/c3pYq04/VWMmNc6jJxHdN4BSpDsscmqVW7vv0b_5G5x2fN8mSy543lcq-W7lCdLW6lZ3l5W5PXlC116y5GLMDs1PZtLT_XW494zYW9dcGV9W3qzYhS6lmnndW1MpDsJ5LgTGjW1qdztH8y596PW5gHVXz1lWXQgW4skPx93CQY2DW37Wd7Z1xSSRGW7C1-Cx8rn-FqN8C4-PG-bDp4W6JCfV15YZnVRW7h79RR9kL2dbVRN-dj4_plqXN4S3fhCW7kY2W99sd6j2GG5sFW7GDD_d3D240MW46JMcD2YNS3DV89m9X81J45MW26m6MJ2KPHl6N2Nh2496B_z8W1_Lffq5kM3bJW2jbQ2J7G4JGmW8T0G3v1xcmXQf3dqWb-04 )
+
+HIGH - LEVEL NETWORKING:
+
+An excellent opportunity to meet and network with active early-stage VCs, corporate VCs, angel investors, investment bankers, senior executives of emerging companies, and strategic partners.
+
+Partnered6 (5) (https://c3pYq04.na1.hubspotlinks.com/Ctc/LT+113/c3pYq04/VWMmNc6jJxHdN4BSpDsscmqVW7vv0b_5G5x2fN8mSy4P3lcq-W6N1vHY6lZ3pXW2VKMFJ65kl0DW1094RS8jD2-bW4m57DP7vg3WTW1ZdZ1r12jc-2W4G0swG7GY3tkW7mK4113Dsdn3W3qnV5y3vzkVzW1WX3f26Z0KrjW80hv3H3J-M6-Vfb13p8mV1-5W7PybxB5JlPK9W4zPhRD6nHqjRW2s-c3L8vYz6VW2v1Wxf32Nxs8VDD4dS4NSt6lW2HPM5f1JBs4pW4WJfLt1Z0tX4VH753m896t_XVjXXvR6nZzD1W5R_c5R95VvPkW7fpPk63Bv9SdW3Kjrkj5P2jtyf4RCZTC04 )
+
+youngStartup Ventures, 2164 Victory Blvd, Staten Island, New York
+
+Unsubscribe (https://hs-536350.s.hubspotemail.net/hs/preferences-center/en/direct?data=W2nXS-N30h-StW3ZLFDF3GKQpyW2RjCwp2HFrR0W2r60Hr3j4nKvW1SbFr_2nYg61W2CMMh23DTBSzW1VqSnT2-bR66W3_-Pvq2PPGysW3M89LS23bfnpW1Xpt0d1VvHp4W3jpTRb3JRR7_W21s4fk3jr1Y0W4kNn_93LYZ5nW1SqFNL1Q51cNW219_4q2sSGh3W36y8b43B-B-_W2nSLwk4rnL65W2FplRv3R6TgwW2KRF9c1YYCZ4W1N4mGZ3gxhV7W45nXvm30LL_3W1_qdK03djtyCW43xc3V4tl7fTW3T0V9f1Xv1VzW3GLdkY30BmTdW24VMnk2KVBpKW2WyxTs1Xf3tQW30n-4C2HKFRTW1NfWz83_H_wDW4pCFb03gy3B3W3JWFWj217XTvW1V7YCZ4t4mGkW1_tzNk30yMJPW3dwd5B43p82tW3LV-gK38rxdDW3P3Pg43bdx70W43Yn0D4pBrvmW4fqJRm3D_FPtW1W_k_N3QNjR-W2KFhsx2YlZJrW2Tx34723rvbtW3X-pZZ214ZQwW1BMMkR2WGlscW365mfN30CbQrW383vmH4mDFDZW2v-Dt62t2wzjW219ZkM1BfjjBW3LVCZL4fslYSW3_Xw7P4kkKyJW2Rlg3D3VzxcnW3XVQ072WLw6jf1Zbrqy04&_hsenc=p2ANqtz-8D-fHhuVd0ZV5y7EwVn3pKso5dGqt_g2FCGf_3m5jHbS1puoOR48L8-VtmJrYEfDcci1UjQJcsKe9c6EWEVt7yWIN1p9ImDHsh2r2IL1FmyeIW-yc&_hsmi=390885318 )
+Manage preferences (https://hs-536350.s.hubspotemail.net/hs/preferences-center/en/page?data=W2nXS-N30h-StW3ZLFDF3GKQpyW2RjCwp2HFrR0W2r60Hr3j4nKvW1SbFr_2nYg61W2CMMh23DTBSzW1VqSnT2-bR66W3_-Pvq2PPGysW3M89LS23bfnpW1Xpt0d1VvHp4W3jpTRb3JRR7_W21s4fk3jr1Y0W4kNn_93LYZ5nW1SqFNL1Q51cNW219_4q2sSGh3W36y8b43B-B-_W2nSLwk4rnL65W2FplRv3R6TgwW2KRF9c1YYCZ4W1N4mGZ3gxhV7W45nXvm30LL_3W1_qdK03djtyCW43xc3V4tl7fTW3T0V9f1Xv1VzW3GLdkY30BmTdW24VMnk2KVBpKW2WyxTs1Xf3tQW30n-4C2HKFRTW1NfWz83_H_wDW4pCFb03gy3B3W3JWFWj217XTvW1V7YCZ4t4mGkW1_tzNk30yMJPW3dwd5B43p82tW3LV-gK38rxdDW3P3Pg43bdx70W43Yn0D4pBrvmW4fqJRm3D_FPtW1W_k_N3QNjR-W2KFhsx2YlZJrW2Tx34723rvbtW3X-pZZ214ZQwW1BMMkR2WGlscW365mfN30CbQrW383vmH4mDFDZW2v-Dt62t2wzjW219ZkM1BfjjBW3LVCZL4fslYSW3_Xw7P4kkKyJW2Rlg3D3VzxcnW3XVQ072WLw6jf1Zbrqy04&_hsenc=p2ANqtz-8D-fHhuVd0ZV5y7EwVn3pKso5dGqt_g2FCGf_3m5jHbS1puoOR48L8-VtmJrYEfDcci1UjQJcsKe9c6EWEVt7yWIN1p9ImDHsh2r2IL1FmyeIW-yc&_hsmi=390885318 )

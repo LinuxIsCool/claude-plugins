@@ -1,0 +1,47 @@
+---
+id: msg_3fyvSCqfFLa59YyD2XF2ftQhELXJfSsdmooiuavsqudD
+kind: 1010
+account_id: email_no-reply-vnygdu8kkxa4muvw57ybjw_mail_anthropic_com
+created_at: 1765327522000
+imported_at: 1766105406375
+author_name: Anthropic
+title: [action needed] Your Claude API access is turned off
+thread_id: email_55b65dd679ee
+platform: email
+platform_id: <K6fsvTy8TZGI-Kj1oEkckA@geopod-ismtpd-40>
+tags: [["subject","[action needed] Your Claude API access is turned off"],["folder","INBOX"]]
+---
+
+Claude [https://claude.ai/images/claude_logo_full.png]
+
+Hello,
+
+Your access to the Claude API has been disabled because your organization
+‘Longtail Financial' is out of usage credits.
+
+Go to the Billing
+[https://url8792.mail.anthropic.com/ls/click?upn=u001.rFcAmKXLOm9u6wLRWHIUYSyi8Ot2-2FnNyQVY4hpmDkiqK52B-2F-2FQKLV8ha1nDXJfosgFnZUIx0478iqL5qrUeT7Q-3D-3DFH_k_9dnU1zGWJMtetNfBTOW5c1SnkmB8Vbb72Zbkovm9dNFH3KGEfvPGufhwmEwzj0Ja6SMfZ-2FpJjeWqaRBeaUmaWh282M4ATFTzvCJhaM9Zs6eGYAijlq1teMNOIIo0J2zGF647aWOeVyDklswSGNwCe6pN9qfUi5HNve1GBLsScOfrmzdmyLuj8yoCZPaFJcKrgN6sqCHmUCMkERsKftVLgr-2FtI2jpswr-2FDz0ABHNF4Xg6kKl-2B483CFAEoX7EDMCvrcZ5MG-2BCIJIzSnGUDQKZeSS1mjeG-2BQN6BmoW88NRuDDtgamuw09rO9bOaIlDrl-2Bkx]
+page to add credits and manage your settings. To ensure uninterrupted service,
+we recommend enabling auto-reload for your organization. When enabled, we'll
+automatically add credits when your balance reaches a specified minimum.
+
+Warmly,
+The Anthropic Team
+
+For any further questions, please visit our help center
+[https://url8792.mail.anthropic.com/ls/click?upn=u001.rFcAmKXLOm9u6wLRWHIUYc0QkMTx61-2B0VNcZthi30myKv6o51Mmuf6-2Fasw4G-2FEWnjwLx_9dnU1zGWJMtetNfBTOW5c1SnkmB8Vbb72Zbkovm9dNFH3KGEfvPGufhwmEwzj0Ja6SMfZ-2FpJjeWqaRBeaUmaWhnkcRPheSe1yxaDjTFdIyDo-2BBNCci5CFhvGe1pREkvi-2BDFmWqzAhWpCTJSya93FQSTVgdEOGmTaw2BSrgC-2FCnqOV786Wnr-2F1-2B2vxe-2ByGDQFYjyo0Vd1-2FjyRL-2FEgjcVxrJlEla8SdWN8bhqFnyZGpe4nMiIuqZrOPlwa4oPKtIxO0JJoNfBElHRbuPNdINID-2FZx-2BSFWFIKQeyv7Ky2gLyMCN4TLy4hZXR65ygUcEGvN0].
+
+Anthropic [https://claude.ai/images/ant_logo_full_faded.png]
+
+Claude.ai
+[https://url8792.mail.anthropic.com/ls/click?upn=u001.rFcAmKXLOm9u6wLRWHIUYR2OTiBaouKIQ6GV-2FPwmu34-3D0Rvw_9dnU1zGWJMtetNfBTOW5c1SnkmB8Vbb72Zbkovm9dNFH3KGEfvPGufhwmEwzj0Ja6SMfZ-2FpJjeWqaRBeaUmaWnl9oBvyj-2B7XmI2-2FSKP8y6sZ-2FMNEvwO673Nf8jZp8tLAY8LhZm0122A7yFy951YLbjoBEjogupDEvIHtTDo2RQMNwvPe3NzEJVikFUcl-2FSBuwaf5DF5rCYgFYaj-2Buqxg5kD8TnL5A-2Bfh19an-2B-2FX5EttePfJUYNPp1FVryC6ifDQJKioJEC8HwJzjlIV8rjg8tDBV6IZzyAQ5T-2BoYcVrXDaeVUO3MOb-2Fnxk-2FCJpbPRIJh]
+· Research
+[https://url8792.mail.anthropic.com/ls/click?upn=u001.rFcAmKXLOm9u6wLRWHIUYSKRKJAmcPTW126jLsjaGDdpWUMe1rPQqsdTGhEZEUSP4PQB_9dnU1zGWJMtetNfBTOW5c1SnkmB8Vbb72Zbkovm9dNFH3KGEfvPGufhwmEwzj0Ja6SMfZ-2FpJjeWqaRBeaUmaWgpquJmLcG-2FI40Y95gpcDcS-2FMPWFHi8THz9eJD-2B9BBh3-2BjKZwl7kTh7ECbKlofde60EHonk0BMkWxvWDWN9k2KqPOwdQIqGdO0H7bTNSVX9tkhMPwqSB36nC4fna4MNMOYuqNnCvMCpoE50NTPn1sqTN0UuKrtijBTQxfFoh3jDeXdnA8PXzc6B5rRosIXIg07BnI7cFXbzSpfNu6kIh3s3UcQCIRQH-2BZf52nhgacI-2BX]
+· Products
+[https://url8792.mail.anthropic.com/ls/click?upn=u001.rFcAmKXLOm9u6wLRWHIUYdjm06hTZNgr9QoLOKdEJWibHpXIMsfRA-2FkzEr0qCie3LCrC_9dnU1zGWJMtetNfBTOW5c1SnkmB8Vbb72Zbkovm9dNFH3KGEfvPGufhwmEwzj0Ja6SMfZ-2FpJjeWqaRBeaUmaWkifeADNnI5m2WDrhEPwx2QdR0zaCK58h50R-2F-2B-2F22gNhTMBoM3-2Bj7a1JVgImCAiv9-2FUqT-2FqSZG5302l-2FeNtSX6KuXCltG-2Fpoq9KHIKEn7GX9FKT6EH7gDVnOq88Ci-2B5wI6HQvpd-2Fn9S0zA-2BjSAW0RMVbyvZ35EXJ98dqBZ5gOf-2Fy0Q6jI-2FfQXkIAlaxTSh4hUedAJy9kVCKZWbA-2B6uzAeqFTZ0lzyEExlvG-2B10UWveq5]
+· Company
+[https://url8792.mail.anthropic.com/ls/click?upn=u001.rFcAmKXLOm9u6wLRWHIUYVkNF9ETxjhvx66ue5S9R9UnlB8E2k-2FYvarmPfGHl-2BuKB5ys_9dnU1zGWJMtetNfBTOW5c1SnkmB8Vbb72Zbkovm9dNFH3KGEfvPGufhwmEwzj0Ja6SMfZ-2FpJjeWqaRBeaUmaWmao0HkMU8Ua741xw6275assYwEDETZdR-2BldMM66hEQoiXlmscKolM08t2WWRxOGKcVmrFQX1kNuSh0f0znW5m1pX-2Bry6K5ErwzrjZQXS6VWaEWbR4RQapppOx0iUjEJYaZQFZoCeVsaPprMkf772-2BuMgNbfHuY5uZpWU-2FCGbdiOaldjNDWFQwWranQTFi67-2FA-2F4XYzYI7RbaIy4YkFQPcv9Bz8AV-2F3FdjVP-2FXBKyFiJ]
+
+
+
+[https://url8792.mail.anthropic.com/wf/open?upn=u001.yVmcaFlf3gf2lBQir9nZKdFoXuC5SKYdB1x4T6-2Fy-2FLrYl1t535TRCZMQxEw8wODWOJS0O00ZSZIjq-2BFvhNjjq5XjROl1EZgJooZuhDFqyBe4NBRmyB-2BGA-2F-2BePsKmtQqfB3-2FwARqkIr-2BcpLs-2BG5rO3If7kYTgy1kE8yuJv9sjqAu6O8l1g2TUD3u59cqXh25Eo-2BTIgTY2H5sp0ABPji9ycB9m6fMMFxU4Ic7gsRHXegW4EOAZb-2FxF1OtdM6KpNAgAuk1FHuN5V8mFP7QgBYuJBQaswhDDGe5QEGArsyHVN5a6I34atC2VEEX-2Bv8N3OjBP]

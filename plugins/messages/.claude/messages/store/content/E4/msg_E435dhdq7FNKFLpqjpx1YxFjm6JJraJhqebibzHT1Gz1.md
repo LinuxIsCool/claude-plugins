@@ -1,0 +1,15 @@
+---
+id: msg_E435dhdq7FNKFLpqjpx1YxFjm6JJraJhqebibzHT1Gz1
+kind: 1010
+account_id: email_support_notify_ly_com
+created_at: 1764550866000
+imported_at: 1766105335584
+author_name: Booking Center
+title: ITINERARY
+thread_id: email_47807d2d58e1
+platform: email
+platform_id: <1764550866253_228186_3766862_2662.sc-10-9-156-212-inbound0@notify.ly.com>
+tags: [["subject","ITINERARY"],["folder","INBOX"]]
+---
+
+This email has been automatically sent, please do not reply to this inquiry directly. Customer Service Hotline:+16476945054 Email Address: csfeedback@ly.com ITINERARY AIRLINE BOOKING REFERENCE : I4ERQV PNR : CLZZFA SURNAME : ANDERSON GIVEN NAME : SHAWN ID NO. : HN720580 ETICKET NO. : 4517386090852 ISSUING AIRLINE : PORTER AIRLINES DATE OF ISSUE : Dec 1, 2025 DEP/ARR AIRPORT FLIGHT NO. CLASS DEPARTURE DATE DEPARTURE TIME ARRIVAL TIME STATUS DEPARTURE TERMINAL ARRIVAL TERMINAL Vancouver International Airport-YVR/Macdonald Cartier International Airport-YOW PD0262 Economy Dec 27, 2025 07:00 14:44 OK T0 Macdonald Cartier International Airport-YOW/Newark Liberty International Airport-EWR PD2339 Economy Dec 27, 2025 15:55 17:25 OK B FARE: CAD167.01 TAX : CAD107.89 TOTAL : CAD274.90 NOTICE: · PLEASE ARRIVE AT THE AIRPORT BEFORE THE CHECK-IN TIME SPECIFIED BY THE AIRLINE. · DURING CHECK-IN, PLEASE PRODUCE YOUR VALID ID CARD AS USED WHEN PURCHASING THE TICKET. · TO FIND OUT MORE ABOUT AIRLINE REGULATIONS, PLEASE REFER TO THE RELEVANT AIRLINE OR AGENTS.
