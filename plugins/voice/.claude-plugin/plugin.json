@@ -1,0 +1,46 @@
+{
+  "name": "voice",
+  "version": "0.1.0",
+  "description": "Voice input/output for Claude Code ecosystem - STT, TTS, tmux control, agent voices",
+  "author": {
+    "name": "linuxiscool"
+  },
+  "keywords": [
+    "voice",
+    "speech",
+    "tts",
+    "stt",
+    "audio",
+    "accessibility",
+    "tmux"
+  ],
+  "skills": ["./skills/"],
+  "commands": ["./commands/"],
+  "agents": ["./agents/voice-conductor.md"],
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh SessionStart"
+      }]
+    }],
+    "Stop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh Stop"
+      }]
+    }],
+    "Notification": [{
+      "hooks": [{
+        "type": "command",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh Notification"
+      }]
+    }],
+    "SubagentStop": [{
+      "hooks": [{
+        "type": "command",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/voice-hook.sh SubagentStop"
+      }]
+    }]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "@plugins/voice",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Voice input/output for Claude Code ecosystem - STT, TTS, tmux control, agent voices",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tts": "./src/adapters/tts/index.ts",
+    "./identity": "./src/identity/resolver.ts",
+    "./ports/*": "./src/ports/*.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint src/",
+    "hook": "bun run hooks/voice-hook.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "bun": ">=1.0.0"
+  },
+  "keywords": [
+    "voice",
+    "tts",
+    "stt",
+    "speech",
+    "audio",
+    "claude",
+    "elevenlabs",
+    "whisper"
+  ],
+  "author": "linuxiscool",
+  "license": "MIT"
+}
