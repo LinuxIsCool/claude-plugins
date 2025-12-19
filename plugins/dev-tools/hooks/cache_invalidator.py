@@ -48,8 +48,27 @@ def extract_plugin_name(file_path: str) -> str | None:
     return None
 
 
+def is_dev_mode(plugin_cache: Path) -> bool:
+    """Check if plugin is in dev mode (cache contains symlinks).
+
+    Dev mode = version directory is a symlink to source.
+    This enables hot-reload for hook-based plugins.
+    """
+    if not plugin_cache.exists():
+        return False
+
+    # Check if any version directory is a symlink
+    for item in plugin_cache.iterdir():
+        if item.is_symlink():
+            return True
+    return False
+
+
 def find_cache_to_clear(plugin_name: str) -> list[Path]:
-    """Find all cache directories for a plugin."""
+    """Find all cache directories for a plugin.
+
+    Skips plugins in dev mode (symlinked caches) to preserve hot-reload.
+    """
     cache_base = get_plugin_cache_dir()
     caches_to_clear = []
 
@@ -61,6 +80,10 @@ def find_cache_to_clear(plugin_name: str) -> list[Path]:
         if source_dir.is_dir():
             plugin_cache = source_dir / plugin_name
             if plugin_cache.exists():
+                # Skip if in dev mode (preserves symlinks for hot-reload)
+                if is_dev_mode(plugin_cache):
+                    print(f"Plugin '{plugin_name}' in dev mode - cache preserved for hot-reload")
+                    continue
                 caches_to_clear.append(plugin_cache)
 
     return caches_to_clear
