@@ -10,6 +10,7 @@
     "./stt": "./src/adapters/stt/index.ts",
     "./identity": "./src/identity/resolver.ts",
     "./quality": "./src/quality/index.ts",
+    "./coordination": "./src/coordination/index.ts",
     "./ports/*": "./src/ports/*.ts"
   },
   "scripts": {
@@ -17,13 +18,19 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome lint src/",
     "hook": "bun run hooks/voice-hook.ts",
+    "daemon": "bun run bin/voice-daemon.ts",
+    "daemon:start": "bun run bin/voice-daemon.ts start",
+    "daemon:stop": "bun run bin/voice-daemon.ts stop",
+    "daemon:status": "bun run bin/voice-daemon.ts status",
     "quality:benchmark": "bun run src/quality/cli.ts benchmark",
     "quality:compare": "bun run src/quality/cli.ts compare",
     "quality:regression": "bun run src/quality/cli.ts regression",
     "quality:baseline": "bun run src/quality/cli.ts baseline",
     "quality:list": "bun run src/quality/cli.ts list"
   },
-  "dependencies": {},
+  "dependencies": {
+    "yaml": "^2.8.2"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "typescript": "^5.0.0"

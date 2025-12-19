@@ -49,6 +49,26 @@ import { getDefaultTTSFactory, speakAndPlay } from "../src/adapters/tts/index.js
 import { resolveVoiceForSession, resolveVoiceForAgent, normalizeVoiceSettings } from "../src/identity/resolver.js";
 import type { TTSOptions } from "../src/ports/tts.js";
 
+// Import personality system
+import { getPersonalityManager, TextTransformer } from "../src/personality/index.js";
+import type { TransformContext } from "../src/personality/index.js";
+
+// Import queue coordination
+import { VoiceQueueClient, VoicePriority } from "../src/coordination/index.js";
+
+// Whether to use the queue daemon (can be disabled via env)
+const USE_QUEUE = process.env.VOICE_QUEUE_ENABLED !== "0";
+
+/**
+ * Map event types to voice priorities
+ */
+const EVENT_PRIORITIES: Record<string, VoicePriority> = {
+  SessionStart: VoicePriority.LOW,
+  Stop: VoicePriority.NORMAL,
+  SubagentStop: VoicePriority.NORMAL,
+  Notification: VoicePriority.HIGH,
+};
+
 /**
  * Debug logging - always logs to file, only stderr if DEBUG
  */
@@ -339,8 +359,31 @@ function getSubagentInfo(
 }
 
 /**
- * Speak text using resolved voice configuration
- * Uses lock file to prevent overlapping voice output from duplicate hooks
+ * Perform actual TTS synthesis and playback.
+ * This is called either directly (fallback) or when queue signals play_now.
+ */
+async function performTTS(
+  text: string,
+  resolved: Awaited<ReturnType<typeof resolveVoiceForSession>>
+): Promise<void> {
+  const normalizedSettings = normalizeVoiceSettings(resolved.config.settings);
+
+  const options: Partial<TTSOptions> = {
+    voiceId: resolved.config.voiceId,
+    ...normalizedSettings,
+  };
+
+  await speakAndPlay(text, options, resolved.config.backend);
+}
+
+/**
+ * Speak text using queue coordination with fallback to direct playback.
+ *
+ * Flow:
+ * 1. Try to connect to queue daemon (auto-starts if not running)
+ * 2. Enqueue request and wait for play_now signal
+ * 3. Perform TTS when signaled
+ * 4. If queue unavailable, fall back to direct playback with file lock
  */
 async function speak(
   text: string,
@@ -351,29 +394,47 @@ async function speak(
 ): Promise<void> {
   if (!text) return;
 
-  // Acquire lock to prevent duplicate/overlapping speech
-  const lockKey = agentId || "main";
-  const hasLock = await acquireLock(sessionId, `${eventType}-${lockKey}`);
-  if (!hasLock) {
-    log(`Skipping speech - another instance is already speaking for ${eventType}`);
-    return;
-  }
-
   const startTime = Date.now();
   const timestamp = new Date().toISOString();
+  const priority = EVENT_PRIORITIES[eventType] ?? VoicePriority.NORMAL;
 
-  log(`Speaking: "${text.slice(0, 50)}..."`);
+  log(`Speaking: "${text.slice(0, 50)}..." (priority: ${priority})`);
+
+  // Resolve voice configuration first
+  const resolved = agentId
+    ? await resolveVoiceForAgent(agentId, cwd)
+    : await resolveVoiceForSession(sessionId, cwd);
+
+  log(`Voice resolved: ${resolved.source} -> ${resolved.config.backend}:${resolved.config.voiceId}`);
+
+  // Apply personality transformation
+  let transformedText = text;
+  try {
+    const personality = getPersonalityManager(cwd).getForAgent(agentId || "default");
+    const transformer = new TextTransformer(personality);
+    const context: TransformContext = {
+      eventType,
+      isGreeting: eventType === "SessionStart",
+      isError: eventType === "Notification",
+      isSuccess: eventType === "Stop",
+    };
+    transformedText = transformer.transform(text, context);
+    log(`Personality applied: ${personality.id} (${transformedText.length} chars)`);
+  } catch (e) {
+    log(`Personality transformation failed, using original text: ${e}`);
+    // Continue with original text on error
+  }
 
   // Initialize event for logging
   const voiceEvent: VoiceEvent = {
     timestamp,
     session_id: sessionId,
     event: eventType,
-    text,
-    text_length: text.length,
-    backend: "unknown",
-    voice_id: "unknown",
-    voice_source: "system",
+    text: transformedText,
+    text_length: transformedText.length,
+    backend: resolved.config.backend,
+    voice_id: resolved.config.voiceId,
+    voice_source: resolved.source,
     success: false,
   };
 
@@ -381,50 +442,99 @@ async function speak(
     voiceEvent.agent_id = agentId;
   }
 
+  // Try queue-based playback first
+  if (USE_QUEUE) {
+    try {
+      await speakViaQueue(transformedText, priority, resolved, sessionId, agentId);
+      voiceEvent.success = true;
+      voiceEvent.duration_ms = Date.now() - startTime;
+      log("Speech complete (via queue)");
+      await logVoiceEvent(cwd, voiceEvent);
+      return;
+    } catch (e) {
+      log(`Queue unavailable, falling back to direct playback: ${e}`);
+      // Fall through to direct playback
+    }
+  }
+
+  // Fallback: Direct playback with file lock
+  const lockKey = agentId || "main";
+  const hasLock = await acquireLock(sessionId, `${eventType}-${lockKey}`);
+  if (!hasLock) {
+    log(`Skipping speech - another instance is already speaking for ${eventType}`);
+    return;
+  }
+
   try {
-    // Resolve voice
-    const resolved = agentId
-      ? await resolveVoiceForAgent(agentId, cwd)
-      : await resolveVoiceForSession(sessionId, cwd);
-
-    log(`Voice resolved: ${resolved.source} -> ${resolved.config.backend}:${resolved.config.voiceId}`);
-
-    // Update event with resolved voice info
-    voiceEvent.backend = resolved.config.backend;
-    voiceEvent.voice_id = resolved.config.voiceId;
-    voiceEvent.voice_source = resolved.source;
-
-    // Normalize settings to valid ranges
-    const normalizedSettings = normalizeVoiceSettings(resolved.config.settings);
-
-    const options: Partial<TTSOptions> = {
-      voiceId: resolved.config.voiceId,
-      ...normalizedSettings,
-    };
-
-    await speakAndPlay(text, options, resolved.config.backend);
-
-    // Record success
+    await performTTS(transformedText, resolved);
     voiceEvent.success = true;
     voiceEvent.duration_ms = Date.now() - startTime;
-
-    log("Speech complete");
+    log("Speech complete (direct)");
   } catch (e) {
     const errorMsg = e instanceof Error ? e.message : String(e);
     voiceEvent.error = errorMsg;
     voiceEvent.duration_ms = Date.now() - startTime;
-
     log(`Speech failed: ${e}`);
-    // Log to stderr so failures are visible even without debug mode
     console.error(`[voice] TTS failed: ${errorMsg}`);
-    // Don't throw - voice failure shouldn't break Claude
   } finally {
-    // Release lock
     await releaseLock(sessionId, `${eventType}-${lockKey}`);
   }
 
-  // Always log the event (success or failure)
   await logVoiceEvent(cwd, voiceEvent);
+}
+
+/**
+ * Speak via the queue daemon.
+ * Connects, enqueues, waits for play signal, then performs TTS.
+ */
+async function speakViaQueue(
+  text: string,
+  priority: VoicePriority,
+  resolved: Awaited<ReturnType<typeof resolveVoiceForSession>>,
+  sessionId?: string,
+  agentId?: string
+): Promise<void> {
+  const client = new VoiceQueueClient();
+
+  try {
+    // Connect with auto-start
+    await client.connect({ autoStart: true });
+
+    // Enqueue request
+    const queueId = await client.enqueue({
+      text,
+      priority,
+      voiceConfig: {
+        backend: resolved.config.backend,
+        voiceId: resolved.config.voiceId,
+        settings: resolved.config.settings,
+      },
+      sessionId,
+      agentId,
+    });
+
+    log(`Enqueued: ${queueId}`);
+
+    // Wait for play signal (daemon says it's our turn)
+    const item = await client.waitForPlaySignal(30000);
+    log(`Play signal received for: ${item.id}`);
+
+    // Perform TTS
+    const startTime = Date.now();
+    try {
+      await performTTS(text, resolved);
+      const durationMs = Date.now() - startTime;
+      await client.reportComplete(queueId, durationMs);
+    } catch (error) {
+      await client.reportFailed(
+        queueId,
+        error instanceof Error ? error.message : String(error)
+      );
+      throw error;
+    }
+  } finally {
+    client.disconnect();
+  }
 }
 
 /**
