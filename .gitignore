@@ -220,6 +220,9 @@ resources/
 .claude/messages/store/content/
 .claude/messages/views/
 
+# Large binary files (embeddings, models)
+*.npz
+
 # Node.js / JavaScript / TypeScript
 node_modules/
 .npm
