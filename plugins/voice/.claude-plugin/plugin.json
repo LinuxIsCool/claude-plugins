@@ -1,21 +1,6 @@
 {
   "name": "voice",
   "version": "0.1.0",
-  "description": "Voice input/output for Claude Code ecosystem - STT, TTS, tmux control, agent voices",
-  "author": {
-    "name": "linuxiscool"
-  },
-  "keywords": [
-    "voice",
-    "speech",
-    "tts",
-    "stt",
-    "audio",
-    "accessibility",
-    "tmux"
-  ],
-  "skills": ["./skills/"],
-  "commands": ["./commands/"],
-  "agents": ["./agents/voice-conductor.md"],
+  "description": "Voice TTS feedback for Claude Code",
   "hooks": "./hooks/hooks.json"
 }
