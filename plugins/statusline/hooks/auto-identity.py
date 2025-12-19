@@ -59,7 +59,7 @@ def log(msg: str):
 
 
 def check_needs_name(instances_dir: Path, session_id: str) -> bool:
-    """Check if session needs a name (hasn't been auto_named yet)."""
+    """Check if session needs a name (hasn't been auto_named yet or still has default)."""
     registry = instances_dir / "registry.json"
     if not registry.exists():
         return False
@@ -68,7 +68,15 @@ def check_needs_name(instances_dir: Path, session_id: str) -> bool:
         with open(registry) as f:
             data = json.load(f)
         session_data = data.get(session_id, {})
-        return not session_data.get("auto_named", False)
+        # Check if auto_named is false
+        if not session_data.get("auto_named", False):
+            return True
+        # Also regenerate if name is still default (generation may have failed)
+        name = session_data.get("name", "")
+        if name == "Claude" or name.startswith("Claude-"):
+            log(f"Name is default '{name}', will regenerate")
+            return True
+        return False
     except:
         return False
 
@@ -76,7 +84,7 @@ def check_needs_name(instances_dir: Path, session_id: str) -> bool:
 def claim_naming_rights(instances_dir: Path, session_id: str) -> bool:
     """Atomically claim naming rights for this session.
 
-    Returns True if we successfully claimed, False if already claimed.
+    Returns True if we successfully claimed or if regeneration is needed.
     """
     registry = instances_dir / "registry.json"
     if not registry.exists():
@@ -89,11 +97,16 @@ def claim_naming_rights(instances_dir: Path, session_id: str) -> bool:
                 data = json.load(f)
                 session_data = data.get(session_id, {})
 
+                # Check if already named with a real name
                 if session_data.get("auto_named", False):
-                    log("Already auto_named, skipping name generation")
-                    return False
+                    name = session_data.get("name", "")
+                    # Allow regeneration if name is still default
+                    if name != "Claude" and not name.startswith("Claude-"):
+                        log(f"Already auto_named with '{name}', skipping")
+                        return False
+                    log(f"Name is default '{name}', allowing regeneration")
 
-                # Claim it
+                # Claim it (or reclaim for regeneration)
                 session_data["auto_named"] = True
                 data[session_id] = session_data
 
