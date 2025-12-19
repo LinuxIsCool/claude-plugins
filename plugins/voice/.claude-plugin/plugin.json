@@ -8,6 +8,9 @@
   "keywords": ["voice", "speech", "tts", "audio", "accessibility"],
   "skills": ["./skills/"],
   "commands": ["./commands/"],
-  "agents": ["./agents/voice-conductor.md"],
+  "agents": [
+    "./agents/voice-conductor.md",
+    "./agents/voice-character-curator.md"
+  ],
   "hooks": "./hooks/hooks.json"
 }
