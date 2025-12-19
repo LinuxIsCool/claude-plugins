@@ -149,14 +149,15 @@ async function logVoiceEvent(cwd: string, event: VoiceEvent): Promise<void> {
     const { mkdir } = await import("fs/promises");
     await mkdir(voiceDir, { recursive: true });
 
-    // Write to daily log file
+    // Write to daily log file (append mode)
     const dailyLog = join(voiceDir, "events.jsonl");
     const line = JSON.stringify(event) + "\n";
-    await Bun.write(dailyLog, line, { append: true });
+    const { appendFile } = await import("fs/promises");
+    await appendFile(dailyLog, line);
 
     // Also write to global events file for easy searching
     const globalLog = join(cwd, ".claude", "voice", "events.jsonl");
-    await Bun.write(globalLog, line, { append: true });
+    await appendFile(globalLog, line);
 
     log(`Logged voice event: ${event.event} -> ${dailyLog}`);
   } catch (e) {
