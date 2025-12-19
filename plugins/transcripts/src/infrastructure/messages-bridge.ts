@@ -7,10 +7,10 @@
  * 3. Account resolution: Find speakers by messages account
  */
 
-import { existsSync, readFileSync, writeFileSync, readdirSync } from "fs";
+import { existsSync, readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import type { Speaker, SpeakerIdentity, SpeakerID } from "../domain/entities/speaker.js";
-import type { Transcript, TID } from "../domain/entities/transcript.js";
+import type { Transcript } from "../domain/entities/transcript.js";
 import type { Utterance } from "../domain/entities/utterance.js";
 
 /**
@@ -329,7 +329,7 @@ export async function resolveSpeakerToAccount(
  * Create bidirectional link between speaker and account
  */
 export async function linkSpeakerToAccount(
-  speaker: Speaker,
+  _speaker: Speaker,
   accountId: string
 ): Promise<SpeakerIdentity> {
   const account = (await getMessagesAccounts()).find((a) => a.id === accountId);

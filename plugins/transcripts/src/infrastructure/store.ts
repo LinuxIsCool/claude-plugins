@@ -35,13 +35,11 @@ import type {
   SpeakerInput,
   SpeakerID,
   SpeakerSummary,
-  VoiceFingerprint,
 } from "../domain/entities/speaker.js";
 import type {
   Entity,
   EntityInput,
   EntityID,
-  EntityMention,
 } from "../domain/entities/entity.js";
 import type {
   Event,

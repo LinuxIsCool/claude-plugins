@@ -251,7 +251,7 @@ print(json.dumps(result))
   private runPython(
     pythonPath: string,
     script: string,
-    onProgress?: TranscriptionProgressCallback
+    _onProgress?: TranscriptionProgressCallback
   ): Promise<string> {
     return new Promise((resolve, reject) => {
       // Set LD_LIBRARY_PATH to include cuDNN libs for GPU support

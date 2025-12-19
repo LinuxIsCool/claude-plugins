@@ -6,7 +6,6 @@
  */
 
 import { spawn } from "child_process";
-import { existsSync, statSync, readFileSync } from "fs";
 import type {
   TranscriptionPort,
   TranscriptionCapabilities,
@@ -17,7 +16,6 @@ import type {
 } from "../../ports/transcription.js";
 import type { AudioInput } from "../../domain/values/media-source.js";
 import type { Utterance } from "../../domain/entities/utterance.js";
-import { generateUtteranceID } from "../../infrastructure/tid.js";
 
 /**
  * Whisper model sizes

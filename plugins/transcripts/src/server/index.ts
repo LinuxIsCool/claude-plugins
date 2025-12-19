@@ -10,7 +10,6 @@ import { transcriptionFactory } from "../adapters/transcription/index.js";
 import {
   isMessagesPluginAvailable,
   emitTranscriptToMessages,
-  getMessagesAccounts,
 } from "../infrastructure/messages-bridge.js";
 import type { TranscriptInput } from "../domain/entities/transcript.js";
 import type { SpeakerInput } from "../domain/entities/speaker.js";
