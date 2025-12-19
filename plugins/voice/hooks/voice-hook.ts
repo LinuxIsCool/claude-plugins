@@ -65,6 +65,52 @@ function log(msg: string): void {
 }
 
 /**
+ * Voice event structure for logging
+ */
+interface VoiceEvent {
+  timestamp: string;
+  session_id: string;
+  event: string;
+  text: string;
+  text_length: number;
+  backend: string;
+  voice_id: string;
+  voice_source: "session" | "agent" | "model" | "system";
+  agent_id?: string;
+  duration_ms?: number;
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * Log voice event to structured JSONL
+ */
+async function logVoiceEvent(cwd: string, event: VoiceEvent): Promise<void> {
+  try {
+    const ts = new Date(event.timestamp);
+    const dateDir = `${ts.getFullYear()}/${String(ts.getMonth() + 1).padStart(2, "0")}/${String(ts.getDate()).padStart(2, "0")}`;
+    const voiceDir = join(cwd, ".claude", "voice", dateDir);
+
+    // Create directory if needed
+    const { mkdir } = await import("fs/promises");
+    await mkdir(voiceDir, { recursive: true });
+
+    // Write to daily log file
+    const dailyLog = join(voiceDir, "events.jsonl");
+    const line = JSON.stringify(event) + "\n";
+    await Bun.write(dailyLog, line, { append: true });
+
+    // Also write to global events file for easy searching
+    const globalLog = join(cwd, ".claude", "voice", "events.jsonl");
+    await Bun.write(globalLog, line, { append: true });
+
+    log(`Logged voice event: ${event.event} -> ${dailyLog}`);
+  } catch (e) {
+    log(`Failed to log voice event: ${e}`);
+  }
+}
+
+/**
  * Read JSON from stdin
  */
 async function readStdin(): Promise<Record<string, unknown>> {
@@ -220,11 +266,32 @@ async function speak(
   text: string,
   sessionId: string,
   cwd: string,
+  eventType: string,
   agentId?: string
 ): Promise<void> {
   if (!text) return;
 
+  const startTime = Date.now();
+  const timestamp = new Date().toISOString();
+
   log(`Speaking: "${text.slice(0, 50)}..."`);
+
+  // Initialize event for logging
+  const voiceEvent: VoiceEvent = {
+    timestamp,
+    session_id: sessionId,
+    event: eventType,
+    text,
+    text_length: text.length,
+    backend: "unknown",
+    voice_id: "unknown",
+    voice_source: "system",
+    success: false,
+  };
+
+  if (agentId) {
+    voiceEvent.agent_id = agentId;
+  }
 
   try {
     // Resolve voice
@@ -233,6 +300,11 @@ async function speak(
       : await resolveVoiceForSession(sessionId, cwd);
 
     log(`Voice resolved: ${resolved.source} -> ${resolved.config.backend}:${resolved.config.voiceId}`);
+
+    // Update event with resolved voice info
+    voiceEvent.backend = resolved.config.backend;
+    voiceEvent.voice_id = resolved.config.voiceId;
+    voiceEvent.voice_source = resolved.source;
 
     // Normalize settings to valid ranges
     const normalizedSettings = normalizeVoiceSettings(resolved.config.settings);
@@ -243,34 +315,48 @@ async function speak(
     };
 
     await speakAndPlay(text, options, resolved.config.backend);
+
+    // Record success
+    voiceEvent.success = true;
+    voiceEvent.duration_ms = Date.now() - startTime;
+
     log("Speech complete");
   } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : String(e);
+    voiceEvent.error = errorMsg;
+    voiceEvent.duration_ms = Date.now() - startTime;
+
     log(`Speech failed: ${e}`);
     // Log to stderr so failures are visible even without debug mode
-    console.error(`[voice] TTS failed: ${e instanceof Error ? e.message : String(e)}`);
+    console.error(`[voice] TTS failed: ${errorMsg}`);
     // Don't throw - voice failure shouldn't break Claude
   }
+
+  // Always log the event (success or failure)
+  await logVoiceEvent(cwd, voiceEvent);
 }
 
 /**
  * Handle SessionStart event
  */
 async function handleSessionStart(
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  cwd: string
 ): Promise<void> {
   const sessionId = data.session_id as string;
-  const cwd = (data.cwd as string) || ".";
 
   log(`SessionStart: ${sessionId}`);
-  await speak("Ready.", sessionId, cwd);
+  await speak("Ready.", sessionId, cwd, "SessionStart");
 }
 
 /**
  * Handle Stop event
  */
-async function handleStop(data: Record<string, unknown>): Promise<void> {
+async function handleStop(
+  data: Record<string, unknown>,
+  cwd: string
+): Promise<void> {
   const sessionId = data.session_id as string;
-  const cwd = (data.cwd as string) || ".";
   const transcriptPath = data.transcript_path as string;
 
   log(`Stop: ${sessionId}`);
@@ -280,7 +366,7 @@ async function handleStop(data: Record<string, unknown>): Promise<void> {
   const summary = summarizeForVoice(response);
 
   if (summary) {
-    await speak(summary, sessionId, cwd);
+    await speak(summary, sessionId, cwd, "Stop");
   }
 }
 
@@ -288,24 +374,24 @@ async function handleStop(data: Record<string, unknown>): Promise<void> {
  * Handle Notification event
  */
 async function handleNotification(
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  cwd: string
 ): Promise<void> {
   const sessionId = data.session_id as string;
-  const cwd = (data.cwd as string) || ".";
   const message = (data.message as string) || "I need your attention.";
 
   log(`Notification: ${sessionId} - ${message}`);
-  await speak(message, sessionId, cwd);
+  await speak(message, sessionId, cwd, "Notification");
 }
 
 /**
  * Handle SubagentStop event
  */
 async function handleSubagentStop(
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
+  cwd: string
 ): Promise<void> {
   const sessionId = data.session_id as string;
-  const cwd = (data.cwd as string) || ".";
   const agentId = data.agent_id as string;
   const agentTranscriptPath = data.agent_transcript_path as string;
 
@@ -315,8 +401,8 @@ async function handleSubagentStop(
   const info = getSubagentInfo(agentTranscriptPath);
 
   if (info.summary) {
-    // Use agent-specific voice
-    await speak(info.summary, sessionId, cwd, agentId);
+    // Use agent-specific voice, pass agentId for voice resolution
+    await speak(info.summary, sessionId, cwd, "SubagentStop", agentId);
   }
 }
 
@@ -346,16 +432,16 @@ async function main(): Promise<void> {
   // Handle event
   switch (event) {
     case "SessionStart":
-      await handleSessionStart(data);
+      await handleSessionStart(data, cwd);
       break;
     case "Stop":
-      await handleStop(data);
+      await handleStop(data, cwd);
       break;
     case "Notification":
-      await handleNotification(data);
+      await handleNotification(data, cwd);
       break;
     case "SubagentStop":
-      await handleSubagentStop(data);
+      await handleSubagentStop(data, cwd);
       break;
     default:
       log(`Unknown event: ${event}`);
