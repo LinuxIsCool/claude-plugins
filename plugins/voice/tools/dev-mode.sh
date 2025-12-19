@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-# dev-mode.sh - Enable hot-reload development for voice plugin
+# dev-mode.sh - Fast development workflow for voice plugin
 #
-# Voice plugin hooks execute external Bun processes, which means
-# the TypeScript code is read from disk on EVERY hook invocation.
-# By symlinking the cache to source, edits take effect immediately
-# without restarting Claude Code.
+# Claude Code validates and rebuilds plugin caches on startup,
+# so symlinks don't persist. Instead, this script provides fast
+# cache refresh operations.
 #
 # Usage:
-#   ./dev-mode.sh enable   # Symlink cache → source (hot reload)
-#   ./dev-mode.sh disable  # Restore copy-based cache
-#   ./dev-mode.sh status   # Check current mode
+#   ./dev-mode.sh sync     # Fast-copy source to cache (instant update)
+#   ./dev-mode.sh watch    # Watch source files and auto-sync
+#   ./dev-mode.sh status   # Check current cache state
 #
-# What hot-reloads (no restart needed):
+# The 'sync' command copies hook and src files to cache, enabling
+# changes to take effect on next hook invocation without full restart.
+#
+# What syncs without restart:
 #   - hooks/voice-hook.ts     Main hook logic
 #   - src/adapters/tts/*.ts   TTS backends
 #   - src/identity/*.ts       Voice resolution
@@ -34,114 +36,136 @@ CACHE_DIR="$CACHE_BASE/$VERSION"
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 show_status() {
-    echo "Voice Plugin Development Mode"
-    echo "=============================="
+    echo "Voice Plugin Development Status"
+    echo "================================"
     echo ""
     echo "Source: $SOURCE_DIR"
     echo "Cache:  $CACHE_DIR"
     echo ""
 
-    if [[ -L "$CACHE_DIR" ]]; then
-        local target
-        target=$(readlink -f "$CACHE_DIR")
-        echo -e "Mode: ${GREEN}DEV (symlink)${NC}"
-        echo "  Cache → $target"
-        echo ""
-        echo "Hot-reload is ACTIVE. Edit source files and changes"
-        echo "take effect on the next hook invocation."
-    elif [[ -d "$CACHE_DIR" ]]; then
-        echo -e "Mode: ${YELLOW}STANDARD (copy)${NC}"
-        echo "  Cache is a copy of source (not linked)"
-        echo ""
-        echo "Run './dev-mode.sh enable' for hot-reload."
-    else
-        echo -e "Mode: ${RED}NO CACHE${NC}"
+    if [[ ! -d "$CACHE_DIR" ]]; then
+        echo -e "Status: ${RED}NO CACHE${NC}"
         echo "  Cache directory doesn't exist."
+        echo "  The plugin may not be installed, or cache was cleared."
         echo ""
-        echo "Install the plugin first, or run 'enable' to create symlink."
-    fi
-}
-
-enable_dev_mode() {
-    echo "Enabling development mode..."
-    echo ""
-
-    # Backup existing cache if it's a directory (not symlink)
-    if [[ -d "$CACHE_DIR" && ! -L "$CACHE_DIR" ]]; then
-        local backup="${CACHE_DIR}.backup.$(date +%s)"
-        echo "  Backing up existing cache → $backup"
-        mv "$CACHE_DIR" "$backup"
+        echo "Run './dev-mode.sh sync' to create/update cache."
+        return
     fi
 
-    # Remove symlink if exists
-    if [[ -L "$CACHE_DIR" ]]; then
-        rm "$CACHE_DIR"
-    fi
+    # Compare source and cache timestamps
+    local src_hooks_ts="$SOURCE_DIR/hooks/voice-hook.ts"
+    local cache_hooks_ts="$CACHE_DIR/hooks/voice-hook.ts"
 
-    # Create parent directory
-    mkdir -p "$CACHE_BASE"
+    if [[ -f "$src_hooks_ts" && -f "$cache_hooks_ts" ]]; then
+        local src_mtime cache_mtime
+        src_mtime=$(stat -c %Y "$src_hooks_ts" 2>/dev/null || stat -f %m "$src_hooks_ts")
+        cache_mtime=$(stat -c %Y "$cache_hooks_ts" 2>/dev/null || stat -f %m "$cache_hooks_ts")
 
-    # Create symlink
-    ln -s "$SOURCE_DIR" "$CACHE_DIR"
-    echo -e "  ${GREEN}Created symlink:${NC} $CACHE_DIR → $SOURCE_DIR"
-    echo ""
-    echo "Development mode enabled!"
-    echo ""
-    echo "Hot-reload is now active for:"
-    echo "  - hooks/voice-hook.ts"
-    echo "  - src/**/*.ts"
-    echo ""
-    echo "Changes take effect on next hook invocation (no restart needed)."
-    echo ""
-    echo "NOTE: Changes to plugin.json, skills/, commands/, agents/"
-    echo "      still require Claude Code restart."
-}
-
-disable_dev_mode() {
-    echo "Disabling development mode..."
-    echo ""
-
-    if [[ -L "$CACHE_DIR" ]]; then
-        rm "$CACHE_DIR"
-        echo "  Removed symlink"
-    fi
-
-    # Restore backup if exists
-    local latest_backup
-    latest_backup=$(ls -td "${CACHE_DIR}.backup."* 2>/dev/null | head -1 || true)
-
-    if [[ -n "$latest_backup" && -d "$latest_backup" ]]; then
-        mv "$latest_backup" "$CACHE_DIR"
-        echo "  Restored cache from backup"
+        if [[ "$src_mtime" -gt "$cache_mtime" ]]; then
+            echo -e "Status: ${YELLOW}STALE${NC}"
+            echo "  Source is newer than cache."
+            echo "  Run './dev-mode.sh sync' to update."
+        else
+            echo -e "Status: ${GREEN}SYNCED${NC}"
+            echo "  Cache matches source."
+        fi
     else
-        # Copy source to cache
-        mkdir -p "$CACHE_DIR"
-        cp -r "$SOURCE_DIR"/* "$CACHE_DIR/"
-        echo "  Created fresh cache copy from source"
+        echo -e "Status: ${YELLOW}UNKNOWN${NC}"
+        echo "  Could not compare timestamps."
     fi
 
     echo ""
-    echo -e "${YELLOW}Development mode disabled.${NC}"
-    echo "Cache is now a static copy. Changes require:"
-    echo "  1. /dev-tools:refresh voice"
-    echo "  2. Restart Claude Code"
+    echo "Last cache update:"
+    ls -la "$CACHE_DIR/hooks/voice-hook.ts" 2>/dev/null | awk '{print "  " $6, $7, $8}'
+}
+
+sync_cache() {
+    echo "Syncing voice plugin to cache..."
+    echo ""
+
+    # Create cache directory if missing
+    if [[ ! -d "$CACHE_DIR" ]]; then
+        echo "  Creating cache directory..."
+        mkdir -p "$CACHE_DIR"
+    fi
+
+    # Sync hooks (the main hot-reload target)
+    echo "  Syncing hooks/..."
+    mkdir -p "$CACHE_DIR/hooks"
+    cp -r "$SOURCE_DIR/hooks/"* "$CACHE_DIR/hooks/"
+
+    # Sync src (TTS adapters, identity resolution)
+    echo "  Syncing src/..."
+    mkdir -p "$CACHE_DIR/src"
+    cp -r "$SOURCE_DIR/src/"* "$CACHE_DIR/src/"
+
+    # Sync package files (for bun to resolve imports)
+    echo "  Syncing package files..."
+    for f in package.json tsconfig.json bun.lock bun.lockb; do
+        if [[ -f "$SOURCE_DIR/$f" ]]; then
+            cp "$SOURCE_DIR/$f" "$CACHE_DIR/"
+        fi
+    done
+
+    # Also sync plugin.json (needed for Claude to recognize hooks)
+    echo "  Syncing plugin config..."
+    mkdir -p "$CACHE_DIR/.claude-plugin"
+    cp -r "$SOURCE_DIR/.claude-plugin/"* "$CACHE_DIR/.claude-plugin/"
+
+    echo ""
+    echo -e "${GREEN}Sync complete!${NC}"
+    echo ""
+    echo "Changes to hooks/ and src/ will take effect on next hook invocation."
+    echo "No restart needed for TTS/voice changes."
+}
+
+watch_and_sync() {
+    echo "Watching voice plugin source for changes..."
+    echo "Press Ctrl+C to stop."
+    echo ""
+
+    # Check if inotifywait is available
+    if ! command -v inotifywait &> /dev/null; then
+        echo -e "${RED}Error: inotifywait not found${NC}"
+        echo "Install with: sudo apt install inotify-tools"
+        exit 1
+    fi
+
+    # Initial sync
+    sync_cache
+
+    echo ""
+    echo -e "${CYAN}Watching for changes...${NC}"
+    echo ""
+
+    # Watch and sync
+    inotifywait -m -r -e modify,create,delete "$SOURCE_DIR/hooks" "$SOURCE_DIR/src" 2>/dev/null | while read -r directory events filename; do
+        echo -e "${CYAN}[$(date +%H:%M:%S)]${NC} $events: $filename"
+        sync_cache
+    done
 }
 
 case "${1:-status}" in
-    enable)
-        enable_dev_mode
+    sync)
+        sync_cache
         ;;
-    disable)
-        disable_dev_mode
+    watch)
+        watch_and_sync
         ;;
     status)
         show_status
         ;;
     *)
-        echo "Usage: $0 {enable|disable|status}"
+        echo "Usage: $0 {sync|watch|status}"
+        echo ""
+        echo "Commands:"
+        echo "  sync    Fast-copy source files to cache"
+        echo "  watch   Watch source and auto-sync on change"
+        echo "  status  Check current cache state"
         exit 1
         ;;
 esac
