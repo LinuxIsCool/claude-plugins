@@ -2,6 +2,7 @@
  * Base TTS Adapter
  *
  * Shared utilities and base implementation for TTS adapters.
+ * Supports both legacy temp-file playback and new AudioBufferManager streaming.
  */
 
 import { spawn, execSync } from "child_process";
@@ -9,6 +10,8 @@ import { writeFileSync, unlinkSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import type { TTSPort, TTSCapabilities, TTSOptions, TTSResult, VoiceInfo } from "../../ports/tts.js";
+import type { AudioBufferManager } from "../audio/manager.js";
+import type { PlaybackStream } from "../../ports/audio-buffer.js";
 
 /**
  * Generate silence buffer (MP3 format)
@@ -90,13 +93,171 @@ function releaseAudioLock(): void {
   }
 }
 
+// ============================================================================
+// AudioBufferManager Integration
+// ============================================================================
+
 /**
- * Play audio using system audio player
- * Uses temp file approach for reliable playback without clipping
- * Works on Linux with mpv/ffplay, macOS with afplay
- * Includes global lock to prevent overlapping audio across Claude instances
+ * Singleton AudioBufferManager instance.
+ * Lazy-initialized on first use.
+ */
+let audioManager: AudioBufferManager | null = null;
+let audioManagerInitPromise: Promise<AudioBufferManager> | null = null;
+
+/**
+ * Audio playback mode configuration.
+ */
+export type PlaybackMode = "auto" | "stream" | "legacy";
+
+/**
+ * Current playback mode.
+ * - "auto": Try stream first, fall back to legacy
+ * - "stream": Use AudioBufferManager streaming only
+ * - "legacy": Use temp file + subprocess only
+ */
+// Default to legacy mode - streaming doesn't handle encoded formats (mp3/wav) properly yet
+// The subprocess adapter pipes encoded data to pw-play which expects raw PCM
+let currentPlaybackMode: PlaybackMode = "legacy";
+
+/**
+ * Set the playback mode.
+ */
+export function setPlaybackMode(mode: PlaybackMode): void {
+  currentPlaybackMode = mode;
+}
+
+/**
+ * Get the current playback mode.
+ */
+export function getPlaybackMode(): PlaybackMode {
+  return currentPlaybackMode;
+}
+
+/**
+ * Get or initialize the AudioBufferManager singleton.
+ */
+async function getAudioManager(): Promise<AudioBufferManager | null> {
+  if (audioManager) {
+    return audioManager;
+  }
+
+  if (audioManagerInitPromise) {
+    return audioManagerInitPromise;
+  }
+
+  audioManagerInitPromise = (async () => {
+    try {
+      // Dynamic import to avoid circular dependencies
+      const { getAudioBufferManager } = await import("../audio/manager.js");
+      audioManager = await getAudioBufferManager();
+      return audioManager;
+    } catch (err) {
+      console.warn("[base.ts] AudioBufferManager not available:", err);
+      return null;
+    }
+  })();
+
+  return audioManagerInitPromise;
+}
+
+/**
+ * Active playback stream for current audio.
+ * Used to stop/interrupt when new audio starts.
+ */
+let activePlaybackStream: PlaybackStream | null = null;
+
+/**
+ * Play audio using AudioBufferManager streaming.
+ * Returns true if successful, false if streaming not available.
+ */
+async function playAudioBufferStream(audio: Buffer, format: string): Promise<boolean> {
+  const manager = await getAudioManager();
+  if (!manager) {
+    return false;
+  }
+
+  try {
+    // Stop any currently playing audio
+    if (activePlaybackStream) {
+      try {
+        await activePlaybackStream.stop();
+        await activePlaybackStream.close();
+      } catch {
+        // Ignore errors stopping previous stream
+      }
+      activePlaybackStream = null;
+    }
+
+    // Create a new playback stream with prebuffering
+    const stream = await manager.createPlaybackStream({
+      name: "tts-playback",
+      prebufferMs: 50,  // Prevent first-syllable clipping
+      priority: 80,    // High priority for TTS
+    });
+
+    activePlaybackStream = stream;
+
+    // For encoded formats, we need to decode to PCM first
+    // The subprocess adapter handles this via ffmpeg piping
+    if (format === "mp3" || format === "wav" || format === "ogg") {
+      // Write encoded data - the stream handles conversion
+      await stream.prebuffer(audio);
+      await stream.start();
+      await stream.drain();
+    } else {
+      // Raw PCM - write directly
+      await stream.prebuffer(audio);
+      await stream.start();
+      await stream.drain();
+    }
+
+    await stream.close();
+    activePlaybackStream = null;
+
+    return true;
+  } catch (err) {
+    console.warn("[base.ts] Streaming playback failed:", err);
+    return false;
+  }
+}
+
+/**
+ * Play audio using system audio player.
+ *
+ * Playback modes:
+ * - "auto" (default): Try AudioBufferManager streaming first, fall back to legacy
+ * - "stream": Use AudioBufferManager streaming only (fails if unavailable)
+ * - "legacy": Use temp file + subprocess only (original behavior)
+ *
+ * @param audio - Audio buffer to play
+ * @param format - Audio format (mp3, wav, pcm, etc.)
  */
 export async function playAudioBuffer(audio: Buffer, format: string = "mp3"): Promise<void> {
+  const mode = currentPlaybackMode;
+
+  // Try streaming first if mode allows
+  if (mode === "auto" || mode === "stream") {
+    const streamSuccess = await playAudioBufferStream(audio, format);
+    if (streamSuccess) {
+      return;
+    }
+    if (mode === "stream") {
+      throw new Error("Streaming playback not available and mode is 'stream'");
+    }
+    // Fall through to legacy mode
+  }
+
+  // Legacy temp-file based playback
+  await playAudioBufferLegacy(audio, format);
+}
+
+/**
+ * Legacy playback using temp file + subprocess.
+ * Uses temp file approach for reliable playback without clipping.
+ * Works on Linux with mpv/ffplay, macOS with afplay.
+ * Includes global lock to prevent overlapping audio across Claude instances.
+ */
+async function playAudioBufferLegacy(audio: Buffer, format: string): Promise<void> {
   // Acquire global audio lock (kills any current playback)
   await acquireAudioLock();
 
