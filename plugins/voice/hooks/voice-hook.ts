@@ -262,11 +262,19 @@ function summarizeForVoice(text: string): string {
   // Remove inline code
   cleaned = cleaned.replace(/`[^`]+`/g, "");
 
+  // Remove markdown tables (header, separator, and data rows)
+  // Matches lines that start and end with | or contain |---|
+  cleaned = cleaned.replace(/^\|.+\|$/gm, "");  // Table rows
+  cleaned = cleaned.replace(/^\s*\|?[-:| ]+\|?\s*$/gm, "");  // Separator rows like |---|---|
+
   // Remove markdown links, keep text
   cleaned = cleaned.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 
   // Remove markdown formatting
   cleaned = cleaned.replace(/[*_#]+/g, "");
+
+  // Clean up multiple blank lines left by removed content
+  cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
 
   // Split into sentences
   const sentences = cleaned
