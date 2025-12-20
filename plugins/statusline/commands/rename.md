@@ -1,6 +1,6 @@
 ---
 description: Rename the current tmux window to reflect agent identity
-argument-hint: "[name]"
+argument-hint: "[name|reset]"
 ---
 
 # Rename Window Command
@@ -11,6 +11,7 @@ Rename the current tmux window to show agent identity. Makes it easy to distingu
 
 - No argument: Use registered agent name and process number (e.g., "Sigil:C124")
 - `<name>`: Use custom name (e.g., "MyAgent")
+- `reset`: Restore automatic window naming (tmux takes over)
 
 ## Workflow
 
@@ -36,7 +37,25 @@ If an argument was provided, use it. Otherwise use the format `Name:CXXX`:
 - With argument "Spark": Window name = "Spark"
 - Without argument: Window name = "Sigil:C124" (from registry)
 
-### Step 3: Rename Window
+### Step 3: Handle Reset or Rename
+
+**If argument is "reset":**
+
+```bash
+# Re-enable automatic window naming
+tmux set-window-option automatic-rename on
+
+# Tmux will automatically update the window name to the running command
+```
+
+Output:
+```markdown
+Window automatic-rename **enabled**
+
+(tmux will now manage the window name)
+```
+
+**Otherwise (rename):**
 
 ```bash
 # Rename the current tmux window
@@ -68,8 +87,8 @@ Window renamed to **Sigil:C124**
 # Use custom name
 /statusline:rename Spark
 
-# Clear and use default
-/statusline:rename Claude
+# Restore automatic naming (let tmux manage it)
+/statusline:rename reset
 ```
 
 ## Notes

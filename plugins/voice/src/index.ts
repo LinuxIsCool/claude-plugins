@@ -85,3 +85,60 @@ export type {
 export { DEFAULT_TTS_OPTIONS } from "./ports/tts.js";
 export { DEFAULT_STT_OPTIONS } from "./ports/stt.js";
 export { DEFAULT_VAD_OPTIONS } from "./ports/vad.js";
+
+// Voice personality system
+export type {
+  VoicePersonality,
+  PersonalityPreset,
+  EmotionType,
+  TransformContext,
+} from "./personality/index.js";
+
+export {
+  DEFAULT_PERSONALITY,
+  PERSONALITY_PRESETS,
+  GREETINGS,
+  FILLERS,
+  getRandomPhrase,
+  PersonalityManager,
+  getPersonalityManager,
+  TextTransformer,
+  createTransformer,
+  transformText,
+} from "./personality/index.js";
+
+// Tmux control port
+export type {
+  TmuxControlPort,
+  TmuxControlCapabilities,
+  TmuxControlFactory,
+  TmuxSession,
+  TmuxWindow,
+  TmuxPane,
+  Direction,
+  SplitDirection,
+} from "./ports/tmux.js";
+
+// Tmux control adapters
+export {
+  TmuxControlAdapter,
+  createTmuxControl,
+  TmuxVoiceHandler,
+  createTmuxHandler,
+  createTmuxTranscriptHandler,
+  isTmuxAvailable,
+  parseIntent,
+  TMUX_COMMANDS,
+  ORDINALS,
+  DIRECTIONS,
+  SPLIT_DIRECTIONS,
+} from "./adapters/tmux/index.js";
+
+export type {
+  TmuxControlConfig,
+  TmuxHandlerConfig,
+  HandlerResult,
+  TmuxVoiceCommand,
+  TmuxIntent,
+  ParsedIntent,
+} from "./adapters/tmux/index.js";
