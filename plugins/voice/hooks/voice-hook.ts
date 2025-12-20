@@ -273,11 +273,11 @@ function summarizeForVoice(text: string): string {
     .split(/(?<=[.!?])\s+/)
     .filter((s) => s.trim().length > 0);
 
-  // Take first 2-3 sentences, max ~100 words
+  // Take first sentences, with generous limits to avoid mid-structure truncation
   let result = "";
   let wordCount = 0;
-  const maxSentences = 3;
-  const maxWords = 100;
+  const maxSentences = 30;
+  const maxWords = 500;
 
   for (let i = 0; i < Math.min(sentences.length, maxSentences); i++) {
     const sentence = sentences[i].trim();
