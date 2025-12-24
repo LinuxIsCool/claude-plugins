@@ -1,0 +1,21 @@
+{
+  "8c582fe0a675": "GPU base model faster than tiny",
+  "df70c91ca1b7": "Install pyannote-audio package completed",
+  "5489a5803098": "ML environment configured, needs HuggingFace token",
+  "99c81440a67a": "Write work journal entry",
+  "6e6afb9eb26a": "GPU transcription breakthrough documented",
+  "145513c56161": "Remaining roadmap items status",
+  "5c961338c44b": "Transcripts plugin architecture completed with ports",
+  "b7eb37e45b3a": "Token added to Claude environment file",
+  "d7559bf57950": "Accept HuggingFace license for pyannote",
+  "7315b60c57bc": "Access granted or now available",
+  "7524d21d687c": "Accept gated segmentation model for pipeline",
+  "f90460e0e378": "User confirms agreement",
+  "172a2f6f4549": "Accept speaker diarization community model",
+  "202387b20cd8": "User accepts proposal or request",
+  "99c2dd6e0f43": "Implemented diarization embeddings plugin phase",
+  "fc9ad0a4899c": "Write detailed journal entry",
+  "4c2eaa1a096d": "SQLite FTS5 query syntax and features",
+  "36c74c196d91": "Write detailed journal entry",
+  "a48823beb55b": "Created comprehensive search MCP integration journal entry"
+}

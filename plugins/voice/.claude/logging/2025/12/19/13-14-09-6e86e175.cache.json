@@ -1,0 +1,11 @@
+{
+  "cd6a3bfa4410": "Built local CPU-based text-to-speech adapter",
+  "3bb29c18db3a": "User requests permission to proceed",
+  "fd504087e08b": "Piper TTS adapter implementation complete successfully",
+  "c0d4079af5b9": "Check piper installation status",
+  "d9e8ee03b2d6": "Install Piper text-to-speech software",
+  "98d04947535f": "Check voice specs directory status",
+  "451a316ec759": "Voice plugin specs roadmap overview",
+  "058cff9af688": "Specifications currently under development",
+  "2accc169018c": "Commit Piper TTS adapter implementation now"
+}

@@ -1,0 +1,12 @@
+{
+  "debd42499db0": "Custom tmux window names for Claude agents",
+  "4a2c21143395": "Add tmux window naming function",
+  "59a545e9be77": "Concerned about tmux config side effects",
+  "51805d30cfc0": "Tmux automatic-rename conflicts with custom window names",
+  "aff3a6b7590f": "Create window rename command for statusline",
+  "2ffe81b9fba6": "Created statusline rename command",
+  "bd609c01feb5": "Rename command reset functionality implementation",
+  "e5e9f3d40e23": "Statusline rename command now fully supported",
+  "9e063346e157": "Write journal entry about today's work",
+  "af5dadd05ac3": "Created journal entry documenting tmux window naming"
+}

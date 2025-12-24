@@ -1,0 +1,10 @@
+{
+  "08ed1def9ec2": "Slash command input logging inquiry",
+  "204ccf36d28b": "Logging captures via subscription hooks, not interception",
+  "e1d0a83ccb1d": "Show past ten command inputs",
+  "b29d44a22e58": "Display last ten command inputs",
+  "15ddc34bbe07": "Tool uses and tool use stops log",
+  "a74d3e1e11f9": "Tool execution data structure breakdown",
+  "ef8fdd783fff": "Build slash command for log directory vault",
+  "f598e82afe7f": "Slash commands expand as prompt templates"
+}

@@ -1,0 +1,16 @@
+{
+  "094868f2daea": "Check statusline description failure logs",
+  "b8527c797157": "Fix regenerates awaiting instruction descriptions",
+  "3049f1332319": "New Claude instance missing awaiting response indicator",
+  "a2817e6c0861": "Fix session description generation timing issue",
+  "a8a4a020b298": "Missing 'Awaiting instructions' message on startup",
+  "c50d60a0c07a": "Fix generating real descriptions instead",
+  "c61a84827b5c": "Debug logging and Claude pane display",
+  "331c46807305": "Fix working for sessions with prompts",
+  "be13f0558203": "Restore original new instance greeting behavior",
+  "5d053399a512": "Fix statusline display for awaiting instructions",
+  "55ed7aafc1c6": "Write detailed journal entry and commit",
+  "68765177546c": "Fix statusline description race condition",
+  "8724506b129c": "Instance naming and description configuration issues",
+  "57882a5ea810": "Two commits fix statusline display issues"
+}

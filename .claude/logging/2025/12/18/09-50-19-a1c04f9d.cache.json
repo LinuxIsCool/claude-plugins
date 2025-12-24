@@ -1,0 +1,8 @@
+{
+  "e82c54bfa319": "Agent froze on statusline work",
+  "52f3dced03bc": "Fathom updated statusline auto-name improvements",
+  "6e055e1af105": "Continue improvements, fix clear bug",
+  "0fab19f52f38": "Added atomic file locking for task registry",
+  "b8fb93e5a899": "Improve prompt naming and descriptions",
+  "cdb2b87dd267": "Fix statusline semantic confusion and naming"
+}

@@ -1,0 +1,20 @@
+{
+  "572a1de5cd6f": "Investigate agent voice output truncation issue",
+  "f0b9305e9beb": "Numbered lists break sentence detection regex",
+  "3ae8aee13b3c": "Analyze truncation decision and customization implications",
+  "f104667d4082": "Analyzing voice truncation architecture design decisions",
+  "62b8c6e89456": "Write markdown spec for voice tonality",
+  "ff47dc675548": "Created content selection spec with pluggable strategies",
+  "e435c8be4e22": "Plugin hook file missing error",
+  "9fedff3964f5": "Rebuilt voice plugin cache with missing hooks",
+  "e78c4900f396": "Increase text truncation limit to thirty sentences",
+  "6816098504f9": "Increased limits for voice event output",
+  "f75e0a7cc103": "Previous spec document creation inquiry",
+  "53ec0c43cfeb": "Created comprehensive ContentSelector architecture spec",
+  "96eeb82c5f4e": "Voice plugin hook failed to start",
+  "67a6ce8eeb86": "TTS read markdown table verbatim",
+  "9dacb4952908": "Proceed with safe robust implementation",
+  "9e10a7567e33": "Tables stripped from voice event processing",
+  "dd7b1ed501ea": "Implement version control for work",
+  "5cf727b138fc": "Autocommit plugin captured both changes successfully"
+}

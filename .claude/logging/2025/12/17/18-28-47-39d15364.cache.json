@@ -1,0 +1,5 @@
+{
+  "faae590225ee": "Remove stale git lock file blocking commits",
+  "95c66df43e38": "Investigate unstaged additions plugin failure",
+  "95ea66c94f91": "Investigate large git additions from message files"
+}

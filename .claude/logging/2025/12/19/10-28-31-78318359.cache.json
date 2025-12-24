@@ -1,0 +1,16 @@
+{
+  "3136f19932ad": "Fix statusline display bugs and pane titles",
+  "60905551ae52": "Fix tmux pane targeting and registry mismatch",
+  "b2a6d4adbb33": "Fix issues one and two",
+  "49b9ff11f3e7": "Fix bug 1 resolves bug 3",
+  "44f019235f28": "Clarify fragmented data in isolated instances",
+  "51adb89db821": "Clarify fragmented data storage locations",
+  "44a76f0331fe": "Proceed with two bug fixes",
+  "d2cce6d82dd3": "Fixes tmux pane targeting and registry location",
+  "d2d6317fa6a6": "Write work journal entry and commit",
+  "009b45c2c3cf": "Fix pane title targeting and logging",
+  "69418c544aa5": "Explain CX statusline count behavior",
+  "e5cf5e4cb5ee": "CX counter stored per instances directory basis",
+  "acdeaad5ef2f": "Seeking approval for current state",
+  "636dd40f592d": "Keep current design, add project isolation option"
+}

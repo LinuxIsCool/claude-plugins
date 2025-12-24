@@ -1,0 +1,21 @@
+{
+  "90051aa23a71": "Diagnose opacity management with parallel subagents",
+  "e47a7265d4d7": "Color causes washed-out appearance, not opacity",
+  "a8e654ef9d45": "Try different color option",
+  "43fb5efd95c7": "Hot reload updates calendar event colors",
+  "e8aee04733c9": "Site displaying blank page",
+  "0ce6804eaaf0": "Calendar events now display teal color",
+  "827d5227cd34": "Modulate actual transparency settings",
+  "d54cfff72ff3": "Calendar events styled with teal transparency",
+  "ca1a47cd91e8": "Calendar events opacity reduced to fifty percent",
+  "a367eabab31e": "Missing events and color synchronization issues",
+  "37d68b199ca3": "Fix calendar sync missing events",
+  "118f0d7c49d9": "Add calendars with Google sync matching",
+  "5091a627a8be": "Implemented Google Calendar import feature",
+  "7da9ca92391e": "Generate image summary in 2-7 words",
+  "8d80244cedf1": "Calendar events restored with original colors",
+  "553938bc9233": "User requests a link",
+  "749fa78fe9bb": "Local server address provided",
+  "d2825ecda750": "Missing events in calendar view",
+  "3588f3f66501": "Calendar events synced successfully"
+}
