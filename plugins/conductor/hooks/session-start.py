@@ -105,6 +105,44 @@ def check_conductor_state(cwd: Path) -> dict:
     return state
 
 
+def get_top_anticipation(cwd: Path, threshold: float = 0.7) -> tuple[str, float] | None:
+    """Get the highest-confidence anticipation above threshold.
+
+    Returns (interest, confidence) tuple or None if none found.
+    """
+    import re
+
+    anticipations_path = cwd / ".claude" / "conductor" / "anticipations.md"
+    if not anticipations_path.exists():
+        return None
+
+    try:
+        content = anticipations_path.read_text()
+
+        # Find the "Likely Next Interests" table section
+        # Format: | Interest | Confidence | Basis |
+        pattern = r'\|\s*([^|]+)\s*\|\s*(0\.\d+)\s*\|'
+        matches = re.findall(pattern, content)
+
+        best = None
+        best_conf = 0.0
+
+        for interest, conf_str in matches:
+            try:
+                conf = float(conf_str)
+                if conf >= threshold and conf > best_conf:
+                    best = interest.strip()
+                    best_conf = conf
+            except ValueError:
+                continue
+
+        if best:
+            return (best, best_conf)
+        return None
+    except Exception:
+        return None
+
+
 def generate_context(cwd: Path) -> str:
     """Generate brief session context."""
     parts = []
@@ -124,6 +162,12 @@ def generate_context(cwd: Path) -> str:
     if state["exists"]:
         if not state["bootstrapped"]:
             parts.append("User model awaiting bootstrap")
+
+    # High-confidence anticipation
+    anticipation = get_top_anticipation(cwd, threshold=0.7)
+    if anticipation:
+        interest, conf = anticipation
+        parts.append(f"Anticipation: {interest}? ({conf})")
 
     if not parts:
         return ""

@@ -465,6 +465,14 @@ export class TranscriptsMCPServer {
             properties: {},
           },
         },
+        {
+          name: "transcripts_queue_reconcile",
+          description: "Sync queue with cache - mark already-cached videos as completed. Use after direct ingestVideo calls.",
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
       ],
     };
   }
@@ -555,6 +563,9 @@ export class TranscriptsMCPServer {
 
       case "transcripts_queue_check_new":
         return this.toolQueueCheckNew();
+
+      case "transcripts_queue_reconcile":
+        return this.toolQueueReconcile();
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -1749,6 +1760,29 @@ export class TranscriptsMCPServer {
         ],
       };
     }
+  }
+
+  /**
+   * Reconcile queue with cache
+   */
+  private toolQueueReconcile() {
+    const result = this.youtubeQueue.reconcileWithCache();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            reconciled: result.reconciled,
+            message: result.reconciled > 0
+              ? `Marked ${result.reconciled} cached videos as completed`
+              : "No cached videos found that weren't already marked complete",
+            videos: result.videos.slice(0, 20),
+            more: result.videos.length > 20 ? result.videos.length - 20 : 0,
+          }, null, 2),
+        },
+      ],
+    };
   }
 
   /**

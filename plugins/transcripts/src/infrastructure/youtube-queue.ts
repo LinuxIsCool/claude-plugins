@@ -16,6 +16,7 @@ import { homedir } from "os";
 import {
   listChannelVideos,
   ingestVideo,
+  getCachedTranscript,
   type ChannelVideo,
   type IngestOptions,
 } from "../adapters/ingestion/youtube.js";
@@ -402,6 +403,35 @@ export class YouTubeQueue {
     };
 
     for (const video of pending) {
+      // Check if already cached (from direct ingestVideo calls)
+      const cached = getCachedTranscript(video.id, { language: options.language });
+      if (cached && cached.length > 0) {
+        // Already have this transcript - mark as completed
+        video.status = "completed";
+        video.error = null;
+        video.last_attempt = Date.now();
+        this.updateQueueItem(video);
+
+        // Update channel stats
+        const channel = this.channels.get(video.channel_id);
+        if (channel) {
+          channel.ingested_count++;
+          this.saveChannels();
+        }
+
+        this.state.total_ingested++;
+        this.saveState();
+
+        result.succeeded++;
+        result.processed++;
+        result.videos.push({
+          id: video.id,
+          title: video.title,
+          status: "completed",
+        });
+        continue;
+      }
+
       // Mark as processing
       video.status = "processing";
       video.attempts++;
@@ -504,6 +534,45 @@ export class YouTubeQueue {
       }
     }
     return count;
+  }
+
+  /**
+   * Reconcile queue with cache - mark already-cached videos as completed
+   * Useful after direct ingestVideo calls that bypassed the queue
+   */
+  reconcileWithCache(options: { language?: string } = {}): {
+    reconciled: number;
+    videos: Array<{ id: string; title: string }>;
+  } {
+    const reconciled: Array<{ id: string; title: string }> = [];
+
+    for (const video of this.queue.values()) {
+      if (video.status === "pending" || video.status === "rate_limited") {
+        const cached = getCachedTranscript(video.id, { language: options.language });
+        if (cached && cached.length > 0) {
+          video.status = "completed";
+          video.error = null;
+          video.last_attempt = Date.now();
+          this.updateQueueItem(video);
+
+          // Update channel stats
+          const channel = this.channels.get(video.channel_id);
+          if (channel) {
+            channel.ingested_count++;
+          }
+
+          this.state.total_ingested++;
+          reconciled.push({ id: video.id, title: video.title });
+        }
+      }
+    }
+
+    if (reconciled.length > 0) {
+      this.saveChannels();
+      this.saveState();
+    }
+
+    return { reconciled: reconciled.length, videos: reconciled };
   }
 
   /**

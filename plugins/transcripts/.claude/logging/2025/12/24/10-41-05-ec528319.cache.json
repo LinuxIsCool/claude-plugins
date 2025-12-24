@@ -11,5 +11,16 @@
   "c82e99cd47ad": "Write detailed journal entry",
   "e760768330f6": "Infrastructure audit reveals missing implementation layers",
   "beffa6e6599f": "Subscribe to multiple YouTube channels",
-  "7d689f00ab01": "All eighteen channels subscribed and queued"
+  "7d689f00ab01": "All eighteen channels subscribed and queued",
+  "2f3229278003": "Clarify discrepancy between 3 and 20 ingested",
+  "3e53a3ffeb1d": "Sync queue status with direct ingestion calls",
+  "90bd1f88840b": "Proceed with current action",
+  "86eb18293773": "Fixed queue cache reconciliation system",
+  "6ded7a106836": "Find 5 recent IndyDev Dan videos",
+  "9181117c505e": "IndyDevDan's five most recent videos cached",
+  "d5e1cc5019b9": "Autonomous transcript analysis with multi-agent consultation",
+  "ff25b7699661": "Explore metabolic potential through layered analysis",
+  "2c133e084117": "Use Claude Code instead of API",
+  "583010578270": "Extraction adapter complete, ready for integration",
+  "a9613b09ce41": "Created detailed journal entry on extraction adapter"
 }
