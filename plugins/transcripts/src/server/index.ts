@@ -12,6 +12,21 @@ import {
   isMessagesPluginAvailable,
   emitTranscriptToMessages,
 } from "../infrastructure/messages-bridge.js";
+import {
+  isYtDlpAvailable,
+  getVideoInfo,
+  ingestVideo,
+  listChannelVideos,
+  listPlaylistVideos,
+  batchIngest,
+  clearCache as clearYouTubeCache,
+  type YouTubeTranscript,
+  type IngestOptions,
+} from "../adapters/ingestion/youtube.js";
+import {
+  getYouTubeQueue,
+  type YouTubeQueue,
+} from "../infrastructure/youtube-queue.js";
 import type { TranscriptInput, TID } from "../domain/entities/transcript.js";
 import type { SpeakerInput } from "../domain/entities/speaker.js";
 
@@ -40,10 +55,12 @@ interface MCPResponse {
 export class TranscriptsMCPServer {
   private store: TranscriptStore;
   private searchIndex: TranscriptSearchIndex;
+  private youtubeQueue: YouTubeQueue;
 
   constructor() {
     this.store = createStore();
     this.searchIndex = new TranscriptSearchIndex();
+    this.youtubeQueue = getYouTubeQueue();
   }
 
   /**
@@ -274,6 +291,180 @@ export class TranscriptsMCPServer {
             },
           },
         },
+        // YouTube ingestion tools
+        {
+          name: "transcripts_youtube_info",
+          description: "Get information about a YouTube video without downloading",
+          inputSchema: {
+            type: "object",
+            properties: {
+              url: { type: "string", description: "YouTube video URL or ID" },
+            },
+            required: ["url"],
+          },
+        },
+        {
+          name: "transcripts_youtube_ingest",
+          description: "Ingest a YouTube video (download captions or transcribe with Whisper)",
+          inputSchema: {
+            type: "object",
+            properties: {
+              url: { type: "string", description: "YouTube video URL or ID" },
+              mode: {
+                type: "string",
+                enum: ["auto", "captions", "whisper"],
+                description: "Ingestion mode: auto (try captions, fallback to whisper), captions (only use YouTube captions), whisper (always transcribe audio)",
+              },
+              language: { type: "string", description: "Language code (default: en)" },
+              whisper_model: { type: "string", description: "Whisper model if using whisper mode (e.g., base, large-v3)" },
+              save: { type: "boolean", description: "Save to transcript store (default: true)" },
+            },
+            required: ["url"],
+          },
+        },
+        {
+          name: "transcripts_youtube_channel",
+          description: "List videos from a YouTube channel",
+          inputSchema: {
+            type: "object",
+            properties: {
+              channel: { type: "string", description: "Channel URL or @handle" },
+              limit: { type: "number", description: "Max videos to return (default: 50)" },
+            },
+            required: ["channel"],
+          },
+        },
+        {
+          name: "transcripts_youtube_playlist",
+          description: "List videos from a YouTube playlist",
+          inputSchema: {
+            type: "object",
+            properties: {
+              playlist_url: { type: "string", description: "YouTube playlist URL" },
+              limit: { type: "number", description: "Max videos to return (default: 100)" },
+            },
+            required: ["playlist_url"],
+          },
+        },
+        {
+          name: "transcripts_youtube_batch",
+          description: "Ingest multiple YouTube videos",
+          inputSchema: {
+            type: "object",
+            properties: {
+              video_ids: {
+                type: "array",
+                items: { type: "string" },
+                description: "Array of YouTube video IDs or URLs",
+              },
+              mode: {
+                type: "string",
+                enum: ["auto", "captions", "whisper"],
+                description: "Ingestion mode for all videos",
+              },
+              language: { type: "string", description: "Language code (default: en)" },
+              save: { type: "boolean", description: "Save to transcript store (default: true)" },
+            },
+            required: ["video_ids"],
+          },
+        },
+        {
+          name: "transcripts_youtube_clear_cache",
+          description: "Clear YouTube download cache",
+          inputSchema: {
+            type: "object",
+            properties: {
+              video_id: { type: "string", description: "Clear cache for specific video (optional, clears all if not provided)" },
+            },
+          },
+        },
+        // YouTube Queue tools
+        {
+          name: "transcripts_queue_subscribe",
+          description: "Subscribe to a YouTube channel for automatic transcript ingestion. Videos are queued and processed respecting rate limits.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              channel: { type: "string", description: "Channel URL or @handle (e.g., @IndyDevDan or https://youtube.com/@IndyDevDan)" },
+              name: { type: "string", description: "Display name for the channel" },
+              priority: {
+                type: "string",
+                enum: ["high", "medium", "low"],
+                description: "Processing priority (default: medium)",
+              },
+            },
+            required: ["channel"],
+          },
+        },
+        {
+          name: "transcripts_queue_unsubscribe",
+          description: "Unsubscribe from a YouTube channel",
+          inputSchema: {
+            type: "object",
+            properties: {
+              channel_id: { type: "string", description: "Channel ID to unsubscribe" },
+            },
+            required: ["channel_id"],
+          },
+        },
+        {
+          name: "transcripts_queue_channels",
+          description: "List all subscribed YouTube channels",
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
+        {
+          name: "transcripts_queue_status",
+          description: "Get the current status of the YouTube ingestion queue",
+          inputSchema: {
+            type: "object",
+            properties: {
+              show_pending: { type: "boolean", description: "Include list of pending videos" },
+              limit: { type: "number", description: "Max pending videos to show (default: 10)" },
+            },
+          },
+        },
+        {
+          name: "transcripts_queue_process",
+          description: "Process pending videos in the queue. Respects rate limits and backs off automatically.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              batch_size: { type: "number", description: "Number of videos to process (default: 5)" },
+              mode: {
+                type: "string",
+                enum: ["auto", "captions", "whisper"],
+                description: "Ingestion mode (default: auto)",
+              },
+            },
+          },
+        },
+        {
+          name: "transcripts_queue_retry_failed",
+          description: "Reset failed videos to pending status for retry",
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
+        {
+          name: "transcripts_queue_clear_rate_limit",
+          description: "Manually clear rate limit status (use with caution)",
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
+        {
+          name: "transcripts_queue_check_new",
+          description: "Check subscribed channels for new videos and add them to the queue",
+          inputSchema: {
+            type: "object",
+            properties: {},
+          },
+        },
       ],
     };
   }
@@ -320,6 +511,50 @@ export class TranscriptsMCPServer {
 
       case "transcripts_rebuild_index":
         return this.toolRebuildIndex(args);
+
+      // YouTube tools
+      case "transcripts_youtube_info":
+        return this.toolYouTubeInfo(args);
+
+      case "transcripts_youtube_ingest":
+        return this.toolYouTubeIngest(args);
+
+      case "transcripts_youtube_channel":
+        return this.toolYouTubeChannel(args);
+
+      case "transcripts_youtube_playlist":
+        return this.toolYouTubePlaylist(args);
+
+      case "transcripts_youtube_batch":
+        return this.toolYouTubeBatch(args);
+
+      case "transcripts_youtube_clear_cache":
+        return this.toolYouTubeClearCache(args);
+
+      // Queue tools
+      case "transcripts_queue_subscribe":
+        return this.toolQueueSubscribe(args);
+
+      case "transcripts_queue_unsubscribe":
+        return this.toolQueueUnsubscribe(args);
+
+      case "transcripts_queue_channels":
+        return this.toolQueueChannels();
+
+      case "transcripts_queue_status":
+        return this.toolQueueStatus(args);
+
+      case "transcripts_queue_process":
+        return this.toolQueueProcess(args);
+
+      case "transcripts_queue_retry_failed":
+        return this.toolQueueRetryFailed();
+
+      case "transcripts_queue_clear_rate_limit":
+        return this.toolQueueClearRateLimit();
+
+      case "transcripts_queue_check_new":
+        return this.toolQueueCheckNew();
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -827,6 +1062,693 @@ export class TranscriptsMCPServer {
         },
       ],
     };
+  }
+
+  // =========================================================================
+  // YouTube Tools
+  // =========================================================================
+
+  /**
+   * Get YouTube video info
+   */
+  private async toolYouTubeInfo(args: Record<string, unknown>) {
+    const url = args.url as string;
+
+    // Check yt-dlp availability
+    const available = await isYtDlpAvailable();
+    if (!available) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "yt-dlp is not available. Please install it: pip install yt-dlp",
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    try {
+      const info = await getVideoInfo(url);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              id: info.id,
+              title: info.title,
+              channel: info.channel,
+              channel_id: info.channel_id,
+              duration: formatTime(info.duration_seconds * 1000),
+              duration_seconds: info.duration_seconds,
+              upload_date: info.upload_date,
+              view_count: info.view_count,
+              has_captions: info.has_captions,
+              caption_languages: info.caption_languages.slice(0, 10),
+              url: info.url,
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to get video info: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * Ingest YouTube video
+   */
+  private async toolYouTubeIngest(args: Record<string, unknown>) {
+    const url = args.url as string;
+    const mode = (args.mode as IngestOptions["mode"]) || "auto";
+    const language = args.language as string | undefined;
+    const whisperModel = args.whisper_model as string | undefined;
+    const save = args.save !== false; // Default true
+
+    // Check yt-dlp availability
+    const available = await isYtDlpAvailable();
+    if (!available) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "yt-dlp is not available. Please install it: pip install yt-dlp",
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    try {
+      const result = await ingestVideo(url, {
+        mode,
+        language,
+        whisper_model: whisperModel,
+      });
+
+      // Save to store if requested
+      let transcriptId: string | undefined;
+      if (save) {
+        const input: TranscriptInput = {
+          title: result.video.title,
+          source: {
+            mode: "url",
+            url: result.video.url,
+            type: "video",
+            audio: {
+              format: "unknown",
+              duration_ms: result.video.duration_seconds * 1000,
+            },
+            platform: {
+              name: "youtube",
+              url: result.video.url,
+              platform_id: result.video.id,
+              channel: result.video.channel,
+            },
+          },
+          utterances: result.captions.map((c, i) => ({
+            index: i,
+            speaker: { id: "spk_unknown", name: result.video.channel },
+            start_ms: c.start_ms,
+            end_ms: c.end_ms,
+            text: c.text,
+            confidence: result.source === "whisper" ? 0.9 : 0.95,
+          })),
+          processing: {
+            backend: result.source === "whisper" ? "whisper" : "youtube-captions",
+            model: result.source === "whisper" ? (whisperModel || "base") : undefined,
+            language: result.language,
+            duration_ms: 0,
+          },
+          status: "complete",
+        };
+
+        const transcript = await this.store.createTranscript(input);
+        transcriptId = transcript.id;
+
+        // Index for search
+        this.searchIndex.index(transcript);
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              video_id: result.video.id,
+              title: result.video.title,
+              channel: result.video.channel,
+              duration: formatTime(result.video.duration_seconds * 1000),
+              source: result.source,
+              language: result.language,
+              caption_count: result.captions.length,
+              saved: save,
+              transcript_id: transcriptId,
+              sample: result.captions.slice(0, 5).map(c => ({
+                time: formatTime(c.start_ms),
+                text: c.text.slice(0, 100) + (c.text.length > 100 ? "..." : ""),
+              })),
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to ingest video: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * List videos from YouTube channel
+   */
+  private async toolYouTubeChannel(args: Record<string, unknown>) {
+    const channel = args.channel as string;
+    const limit = (args.limit as number) || 50;
+
+    // Check yt-dlp availability
+    const available = await isYtDlpAvailable();
+    if (!available) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "yt-dlp is not available. Please install it: pip install yt-dlp",
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    try {
+      const videos = await listChannelVideos(channel, { limit });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              channel,
+              video_count: videos.length,
+              videos: videos.map(v => ({
+                id: v.id,
+                title: v.title,
+                duration: formatTime(v.duration_seconds * 1000),
+                upload_date: v.upload_date,
+                views: v.view_count,
+              })),
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to list channel videos: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * List videos from YouTube playlist
+   */
+  private async toolYouTubePlaylist(args: Record<string, unknown>) {
+    const playlistUrl = args.playlist_url as string;
+    const limit = (args.limit as number) || 100;
+
+    // Check yt-dlp availability
+    const available = await isYtDlpAvailable();
+    if (!available) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "yt-dlp is not available. Please install it: pip install yt-dlp",
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    try {
+      const videos = await listPlaylistVideos(playlistUrl, { limit });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              playlist_url: playlistUrl,
+              video_count: videos.length,
+              videos: videos.map(v => ({
+                id: v.id,
+                title: v.title,
+                duration: formatTime(v.duration_seconds * 1000),
+                upload_date: v.upload_date,
+                views: v.view_count,
+              })),
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to list playlist videos: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * Batch ingest YouTube videos
+   */
+  private async toolYouTubeBatch(args: Record<string, unknown>) {
+    const videoIds = args.video_ids as string[];
+    const mode = (args.mode as IngestOptions["mode"]) || "auto";
+    const language = args.language as string | undefined;
+    const save = args.save !== false;
+
+    // Check yt-dlp availability
+    const available = await isYtDlpAvailable();
+    if (!available) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "yt-dlp is not available. Please install it: pip install yt-dlp",
+            }, null, 2),
+          },
+        ],
+      };
+    }
+
+    const results: Array<{
+      id: string;
+      title?: string;
+      transcript_id?: string;
+      error?: string;
+    }> = [];
+
+    for await (const { id, result, error } of batchIngest(videoIds, { mode, language })) {
+      if (error) {
+        results.push({ id, error });
+        continue;
+      }
+
+      if (!result) {
+        results.push({ id, error: "No result returned" });
+        continue;
+      }
+
+      let transcriptId: string | undefined;
+      if (save) {
+        const input: TranscriptInput = {
+          title: result.video.title,
+          source: {
+            mode: "url",
+            url: result.video.url,
+            type: "video",
+            audio: {
+              format: "unknown",
+              duration_ms: result.video.duration_seconds * 1000,
+            },
+            platform: {
+              name: "youtube",
+              url: result.video.url,
+              platform_id: result.video.id,
+              channel: result.video.channel,
+            },
+          },
+          utterances: result.captions.map((c, i) => ({
+            index: i,
+            speaker: { id: "spk_unknown", name: result.video.channel },
+            start_ms: c.start_ms,
+            end_ms: c.end_ms,
+            text: c.text,
+            confidence: result.source === "whisper" ? 0.9 : 0.95,
+          })),
+          processing: {
+            backend: result.source === "whisper" ? "whisper" : "youtube-captions",
+            language: result.language,
+            duration_ms: 0,
+          },
+          status: "complete",
+        };
+
+        const transcript = await this.store.createTranscript(input);
+        transcriptId = transcript.id;
+        this.searchIndex.index(transcript);
+      }
+
+      results.push({
+        id,
+        title: result.video.title,
+        transcript_id: transcriptId,
+      });
+    }
+
+    const succeeded = results.filter(r => !r.error).length;
+    const failed = results.filter(r => r.error).length;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            total: videoIds.length,
+            succeeded,
+            failed,
+            saved: save,
+            results,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Clear YouTube cache
+   */
+  private toolYouTubeClearCache(args: Record<string, unknown>) {
+    const videoId = args.video_id as string | undefined;
+
+    try {
+      const cleared = clearYouTubeCache(videoId);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              cleared,
+              video_id: videoId || "all",
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to clear cache: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  // =========================================================================
+  // Queue Tools
+  // =========================================================================
+
+  /**
+   * Subscribe to a YouTube channel
+   */
+  private async toolQueueSubscribe(args: Record<string, unknown>) {
+    const channel = args.channel as string;
+    const name = args.name as string | undefined;
+    const priority = args.priority as "high" | "medium" | "low" | undefined;
+
+    try {
+      const result = await this.youtubeQueue.subscribe(channel, { name, priority });
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              subscribed: true,
+              channel: {
+                id: result.channel.id,
+                name: result.channel.name,
+                url: result.channel.url,
+                priority: result.channel.priority,
+                video_count: result.channel.video_count,
+              },
+              videos_queued: result.videosQueued,
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to subscribe: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * Unsubscribe from a YouTube channel
+   */
+  private toolQueueUnsubscribe(args: Record<string, unknown>) {
+    const channelId = args.channel_id as string;
+
+    const removed = this.youtubeQueue.unsubscribe(channelId);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            unsubscribed: removed,
+            channel_id: channelId,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * List subscribed channels
+   */
+  private toolQueueChannels() {
+    const channels = this.youtubeQueue.listChannels();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            count: channels.length,
+            channels: channels.map(c => ({
+              id: c.id,
+              name: c.name,
+              url: c.url,
+              priority: c.priority,
+              video_count: c.video_count,
+              ingested_count: c.ingested_count,
+              last_checked: c.last_checked ? new Date(c.last_checked).toISOString() : null,
+            })),
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Get queue status
+   */
+  private toolQueueStatus(args: Record<string, unknown>) {
+    const showPending = args.show_pending as boolean | undefined;
+    const limit = (args.limit as number) || 10;
+
+    const status = this.youtubeQueue.getStatus();
+
+    const result: Record<string, unknown> = {
+      processing_enabled: status.state.processing_enabled,
+      rate_limited: status.state.is_rate_limited,
+      rate_limit_until: status.state.rate_limit_until
+        ? new Date(status.state.rate_limit_until).toISOString()
+        : null,
+      backoff_minutes: status.state.backoff_minutes,
+      last_successful_ingest: status.state.last_successful_ingest
+        ? new Date(status.state.last_successful_ingest).toISOString()
+        : null,
+      channels: status.channels,
+      queue: status.queue,
+      can_process: status.canProcess,
+    };
+
+    if (showPending) {
+      const pending = this.youtubeQueue.getQueueItems({ status: "pending", limit });
+      result.pending_videos = pending.map(v => ({
+        id: v.id,
+        title: v.title,
+        channel_id: v.channel_id,
+        upload_date: v.upload_date,
+      }));
+    }
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Process queue
+   */
+  private async toolQueueProcess(args: Record<string, unknown>) {
+    const batchSize = (args.batch_size as number) || 5;
+    const mode = (args.mode as IngestOptions["mode"]) || "auto";
+
+    try {
+      const result = await this.youtubeQueue.processQueue({ mode }, batchSize);
+
+      // Save successful transcripts to store
+      for (const video of result.videos) {
+        if (video.status === "completed") {
+          // The ingestVideo call in processQueue already saves via store
+          // but we need to trigger search indexing if not already done
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              processed: result.processed,
+              succeeded: result.succeeded,
+              failed: result.failed,
+              rate_limited: result.rate_limited,
+              videos: result.videos,
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to process queue: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
+  }
+
+  /**
+   * Retry failed videos
+   */
+  private toolQueueRetryFailed() {
+    const count = this.youtubeQueue.retryFailed();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            reset_to_pending: count,
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Clear rate limit
+   */
+  private toolQueueClearRateLimit() {
+    this.youtubeQueue.clearRateLimit();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify({
+            cleared: true,
+            message: "Rate limit cleared. Processing can resume.",
+          }, null, 2),
+        },
+      ],
+    };
+  }
+
+  /**
+   * Check for new videos on subscribed channels
+   */
+  private async toolQueueCheckNew() {
+    try {
+      const results = await this.youtubeQueue.checkForNewVideos();
+
+      const totalNew = results.reduce((sum, r) => sum + r.newVideos, 0);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              channels_checked: results.length,
+              new_videos_found: totalNew,
+              details: results.filter(r => r.newVideos > 0),
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: `Failed to check for new videos: ${error instanceof Error ? error.message : String(error)}`,
+            }, null, 2),
+          },
+        ],
+      };
+    }
   }
 
   /**

@@ -15,10 +15,12 @@
     "diarization",
     "entity-extraction",
     "knowledge-graph",
-    "whisper"
+    "whisper",
+    "youtube"
   ],
   "skills": ["./skills/"],
   "commands": ["./commands/"],
+  "hooks": ["./hooks/"],
   "agents": [
     "./agents/transcriber.md",
     "./agents/analyst.md",
