@@ -23,7 +23,7 @@
   "hooks": ["./hooks/"],
   "agents": [
     "./agents/transcriber.md",
-    "./agents/analyst.md",
+    "./agents/transcript-analyst.md",
     "./agents/researcher.md"
   ],
   "mcp": ["./.mcp.json"]

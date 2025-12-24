@@ -16,5 +16,5 @@
   ],
   "skills": ["./skills/"],
   "commands": ["./commands/"],
-  "agents": ["./agents/analyst.md"]
+  "agents": ["./agents/perf-analyst.md"]
 }

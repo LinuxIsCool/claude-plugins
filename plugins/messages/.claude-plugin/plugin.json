@@ -22,7 +22,7 @@
   "agents": [
     "./agents/correspondent.md",
     "./agents/indexer.md",
-    "./agents/analyst.md"
+    "./agents/message-analyst.md"
   ],
   "mcp": ["./.mcp.json"]
 }

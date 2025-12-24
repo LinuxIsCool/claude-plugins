@@ -69,6 +69,7 @@ Co-Authored-By: Claude <agent>@ecosystem
 
 | Agent | Primary Write Location | Can Read |
 |-------|----------------------|----------|
+| **conductor** | `.claude/conductor/` | Everything |
 | **agent-architect** | `.claude/registry/` | Everything |
 | **archivist** | `.claude/archive/` | Everything |
 | **librarian** | `.claude/library/` | Everything |

@@ -1,5 +1,5 @@
 ---
-name: analyst
+name: perf-analyst
 description: Performance analysis specialist. Examines profiles, identifies bottlenecks, recommends optimizations. Data-driven, precise, actionable. Use for deep performance investigation.
 tools: Read, Bash, Glob, Grep
 model: sonnet

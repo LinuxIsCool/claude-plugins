@@ -1,5 +1,5 @@
 ---
-name: analyst
+name: transcript-analyst
 description: Transcript analysis specialist. Use when user wants to extract entities, identify topics, find relationships, or build knowledge from transcripts. Handles NER, topic modeling, and knowledge graph integration.
 tools: Read, Glob, Grep, Skill, Task
 model: sonnet

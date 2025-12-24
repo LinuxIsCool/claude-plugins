@@ -1,5 +1,5 @@
 ---
-name: analyst
+name: message-analyst
 description: Search and insights specialist for the Messages plugin. Deep analysis of message patterns, cross-platform synthesis, trend discovery, and conversation summarization. Use this agent when the user wants to "analyze messages", "find patterns", "summarize conversations", "search across platforms", "discover trends", "find related discussions", or needs deep insight extraction from message history. Examples:
 
 <example>

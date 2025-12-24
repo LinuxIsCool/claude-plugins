@@ -3,5 +3,13 @@
   "0a461fa87b2e": "Build YouTube transcript queue system with rate",
   "e26c2ee11e6a": "YouTube queue with rate limit handling",
   "afa719a43b77": "Retrieve newest IndyDevDan transcripts and subscription details",
-  "81963425bf38": "Successfully ingested twenty IndyDevDan transcripts"
+  "81963425bf38": "Successfully ingested twenty IndyDevDan transcripts",
+  "b60addc40a41": "Write detailed journal entry",
+  "972d57a0d7a5": "Journal entry created for YouTube queue management",
+  "d5188489b294": "Explain subscription features and transcript capabilities",
+  "54b4a349fa73": "Transcript infrastructure capabilities assessment overview",
+  "c82e99cd47ad": "Write detailed journal entry",
+  "e760768330f6": "Infrastructure audit reveals missing implementation layers",
+  "beffa6e6599f": "Subscribe to multiple YouTube channels",
+  "7d689f00ab01": "All eighteen channels subscribed and queued"
 }

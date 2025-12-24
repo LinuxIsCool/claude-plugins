@@ -208,8 +208,8 @@ marimo/_lsp/
 __marimo__/
 resources/
 
-# Claude Code logging (anywhere in tree)
-**/.claude/logging/
+# Claude Code logging - tracked (scrubbed of secrets before commit)
+# **/.claude/logging/
 .obsidian/
 
 # Claude Code runtime data (statusline plugin)
